@@ -29,7 +29,7 @@ export default async function RootLayout({
   // Determine a preferred language server-side from the Accept-Language
   // header so the initial server render matches the client's preference.
   const hdrs = await headers();
-  const acceptRaw = typeof hdrs.get === 'function' ? hdrs.get('accept-language') : (hdrs['accept-language'] || hdrs['accept_language'] || '');
+  const acceptRaw = hdrs.get('accept-language');
   const accept = acceptRaw || '';
   const primary = accept.split(',')[0]?.split('-')[0] || 'th';
   const AVAILABLE_LANGS = [

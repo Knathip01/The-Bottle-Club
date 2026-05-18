@@ -7,7 +7,7 @@ const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const isPlaceholderKey = !stripeSecretKey || stripeSecretKey === 'sk_test_placeholder' || stripeSecretKey.includes('your_stripe_');
 
 const stripe = new Stripe(stripeSecretKey || 'sk_test_placeholder', {
-  apiVersion: '2023-10-16' as any,
+  apiVersion: '2026-04-22.dahlia',
 });
 
 export async function POST(request: Request) {
