@@ -11,14 +11,12 @@ interface SearchPageProps {
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const session = await getSession();
-  
-  if (!session) {
-    redirect('/login');
-  }
+  const token = session?.user?.access_token;
+  const isLoggedIn = !!session;
 
   const sp = await searchParams;
   const query = sp.q || '';
-  const products = await getProducts(query);
+  const products = await getProducts(query, token);
 
   return (
     <main className="min-h-screen flex flex-col bg-stone-50/50">
@@ -33,7 +31,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
 
         {products.length > 0 ? (
-          <SearchProductList products={products} />
+          <SearchProductList products={products} isLoggedIn={isLoggedIn} />
         ) : (
           <div className="py-20 text-center bg-stone-50 rounded-3xl border border-dashed border-stone-200">
             <p className="text-stone-500 text-lg">No products found matching your search.</p>

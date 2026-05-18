@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { headers } from 'next/headers';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -20,17 +21,28 @@ export const metadata: Metadata = {
 
 import AIChat from "@/components/AIChat";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Determine a preferred language server-side from the Accept-Language
+  // header so the initial server render matches the client's preference.
+  const hdrs = await headers();
+  const acceptRaw = typeof hdrs.get === 'function' ? hdrs.get('accept-language') : (hdrs['accept-language'] || hdrs['accept_language'] || '');
+  const accept = acceptRaw || '';
+  const primary = accept.split(',')[0]?.split('-')[0] || 'th';
+  const AVAILABLE_LANGS = [
+    'th','en','fr','zh','ja','es','de','ko','it','ru','pt','vi','ar','hi','id','tr','nl','pl','sv','da','no','fi','ms','he','el'
+  ];
+  const preferred = (AVAILABLE_LANGS.includes(primary) ? primary : 'th') as any;
+
   return (
-    <html lang="th">
+    <html lang={preferred}>
       <body
         className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-stone-50 text-stone-900`}
       >
-        <LanguageProvider>
+        <LanguageProvider initialLanguage={preferred}>
           {children}
           <AIChat />
         </LanguageProvider>

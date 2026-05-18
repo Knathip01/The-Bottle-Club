@@ -182,16 +182,16 @@ export default function MembersOnlyBarrier() {
               </p>
 
               <div className="mx-auto mt-12 flex w-full max-w-md flex-col items-center justify-center gap-4 sm:flex-row">
-                <Link 
-                  href="/login" 
+                  <Link 
+                    href="/login" 
                   className="group relative flex min-h-14 w-full flex-1 items-center justify-center overflow-hidden rounded-2xl bg-white px-8 py-4 text-center text-sm font-black text-stone-950 transition-all hover:scale-[1.02] active:scale-95"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-100/0 via-blue-500/10 to-blue-100/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
                   {loginText}
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
-                <Link 
-                  href="/register" 
+                  <Link 
+                    href="/register" 
                   className="flex min-h-14 w-full flex-1 items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-8 py-4 text-center text-sm font-black text-white backdrop-blur-md transition-all hover:bg-white/10 hover:border-white/20 active:scale-95"
                 >
                   {registerText}

@@ -8,9 +8,10 @@ import { useLanguage } from '@/context/LanguageContext';
 
 interface SearchProductListProps {
   products: Product[];
+  isLoggedIn?: boolean;
 }
 
-export default function SearchProductList({ products }: SearchProductListProps) {
+export default function SearchProductList({ products, isLoggedIn = true }: SearchProductListProps) {
   const { t } = useLanguage();
   const [loadingId, setLoadingId] = useState<number | null>(null);
 
@@ -33,6 +34,11 @@ export default function SearchProductList({ products }: SearchProductListProps) 
   };
 
   const handleSelectProduct = (product: Product) => {
+    if (!isLoggedIn) {
+      window.location.href = '/login';
+      return;
+    }
+
     setLoadingId(product.id);
 
     const cartItem = {
@@ -40,7 +46,7 @@ export default function SearchProductList({ products }: SearchProductListProps) 
       name: product.name,
       price: product.price,
       quantity: 1,
-      image: `/images/wine_${product.color || 'red'}.png`,
+      image: product.image || `/images/wine_${product.color || 'red'}.png`,
     };
 
     try {
@@ -74,20 +80,11 @@ export default function SearchProductList({ products }: SearchProductListProps) 
               <div className="absolute inset-0 bg-gradient-to-br from-transparent to-stone-200/30" />
 
               <div className="relative transition-transform duration-500 group-hover:scale-110">
-                <div
-                  className={`relative h-40 w-10 overflow-hidden rounded-b-md rounded-t-full shadow-lg ${
-                    wineColor === 'red'
-                      ? 'bg-red-900'
-                      : wineColor === 'white'
-                        ? 'bg-amber-100'
-                        : wineColor === 'rose'
-                          ? 'bg-pink-300'
-                          : 'bg-stone-800'
-                  }`}
-                >
-                  <div className="absolute left-0 right-0 top-4 h-8 bg-white/20" />
-                  <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-black/10" />
-                </div>
+                <img
+                  src={product.image || `/images/wine_${wineColor}.png`}
+                  alt={product.name}
+                  className="h-48 w-auto object-contain drop-shadow-lg"
+                />
               </div>
             </div>
 

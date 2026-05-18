@@ -2,13 +2,13 @@
 
 import { useSyncExternalStore } from 'react';
 import type { CartItem } from '@/lib/cart';
-import { readCart, subscribeCart, writeCart } from '@/lib/cart';
+import { readCart, subscribeCart, writeCart, EMPTY_CART } from '@/lib/cart';
 import Link from 'next/link';
-import { Minus, Plus, Trash2, Heart } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function CartContent() {
-  const items = useSyncExternalStore(subscribeCart, readCart, () => [] as CartItem[]);
+  const items = useSyncExternalStore(subscribeCart, readCart, () => EMPTY_CART);
   const { t } = useLanguage();
 
   const updateQuantity = (id: number, delta: number) => {
@@ -24,150 +24,116 @@ export default function CartContent() {
   };
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const tax = Math.round(subtotal * 0.07);
-  const total = subtotal;
+  const vat = Math.round(subtotal * 0.07);
+  const total = subtotal + vat;
   const points = Math.floor(subtotal / 10);
-  const priceBeforeTax = subtotal - tax;
+
+  if (items.length === 0) {
+    return (
+      <div className="py-20 text-center">
+        <div className="flex justify-center mb-4">
+          <ShoppingBag size={64} className="text-stone-200" />
+        </div>
+        <h2 className="text-2xl font-bold mb-4">{t('cart.empty')}</h2>
+        <Link 
+          href="/" 
+          className="inline-block bg-[#a11a1a] text-white px-8 py-3 rounded-full font-bold hover:bg-red-800 transition-colors"
+        >
+          {t('hero.cta_all')}
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-12">
-      {/* Cart Items Table */}
-      <div className="flex-1">
-        <div className="flex items-center gap-3 mb-6">
-          <span className="bg-stone-100 p-2"><Trash2 size={20} className="text-stone-400" /></span>
-          <h1 className="text-lg font-bold">{t('cart.title')}</h1>
-          <span className="text-stone-400 text-sm">{items.length} {t('cart.items')}</span>
+    <div>
+      {/* Points Banner - Restored to original style but localized */}
+      <div className="mb-6 bg-red-50 text-red-800 p-4 rounded-lg flex items-center justify-between text-sm sm:text-base">
+        <div className="flex items-center gap-2">
+          <span className="font-bold">✓</span> 
+          <span>
+            {t('cart.pay_now_earn')} <span className="font-bold">{points} {t('common.points')}</span> {t('cart.for_this_order')}
+          </span>
         </div>
+      </div>
 
-        <div className="border-t border-stone-100">
-          {items.length === 0 ? (
-            <div className="py-20 text-center">
-              <p className="text-stone-500 mb-6">{t('cart.empty')}</p>
-              <Link href="/" className="px-8 py-3 bg-stone-900 text-white text-xs font-bold uppercase hover:bg-black transition-colors">
-                {t('hero.cta_all')}
-              </Link>
-            </div>
-          ) : (
-            items.map((item) => (
-              <div key={item.id} className="py-8 border-b border-stone-100 flex flex-col md:flex-row gap-6">
-                {/* Product Image */}
-                <div className="w-24 h-32 flex-shrink-0 bg-stone-50 flex items-center justify-center p-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-lg font-bold">{t('cart.title')}</h1>
+            <span className="text-stone-500">{items.length} {t('cart.items')}</span>
+          </div>
+
+          <div className="space-y-4">
+            {items.map((item) => (
+              <div key={item.id} className="flex gap-4 p-4 border rounded-lg bg-white shadow-sm">
+                <div className="w-24 h-32 flex-shrink-0 bg-stone-50 rounded flex items-center justify-center p-2">
                   <img src={item.image} alt={item.name} className="max-h-full object-contain" />
                 </div>
 
-                {/* Product Details */}
                 <div className="flex-1">
-                  <h3 className="text-xs font-bold text-stone-800 leading-relaxed mb-1 uppercase tracking-tight">
-                    {item.name}
-                  </h3>
-                  <p className="text-stone-400 text-xs mb-4">฿{item.price.toLocaleString()}</p>
-                  
-                  <div className="flex items-center gap-4">
-                    <button className="flex items-center gap-1 text-[10px] text-stone-400 hover:text-stone-900 uppercase">
-                      <Heart size={14} /> {t('cart.favorite')}
-                    </button>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-sm">{item.name}</h3>
                     <button 
                       onClick={() => removeItem(item.id)}
-                      className="flex items-center gap-1 text-[10px] text-stone-400 hover:text-stone-900 uppercase"
+                      className="text-stone-400 hover:text-red-600 transition-colors"
                     >
-                      <Trash2 size={14} /> {t('cart.remove')}
+                      <Trash2 size={18} />
                     </button>
                   </div>
-                </div>
-
-                {/* Quantity & Subtotal */}
-                <div className="flex flex-col items-end gap-4">
-                  <div className="flex items-center border border-stone-200">
-                    <button 
-                      onClick={() => updateQuantity(item.id, -1)}
-                      className="p-2 hover:bg-stone-50 transition-colors"
-                    >
-                      <Minus size={14} />
-                    </button>
-                    <span className="w-10 text-center text-xs font-bold">{item.quantity}</span>
-                    <button 
-                      onClick={() => updateQuantity(item.id, 1)}
-                      className="p-2 hover:bg-stone-50 transition-colors"
-                    >
-                      <Plus size={14} />
-                    </button>
+                  
+                  <div className="flex justify-between items-end mt-4">
+                    <div className="flex items-center border rounded-lg overflow-hidden bg-white">
+                      <button 
+                        onClick={() => updateQuantity(item.id, -1)}
+                        className="p-2 hover:bg-stone-50 text-stone-500"
+                      >
+                        <Minus size={16} />
+                      </button>
+                      <span className="px-4 py-2 font-bold min-w-[3rem] text-center text-sm">{item.quantity}</span>
+                      <button 
+                        onClick={() => updateQuantity(item.id, 1)}
+                        className="p-2 hover:bg-stone-50 text-stone-500"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold">฿{item.price.toLocaleString()}</p>
+                    </div>
                   </div>
-                  <div className="font-bold text-sm">฿{(item.price * item.quantity).toLocaleString()}</div>
                 </div>
               </div>
-            ))
-          )}
+            ))}
+          </div>
         </div>
 
-        {items.length > 0 && (
-          <div className="mt-8 flex justify-between">
-            <button 
-              onClick={() => {
-                localStorage.removeItem('cart');
-                window.dispatchEvent(new Event('cart:updated'));
-              }}
-              className="px-8 py-3 border border-stone-900 text-xs font-bold uppercase hover:bg-stone-50 transition-colors"
+        <div className="lg:col-span-1">
+          <div className="bg-stone-50 p-6 rounded-lg sticky top-24 border border-stone-100">
+            <h2 className="text-xl font-bold mb-6 uppercase tracking-wider">{t('cart.order_summary')}</h2>
+            
+            <div className="space-y-4 mb-6">
+              <div className="flex justify-between">
+                <span className="text-stone-500 uppercase text-xs font-bold tracking-tight">{t('cart.subtotal')}</span>
+                <span className="font-bold">฿{subtotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-stone-500 uppercase text-xs font-bold tracking-tight">{t('cart.tax')}</span>
+                <span className="font-bold">฿{vat.toLocaleString()}</span>
+              </div>
+              <div className="border-t border-stone-200 pt-4 flex justify-between">
+                <span className="font-bold uppercase">{t('cart.total')}</span>
+                <span className="text-xl font-bold text-[#a11a1a]">฿{total.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <Link 
+              href="/checkout"
+              className="block w-full bg-[#a11a1a] text-white text-center py-4 text-sm font-bold uppercase hover:bg-red-800 transition-all rounded-lg"
             >
-              {t('cart.clear')}
-            </button>
-            <button className="px-8 py-3 border border-stone-900 text-xs font-bold uppercase hover:bg-stone-50 transition-colors">
-              {t('cart.update')}
-            </button>
+              {t('cart.checkout')}
+            </Link>
           </div>
-        )}
-      </div>
-
-      {/* Cart Summary */}
-      <div className="w-full lg:w-[380px]">
-        {/* Promo Code Section */}
-        <div className="bg-[#f5f5f5] p-6 mb-4">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-lg">🎫</span>
-            <span className="text-xs font-bold uppercase">{t('cart.promo_code')}</span>
-          </div>
-          <div className="flex gap-2">
-            <input 
-              type="text" 
-              placeholder={t('cart.promo_placeholder')} 
-              className="flex-1 border border-stone-300 p-2.5 text-xs focus:outline-none"
-            />
-            <button className="bg-black text-white px-6 py-2.5 text-xs font-bold uppercase hover:bg-stone-800 transition-colors">
-              {t('cart.apply')}
-            </button>
-          </div>
-        </div>
-
-        {/* Total Summary Section */}
-        <div className="bg-[#f5f5f5] p-6">
-          <div className="space-y-4 mb-8">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-stone-500 font-medium uppercase">{t('cart.subtotal')}</span>
-              <span className="font-bold">฿{subtotal.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-stone-500 font-medium uppercase">{t('cart.points')}</span>
-              <span className="text-stone-800 font-bold">{points} POINTS</span>
-            </div>
-            <div className="flex justify-between items-center text-xs bg-stone-200/50 p-2 -mx-2">
-              <span className="text-stone-500 font-medium uppercase">{t('cart.pretax')}</span>
-              <span className="font-bold">฿{priceBeforeTax.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-stone-500 font-medium uppercase">{t('cart.tax')}</span>
-              <span className="font-bold">฿{tax.toLocaleString()}</span>
-            </div>
-            <div className="pt-4 border-t border-stone-200 flex justify-between items-center">
-              <span className="text-xs font-bold uppercase">{t('cart.total')}</span>
-              <span className="text-lg font-bold">฿{total.toLocaleString()}</span>
-            </div>
-          </div>
-
-          <Link 
-            href="/checkout"
-            className="block w-full bg-[#a11a1a] text-white text-center py-4 text-sm font-bold uppercase hover:bg-red-800 transition-colors"
-          >
-            {t('cart.checkout')}
-          </Link>
         </div>
       </div>
     </div>

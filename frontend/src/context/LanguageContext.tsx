@@ -1,8 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useSyncExternalStore } from 'react';
 
-type Language = 'th' | 'en' | 'fr' | 'zh' | 'ja' | 'es' | 'de' | 'ko' | 'it' | 'ru' | 'pt' | 'vi' | 'ar' | 'hi' | 'id' | 'tr' | 'nl' | 'pl' | 'sv' | 'da' | 'no' | 'fi' | 'ms' | 'he' | 'el';
+export type Language = 'th' | 'en' | 'fr' | 'zh' | 'ja' | 'es' | 'de' | 'ko' | 'it' | 'ru' | 'pt' | 'vi' | 'ar' | 'hi' | 'id' | 'tr' | 'nl' | 'pl' | 'sv' | 'da' | 'no' | 'fi' | 'ms' | 'he' | 'el';
 
 interface LanguageContextType {
   language: Language;
@@ -213,6 +213,34 @@ const translations = {
     'common.edit': 'แก้ไข',
     'common.save': 'บันทึก',
     'common.home': 'หน้าหลัก',
+    'common.points': 'คะแนน',
+    'cart.title': 'ตะกร้าสินค้าของคุณ',
+    'cart.items': 'รายการ',
+    'cart.empty': 'ตะกร้าของคุณยังว่างอยู่',
+    'cart.favorite': 'เพิ่มในรายการโปรด',
+    'cart.remove': 'ลบออก',
+    'cart.clear': 'ล้างตะกร้า',
+    'cart.update': 'อัปเดตตะกร้า',
+    'cart.promo_code': 'รหัสส่วนลด',
+    'cart.promo_placeholder': 'กรอกรหัสส่วนลดที่นี่',
+    'cart.apply': 'ใช้งาน',
+    'cart.subtotal': 'ยอดรวมสินค้า',
+    'cart.points': 'คะแนนที่คุณจะได้รับ',
+    'cart.pretax': 'ราคาก่อนภาษี (7%)',
+    'cart.tax': 'ภาษีมูลค่าเพิ่ม',
+    'cart.total': 'ยอดชำระเงินทั้งสิ้น',
+    'cart.checkout': 'ดำเนินการชำระเงิน',
+    'cart.pay_now_earn': 'ชำระเงินทันทีและรับ',
+    'cart.for_this_order': 'สำหรับคำสั่งซื้อนี้',
+    'cart.items_in_bag': 'รายการในตะกร้าของคุณ',
+    'cart.premium_selection': 'รายการที่คัดสรรมาเป็นพิเศษ',
+    'cart.order_summary': 'สรุปรายการสั่งซื้อ',
+    'cart.member_benefit': 'สิทธิประโยชน์สมาชิก',
+    'cart.inc_vat': 'รวมภาษีมูลค่าเพิ่มแล้ว',
+    'cart.secure_checkout': 'การชำระเงินปลอดภัยด้วยเทคโนโลยี SSL 256-bit',
+    'cart.free_shipping_hint': 'จัดส่งฟรีเมื่อซื้อครบ 2,000 บาทขึ้นไป',
+    'cart.shipping_policy': 'นโยบายการจัดส่ง',
+    'cart.return_policy': 'นโยบายการคืนสินค้า',
   },
   en: {
     'nav.wine': 'Wines',
@@ -407,6 +435,35 @@ const translations = {
     'order.syncing_details': 'Syncing order details...',
     'common.edit': 'Edit',
     'common.save': 'Save',
+    'common.home': 'Home',
+    'common.points': 'Points',
+    'cart.title': 'Your Shopping Cart',
+    'cart.items': 'Items',
+    'cart.empty': 'Your cart is empty',
+    'cart.favorite': 'Add to favorites',
+    'cart.remove': 'Remove',
+    'cart.clear': 'Clear Cart',
+    'cart.update': 'Update Cart',
+    'cart.promo_code': 'Promo Code',
+    'cart.promo_placeholder': 'Enter promo code here',
+    'cart.apply': 'Apply',
+    'cart.subtotal': 'Subtotal',
+    'cart.points': 'Points you will earn',
+    'cart.pretax': 'Pre-tax (7%)',
+    'cart.tax': 'VAT',
+    'cart.total': 'Total amount',
+    'cart.checkout': 'Proceed to Checkout',
+    'cart.pay_now_earn': 'Pay now and earn',
+    'cart.for_this_order': 'for this order',
+    'cart.items_in_bag': 'items in your bag',
+    'cart.premium_selection': 'Premium Selection',
+    'cart.order_summary': 'Order Summary',
+    'cart.member_benefit': 'Member Benefit',
+    'cart.inc_vat': 'Inc. VAT',
+    'cart.secure_checkout': 'Secure checkout encrypted with 256-bit SSL technology.',
+    'cart.free_shipping_hint': 'Free shipping on orders over ฿2,000.',
+    'cart.shipping_policy': 'Shipping Policy',
+    'cart.return_policy': 'Return Policy',
   },
   fr: {
     'nav.wine': 'Vins',
@@ -493,6 +550,34 @@ const translations = {
     'search.loading': 'Chargement...',
     'search.wine_type': 'Vin',
     'common.price_label': 'Prix',
+    'common.points': 'Points',
+    'cart.title': 'Votre Panier',
+    'cart.items': 'Articles',
+    'cart.empty': 'Votre panier est vide',
+    'cart.favorite': 'Ajouter aux favoris',
+    'cart.remove': 'Retirer',
+    'cart.clear': 'Vider le panier',
+    'cart.update': 'Mettre à jour le panier',
+    'cart.promo_code': 'Code Promo',
+    'cart.promo_placeholder': 'Entrez le code promo ici',
+    'cart.apply': 'Appliquer',
+    'cart.subtotal': 'Sous-total',
+    'cart.points': 'Points que vous gagnerez',
+    'cart.pretax': 'Hors taxes (7%)',
+    'cart.tax': 'TVA',
+    'cart.total': 'Montant total',
+    'cart.checkout': 'Passer à la caisse',
+    'cart.pay_now_earn': 'Payez maintenant et gagnez',
+    'cart.for_this_order': 'pour cette commande',
+    'cart.items_in_bag': 'articles dans votre panier',
+    'cart.premium_selection': 'Sélection Premium',
+    'cart.order_summary': 'Résumé de la commande',
+    'cart.member_benefit': 'Avantage Membre',
+    'cart.inc_vat': 'TVA incluse',
+    'cart.secure_checkout': 'Paiement sécurisé crypté avec la technologie SSL 256 bits.',
+    'cart.free_shipping_hint': 'Livraison gratuite pour toute commande supérieure à ฿2 000.',
+    'cart.shipping_policy': 'Politique d\'expédition',
+    'cart.return_policy': 'Politique de retour',
   },
   zh: {
     'nav.wine': '葡萄酒',
@@ -579,6 +664,34 @@ const translations = {
     'search.loading': '加载中...',
     'search.wine_type': '葡萄酒',
     'common.price_label': '价格',
+    'common.points': '积分',
+    'cart.title': '您的购物车',
+    'cart.items': '件商品',
+    'cart.empty': '您的购物车是空的',
+    'cart.favorite': '移入收藏夹',
+    'cart.remove': '移除',
+    'cart.clear': '清空购物车',
+    'cart.update': '更新购物车',
+    'cart.promo_code': '优惠码',
+    'cart.promo_placeholder': '在此输入优惠码',
+    'cart.apply': '应用',
+    'cart.subtotal': '小计',
+    'cart.points': '您将获得的积分',
+    'cart.pretax': '税前 (7%)',
+    'cart.tax': '增值税',
+    'cart.total': '总金额',
+    'cart.checkout': '去结账',
+    'cart.pay_now_earn': '立即支付并获得',
+    'cart.for_this_order': '此订单',
+    'cart.items_in_bag': '购物车中的商品',
+    'cart.premium_selection': '精选推荐',
+    'cart.order_summary': '订单摘要',
+    'cart.member_benefit': '会员权益',
+    'cart.inc_vat': '含增值税',
+    'cart.secure_checkout': '使用 256 位 SSL 技术加密的安全结账。',
+    'cart.free_shipping_hint': '满 ฿2,000 免运费。',
+    'cart.shipping_policy': '配送政策',
+    'cart.return_policy': '退货政策',
   },
   ja: {
     'nav.wine': 'ワイン',
@@ -665,6 +778,34 @@ const translations = {
     'search.loading': '読み込み中...',
     'search.wine_type': 'ワイン',
     'common.price_label': '価格',
+    'common.points': 'ポイント',
+    'cart.title': 'ショッピングカート',
+    'cart.items': '点',
+    'cart.empty': 'カートに商品が入っていません',
+    'cart.favorite': 'お気に入りに追加',
+    'cart.remove': '削除',
+    'cart.clear': 'カートを空にする',
+    'cart.update': 'カートを更新',
+    'cart.promo_code': 'プロモーションコード',
+    'cart.promo_placeholder': 'コードを入力',
+    'cart.apply': '適用',
+    'cart.subtotal': '小計',
+    'cart.points': '獲得予定ポイント',
+    'cart.pretax': '税抜金額 (7%)',
+    'cart.tax': '消費税',
+    'cart.total': '合計金額',
+    'cart.checkout': 'レジに進む',
+    'cart.pay_now_earn': '今すぐ支払って獲得',
+    'cart.for_this_order': 'この注文で',
+    'cart.items_in_bag': 'バッグの中の商品',
+    'cart.premium_selection': 'プレミアムセレクション',
+    'cart.order_summary': '注文内容の確認',
+    'cart.member_benefit': '会員特典',
+    'cart.inc_vat': '税込',
+    'cart.secure_checkout': '256ビットSSL技術で暗号化された安全なチェックアウト。',
+    'cart.free_shipping_hint': '฿2,000以上のお買い上げで送料無料。',
+    'cart.shipping_policy': '配送ポリシー',
+    'cart.return_policy': '返品ポリシー',
   },
   es: {
     'nav.wine': 'Vinos',
@@ -739,6 +880,34 @@ const translations = {
     'search.loading': 'Cargando...',
     'search.wine_type': 'Vino',
     'common.price_label': 'Precio',
+    'common.points': 'Puntos',
+    'cart.title': 'Tu Carrito de Compras',
+    'cart.items': 'Artículos',
+    'cart.empty': 'Tu carrito está vacío',
+    'cart.favorite': 'Añadir a favoritos',
+    'cart.remove': 'Eliminar',
+    'cart.clear': 'Vaciar carrito',
+    'cart.update': 'Actualizar carrito',
+    'cart.promo_code': 'Código promocional',
+    'cart.promo_placeholder': 'Introduce el código aquí',
+    'cart.apply': 'Aplicar',
+    'cart.subtotal': 'Subtotal',
+    'cart.points': 'Puntos que ganarás',
+    'cart.pretax': 'Antes de impuestos (7%)',
+    'cart.tax': 'IVA',
+    'cart.total': 'Importe total',
+    'cart.checkout': 'Finalizar compra',
+    'cart.pay_now_earn': 'Paga ahora y gana',
+    'cart.for_this_order': 'por este pedido',
+    'cart.items_in_bag': 'artículos en tu bolsa',
+    'cart.premium_selection': 'Selección Premium',
+    'cart.order_summary': 'Resumen del pedido',
+    'cart.member_benefit': 'Beneficio para miembros',
+    'cart.inc_vat': 'IVA incl.',
+    'cart.secure_checkout': 'Pago seguro cifrado con tecnología SSL de 256 bits.',
+    'cart.free_shipping_hint': 'Envío gratis en pedidos superiores a ฿2,000.',
+    'cart.shipping_policy': 'Política de envío',
+    'cart.return_policy': 'Política de devoluciones',
   },
   de: {
     'nav.wine': 'Weine',
@@ -812,7 +981,36 @@ const translations = {
     'search.avg_price': 'Durchschnittspreis',
     'search.loading': 'Laden...',
     'search.wine_type': 'Wein',
-    'common.price_label': 'Preis',  },
+    'common.price_label': 'Preis',
+    'common.points': 'Punkte',
+    'cart.title': 'Ihr Warenkorb',
+    'cart.items': 'Artikel',
+    'cart.empty': 'Ihr Warenkorb ist leer',
+    'cart.favorite': 'Zu Favoriten hinzufügen',
+    'cart.remove': 'Entfernen',
+    'cart.clear': 'Warenkorb leeren',
+    'cart.update': 'Warenkorb aktualisieren',
+    'cart.promo_code': 'Gutscheincode',
+    'cart.promo_placeholder': 'Gutscheincode hier eingeben',
+    'cart.apply': 'Anwenden',
+    'cart.subtotal': 'Zwischensumme',
+    'cart.points': 'Punkte, die Sie sammeln',
+    'cart.pretax': 'Vor Steuern (7%)',
+    'cart.tax': 'MwSt.',
+    'cart.total': 'Gesamtbetrag',
+    'cart.checkout': 'Zur Kasse gehen',
+    'cart.pay_now_earn': 'Jetzt bezahlen und sammeln',
+    'cart.for_this_order': 'für diese Bestellung',
+    'cart.items_in_bag': 'Artikel in Ihrem Warenkorb',
+    'cart.premium_selection': 'Premium-Auswahl',
+    'cart.order_summary': 'Bestellübersicht',
+    'cart.member_benefit': 'Mitgliedervorteil',
+    'cart.inc_vat': 'Inkl. MwSt.',
+    'cart.secure_checkout': 'Sicherer Checkout, verschlüsselt mit 256-Bit-SSL-Technologie.',
+    'cart.free_shipping_hint': 'Kostenloser Versand bei Bestellungen über ฿2.000.',
+    'cart.shipping_policy': 'Versandrichtlinien',
+    'cart.return_policy': 'Rückgaberecht',
+  },
   ko: {
     'nav.wine': '와인',
     'nav.pairings': '페어링',
@@ -886,6 +1084,34 @@ const translations = {
     'search.loading': '로딩 중...',
     'search.wine_type': '와인',
     'common.price_label': '가격',
+    'common.points': '포인트',
+    'cart.title': '장바구니',
+    'cart.items': '개 항목',
+    'cart.empty': '장바구니가 비어 있습니다',
+    'cart.favorite': '위시리스트에 추가',
+    'cart.remove': '삭제',
+    'cart.clear': '장바구니 비우기',
+    'cart.update': '장바구니 업데이트',
+    'cart.promo_code': '프로모션 코드',
+    'cart.promo_placeholder': '여기에 코드를 입력하세요',
+    'cart.apply': '적용',
+    'cart.subtotal': '소계',
+    'cart.points': '적립 예정 포인트',
+    'cart.pretax': '세전 금액 (7%)',
+    'cart.tax': '부가가치세',
+    'cart.total': '총 결제 금액',
+    'cart.checkout': '결제하기',
+    'cart.pay_now_earn': '지금 결제하고 적립하세요',
+    'cart.for_this_order': '이번 주문에 대해',
+    'cart.items_in_bag': '장바구니에 담긴 상품',
+    'cart.premium_selection': '프리미엄 선택',
+    'cart.order_summary': '주문 요약',
+    'cart.member_benefit': '회원 혜택',
+    'cart.inc_vat': '부가세 포함',
+    'cart.secure_checkout': '256비트 SSL 기술로 암호화된 안전한 결제.',
+    'cart.free_shipping_hint': '฿2,000 이상 주문 시 무료 배송.',
+    'cart.shipping_policy': '배송 정책',
+    'cart.return_policy': '반품 정책',
   },
   it: {
     'nav.wine': 'Vini',
@@ -1181,7 +1407,36 @@ const translations = {
     'search.avg_price': 'Giá trung bình',
     'search.loading': 'Đang tải...',
     'search.wine_type': 'Rượu vang',
-    'common.price_label': 'Giá',  },
+    'common.price_label': 'Giá',
+    'common.points': 'Điểm',
+    'cart.title': 'Giỏ hàng của bạn',
+    'cart.items': 'mặt hàng',
+    'cart.empty': 'Giỏ hàng của bạn đang trống',
+    'cart.favorite': 'Thêm vào yêu thích',
+    'cart.remove': 'Xóa',
+    'cart.clear': 'Xóa sạch giỏ hàng',
+    'cart.update': 'Cập nhật giỏ hàng',
+    'cart.promo_code': 'Mã giảm giá',
+    'cart.promo_placeholder': 'Nhập mã giảm giá tại đây',
+    'cart.apply': 'Áp dụng',
+    'cart.subtotal': 'Tạm tính',
+    'cart.points': 'Điểm bạn sẽ nhận được',
+    'cart.pretax': 'Giá trước thuế (7%)',
+    'cart.tax': 'Thuế VAT',
+    'cart.total': 'Tổng cộng',
+    'cart.checkout': 'Thanh toán',
+    'cart.pay_now_earn': 'Thanh toán ngay và nhận',
+    'cart.for_this_order': 'cho đơn hàng này',
+    'cart.items_in_bag': 'mặt hàng trong giỏ',
+    'cart.premium_selection': 'Lựa chọn cao cấp',
+    'cart.order_summary': 'Tóm tắt đơn hàng',
+    'cart.member_benefit': 'Quyền lợi thành viên',
+    'cart.inc_vat': 'Đã bao gồm VAT',
+    'cart.secure_checkout': 'Thanh toán an toàn được mã hóa bằng công nghệ SSL 256-bit.',
+    'cart.free_shipping_hint': 'Miễn phí vận chuyển cho đơn hàng trên ฿2,000.',
+    'cart.shipping_policy': 'Chính sách vận chuyển',
+    'cart.return_policy': 'Chính sách đổi trả',
+  },
   ar: {
     'nav.wine': 'نبيذ',
     'nav.pairings': 'تناغم الطعام',
@@ -2445,22 +2700,82 @@ const translations = {
   }
 };
 
+const DEFAULT_LANGUAGE: Language = 'th';
+const LANGUAGE_CHANGE_EVENT = 'the-bottle-club-language-change';
+const RTL_LANGUAGES = new Set<Language>(['ar', 'he']);
+
+function isLanguage(value: string | null): value is Language {
+  return Boolean(value && value in translations);
+}
+
+function getLanguageSnapshot(): Language {
+  if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
+  const savedLang = window.localStorage.getItem('language');
+  return isLanguage(savedLang) ? savedLang : DEFAULT_LANGUAGE;
+}
+
+function getServerLanguageSnapshot(): Language {
+  return DEFAULT_LANGUAGE;
+}
+
+function subscribeLanguageChange(onStoreChange: () => void) {
+  if (typeof window === 'undefined') return () => {};
+
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === 'language') onStoreChange();
+  };
+
+  window.addEventListener('storage', handleStorage);
+  window.addEventListener(LANGUAGE_CHANGE_EVENT, onStoreChange);
+
+  return () => {
+    window.removeEventListener('storage', handleStorage);
+    window.removeEventListener(LANGUAGE_CHANGE_EVENT, onStoreChange);
+  };
+}
+
+function syncDocumentLanguage(lang: Language) {
+  if (typeof document === 'undefined') return;
+  document.documentElement.lang = lang;
+  document.documentElement.dir = RTL_LANGUAGES.has(lang) ? 'rtl' : 'ltr';
+}
+
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>('th');
+export function LanguageProvider({
+  children,
+  initialLanguage,
+}: {
+  children: React.ReactNode;
+  initialLanguage?: Language;
+}) {
+  // Use state initialized from server snapshot (or provided initialLanguage)
+  // so the initial client render matches the server HTML and avoids
+  // hydration mismatches. After mount we read the real client snapshot
+  // (localStorage) and subscribe to changes.
+  const [language, setLanguageState] = React.useState<Language>(
+    initialLanguage ?? getServerLanguageSnapshot()
+  );
 
   useEffect(() => {
-    const savedLang = localStorage.getItem('language') as Language;
-    if (savedLang && translations[savedLang as Language]) {
-      setLanguageState(savedLang as Language);
-    }
+    // On mount, sync to the client snapshot and subscribe to changes
+    const sync = () => setLanguageState(getLanguageSnapshot());
+    sync();
+    const unsubscribe = subscribeLanguageChange(sync);
+    return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    syncDocumentLanguage(language);
+  }, [language]);
+
   const setLanguage = (lang: Language) => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('language', lang);
+      window.dispatchEvent(new Event(LANGUAGE_CHANGE_EVENT));
+    }
     setLanguageState(lang);
-    localStorage.setItem('language', lang);
-    document.documentElement.lang = lang;
+    syncDocumentLanguage(lang);
   };
 
   const t = (key: string) => {

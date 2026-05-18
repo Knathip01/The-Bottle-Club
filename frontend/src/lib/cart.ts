@@ -6,6 +6,8 @@ export type CartItem = {
   image: string;
 };
 
+export const EMPTY_CART: CartItem[] = [];
+
 const CART_EVENT_NAME = 'cart:updated';
 
 function isCartItem(value: unknown): value is CartItem {

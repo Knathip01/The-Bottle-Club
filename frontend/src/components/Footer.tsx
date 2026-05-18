@@ -161,25 +161,26 @@ export default function Footer() {
         <div className="py-12 flex flex-col lg:flex-row items-center justify-between gap-10">
           <div className="flex items-center gap-10 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-700 flex-wrap justify-center">
             <span className="text-[10px] font-black text-stone-700 uppercase tracking-[0.4em] w-full lg:w-auto text-center lg:text-left mb-4 lg:mb-0">Delivery Partners</span>
-            <Image src="/logos/dhl.png" alt="DHL" width={60} height={24} className="h-6 w-auto object-contain" />
-            <Image src="/logos/Lalamove.png" alt="Lalamove" width={90} height={24} className="h-6 w-auto object-contain" />
-          </div>
+            <Image src="/logos/dhl.png" alt="DHL" width={60} height={24} className="h-6 w-auto object-contain" style={{ height: '24px', width: 'auto' }} />
+            <Image src="/logos/Lalamove.png" alt="Lalamove" width={90} height={24} className="h-6 w-auto object-contain" style={{ height: '24px', width: 'auto' }} />
+            </div>
 
-          <button 
+            <button
             onClick={handleClearCache}
             className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/5 rounded-xl hover:bg-[#a11a1a]/10 hover:border-[#a11a1a]/20 transition-all group"
-          >
+            >
             <RefreshCw size={14} className="text-stone-600 group-hover:text-[#a11a1a] transition-colors" />
             <span className="text-[9px] font-black uppercase tracking-widest text-stone-600 group-hover:text-[#a11a1a]">Clear Cache & Sync</span>
-          </button>
+            </button>
 
-          <div className="flex items-center gap-8 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-700 flex-wrap justify-center">
+            <div className="flex items-center gap-8 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-700 flex-wrap justify-center">
             <span className="text-[10px] font-black text-stone-700 uppercase tracking-[0.4em] w-full lg:w-auto text-center lg:text-left mb-4 lg:mb-0">Secure Checkout</span>
-            <Image src="/payments/visa.png" alt="Visa" width={40} height={20} className="h-4 w-auto object-contain" />
-            <Image src="/payments/mastercard.png" alt="Mastercard" width={40} height={20} className="h-4 w-auto object-contain" />
-            <Image src="/payments/jcb.png" alt="JCB" width={35} height={20} className="h-4 w-auto object-contain" />
-            <Image src="/payments/promptpay.png" alt="PromptPay" width={55} height={20} className="h-4 w-auto object-contain" />
-            <Image src="/payments/shopeepay.png" alt="ShopeePay" width={55} height={20} className="h-4 w-auto object-contain" />
+            <Image src="/payments/visa.png" alt="Visa" width={40} height={20} className="h-4 w-auto object-contain" style={{ height: '16px', width: 'auto' }} />
+            <Image src="/payments/mastercard.png" alt="Mastercard" width={40} height={20} className="h-4 w-auto object-contain" style={{ height: '16px', width: 'auto' }} />
+            <Image src="/payments/jcb.png" alt="JCB" width={35} height={20} className="h-4 w-auto object-contain" style={{ height: '16px', width: 'auto' }} />
+            <Image src="/payments/promptpay.png" alt="PromptPay" width={55} height={20} className="h-4 w-auto object-contain" style={{ height: '16px', width: 'auto' }} />
+            <Image src="/payments/shopeepay.png" alt="ShopeePay" width={55} height={20} className="h-4 w-auto object-contain" style={{ height: '16px', width: 'auto' }} />
+
           </div>
         </div>
 

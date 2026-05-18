@@ -171,9 +171,16 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
       });
 
       if (!response.ok) {
-        const orderErrorText = await response.text();
-        console.error('Order creation failed:', orderErrorText);
-        throw new Error(`สร้างคำสั่งซื้อไม่สำเร็จ: ${orderErrorText}`);
+        let errorMessage = 'สร้างคำสั่งซื้อไม่สำเร็จ';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          const text = await response.text();
+          errorMessage = text || errorMessage;
+        }
+        console.error('Order creation failed:', errorMessage);
+        throw new Error(errorMessage);
       }
 
       const orderData = await response.json();

@@ -10,7 +10,7 @@ const port = process.env.PORT || 3001;
 
 // Initialize Stripe Client
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
-  apiVersion: '2026-04-22.dahlia',
+  apiVersion: '2023-10-16' as any,
 });
 
 app.use(cors());

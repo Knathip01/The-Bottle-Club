@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Search, ShoppingBag, Menu, X, User, LogOut, ChevronDown, MapPin, Wine, Sparkles, Grape, MapPinned, ShieldCheck, BadgePercent } from 'lucide-react';
 import { logout } from '@/app/actions/auth';
 import { useLanguage } from '@/context/LanguageContext';
+import type { Language } from '@/context/LanguageContext';
 
 interface HeaderProps {
   user?: {
@@ -16,32 +17,32 @@ interface HeaderProps {
 }
 
 const languages = [
-  { code: 'th', name: 'Thai', flag: '🇹🇭' },
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'fr', name: 'French', flag: '🇫🇷' },
-  { code: 'zh', name: 'Chinese', flag: '🇨🇳' },
-  { code: 'ja', name: 'Japanese', flag: '🇯🇵' },
-  { code: 'es', name: 'Spanish', flag: '🇪🇸' },
-  { code: 'de', name: 'German', flag: '🇩🇪' },
-  { code: 'ko', name: 'Korean', flag: '🇰🇷' },
-  { code: 'it', name: 'Italian', flag: '🇮🇹' },
-  { code: 'ru', name: 'Russian', flag: '🇷🇺' },
-  { code: 'pt', name: 'Portuguese', flag: '🇵🇹' },
-  { code: 'vi', name: 'Vietnamese', flag: '🇻🇳' },
-  { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
-  { code: 'hi', name: 'Hindi', flag: '🇮🇳' },
-  { code: 'id', name: 'Indonesian', flag: '🇮🇩' },
-  { code: 'tr', name: 'Turkish', flag: '🇹🇷' },
-  { code: 'nl', name: 'Dutch', flag: '🇳🇱' },
-  { code: 'pl', name: 'Polish', flag: '🇵🇱' },
-  { code: 'sv', name: 'Swedish', flag: '🇸🇪' },
-  { code: 'da', name: 'Danish', flag: '🇩🇰' },
-  { code: 'no', name: 'Norwegian', flag: '🇳🇴' },
-  { code: 'fi', name: 'Finnish', flag: '🇫🇮' },
-  { code: 'ms', name: 'Malay', flag: '🇲🇾' },
-  { code: 'he', name: 'Hebrew', flag: '🇮🇱' },
-  { code: 'el', name: 'Greek', flag: '🇬🇷' },
-] as const;
+  { code: 'th', name: 'Thai', flag: '\u{1F1F9}\u{1F1ED}' },
+  { code: 'en', name: 'English', flag: '\u{1F1FA}\u{1F1F8}' },
+  { code: 'fr', name: 'French', flag: '\u{1F1EB}\u{1F1F7}' },
+  { code: 'zh', name: 'Chinese', flag: '\u{1F1E8}\u{1F1F3}' },
+  { code: 'ja', name: 'Japanese', flag: '\u{1F1EF}\u{1F1F5}' },
+  { code: 'es', name: 'Spanish', flag: '\u{1F1EA}\u{1F1F8}' },
+  { code: 'de', name: 'German', flag: '\u{1F1E9}\u{1F1EA}' },
+  { code: 'ko', name: 'Korean', flag: '\u{1F1F0}\u{1F1F7}' },
+  { code: 'it', name: 'Italian', flag: '\u{1F1EE}\u{1F1F9}' },
+  { code: 'ru', name: 'Russian', flag: '\u{1F1F7}\u{1F1FA}' },
+  { code: 'pt', name: 'Portuguese', flag: '\u{1F1F5}\u{1F1F9}' },
+  { code: 'vi', name: 'Vietnamese', flag: '\u{1F1FB}\u{1F1F3}' },
+  { code: 'ar', name: 'Arabic', flag: '\u{1F1F8}\u{1F1E6}' },
+  { code: 'hi', name: 'Hindi', flag: '\u{1F1EE}\u{1F1F3}' },
+  { code: 'id', name: 'Indonesian', flag: '\u{1F1EE}\u{1F1E9}' },
+  { code: 'tr', name: 'Turkish', flag: '\u{1F1F9}\u{1F1F7}' },
+  { code: 'nl', name: 'Dutch', flag: '\u{1F1F3}\u{1F1F1}' },
+  { code: 'pl', name: 'Polish', flag: '\u{1F1F5}\u{1F1F1}' },
+  { code: 'sv', name: 'Swedish', flag: '\u{1F1F8}\u{1F1EA}' },
+  { code: 'da', name: 'Danish', flag: '\u{1F1E9}\u{1F1F0}' },
+  { code: 'no', name: 'Norwegian', flag: '\u{1F1F3}\u{1F1F4}' },
+  { code: 'fi', name: 'Finnish', flag: '\u{1F1EB}\u{1F1EE}' },
+  { code: 'ms', name: 'Malay', flag: '\u{1F1F2}\u{1F1FE}' },
+  { code: 'he', name: 'Hebrew', flag: '\u{1F1EE}\u{1F1F1}' },
+  { code: 'el', name: 'Greek', flag: '\u{1F1EC}\u{1F1F7}' },
+] as const satisfies readonly { code: Language; name: string; flag: string }[];
 
 export default function Header({ user }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -62,6 +63,13 @@ export default function Header({ user }: HeaderProps) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setIsMobileMenuOpen(false);
     }
+  };
+
+  const handleLanguageChange = (lang: Language) => {
+    setLanguage(lang);
+    setIsLangOpen(false);
+    setIsMobileMenuOpen(false);
+    router.refresh();
   };
 
   const currentLang = languages.find(l => l.code === language) || languages[0];
@@ -158,10 +166,9 @@ export default function Header({ user }: HeaderProps) {
                     {languages.map((lang) => (
                       <button
                         key={lang.code}
-                        onClick={() => {
-                          setLanguage(lang.code);
-                          setIsLangOpen(false);
-                        }}
+                        onClick={() => handleLanguageChange(lang.code)}
+                        aria-label={lang.name}
+                        aria-pressed={language === lang.code}
                         className={`w-full flex items-center justify-center px-4 py-3 hover:bg-[#a11a1a]/5 transition-colors ${
                           language === lang.code ? 'bg-[#a11a1a]/5' : ''
                         }`}
@@ -291,10 +298,9 @@ export default function Header({ user }: HeaderProps) {
                 {languages.map((lang) => (
                   <button
                     key={lang.code}
-                    onClick={() => {
-                      setLanguage(lang.code);
-                      setIsMobileMenuOpen(false);
-                    }}
+                    onClick={() => handleLanguageChange(lang.code)}
+                    aria-label={lang.name}
+                    aria-pressed={language === lang.code}
                     className={`flex items-center justify-center rounded-xl border p-2 transition-all ${
                       language === lang.code 
                         ? 'bg-stone-900 text-white border-stone-900 shadow-xl scale-105' 

@@ -8,6 +8,7 @@ export type Product = {
   type?: string;
   countryCode?: string;
   region?: string;
+  image?: string;
 };
 
 /**
@@ -96,15 +97,21 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
         color = 'red';
       }
 
+      // If no token is provided, we show a silhouette placeholder
+      const image = token 
+        ? `/images/wine_${color}.png` 
+        : '/images/bottle-silhouette.svg';
+
       return {
-        id: item.id ?? 0,
+        id: Number(item.id) || 0,
         name: item.name ?? 'Unknown Wine',
-        price: item.price ?? 0,
-        stock: item.stock ?? 0,
+        price: Number(item.price) || 0,
+        stock: Number(item.stock) || 0,
         color,
         type: item.type || 'wine',
         sub_type: item.wine_type || 'Classic',
         region: item.region?.name || '',
+        image,
         countryCode:
           countryMap[item.country?.name] ||
           item.country?.name?.toLowerCase() ||
@@ -130,5 +137,16 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
     console.error('Failed to fetch products:', error);
 
     return [];
+  }
+}
+
+export async function getProductById(id: number, token?: string): Promise<Product | null> {
+  try {
+    const products = await getProducts(undefined, token);
+    const found = products.find((p) => p.id === Number(id));
+    return found ?? null;
+  } catch (error) {
+    console.error('Failed to fetch product by id:', error);
+    return null;
   }
 }
