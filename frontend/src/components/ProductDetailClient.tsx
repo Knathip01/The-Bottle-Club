@@ -33,6 +33,12 @@ export default function ProductDetailClient({
   const { t } = useLanguage();
   const router = useRouter();
 
+  const [activeImage, setActiveImage] = useState(
+    isLoggedIn
+      ? product.image || `/images/wine_${product.color || 'red'}.png`
+      : '/images/bottle-silhouette.svg'
+  );
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -80,22 +86,45 @@ export default function ProductDetailClient({
     router.push('/cart');
   };
 
+  const hasMultipleImages = product.images && product.images.length > 1;
+
   return (
     <div className="grid grid-cols-1 gap-12 md:grid-cols-2 items-start">
-      {/* Product Image */}
-      <div className="flex items-center justify-center p-12 bg-stone-50 rounded-3xl">
-        <Image
-          src={
-            isLoggedIn
-              ? product.image ||
-                `/images/wine_${product.color || 'red'}.png`
-              : '/images/bottle-silhouette.svg'
-          }
-          alt={product.name}
-          width={200}
-          height={400}
-          className="h-[400px] w-auto object-contain drop-shadow-lg"
-        />
+      {/* Product Image Section */}
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-center p-12 bg-stone-50 rounded-3xl min-h-[500px]">
+          <Image
+            src={activeImage}
+            alt={product.name}
+            width={300}
+            height={600}
+            className="h-[450px] w-auto object-contain drop-shadow-lg transition-all duration-300"
+          />
+        </div>
+
+        {/* Thumbnail Gallery */}
+        {isLoggedIn && hasMultipleImages && (
+          <div className="flex gap-3 overflow-x-auto pb-2 px-1">
+            {product.images?.map((img) => (
+              <button
+                key={img.id}
+                onClick={() => setActiveImage(img.image_url)}
+                className={`relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
+                  activeImage === img.image_url
+                    ? 'border-stone-950 ring-2 ring-stone-950/10'
+                    : 'border-transparent hover:border-stone-200'
+                }`}
+              >
+                <Image
+                  src={img.image_url}
+                  alt={`${product.name} ${img.id}`}
+                  fill
+                  className="object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Product Info */}

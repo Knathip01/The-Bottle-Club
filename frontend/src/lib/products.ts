@@ -1,3 +1,9 @@
+export type ProductImage = {
+  id: number;
+  image_url: string;
+  created_at: string;
+};
+
 export type Product = {
   id: number;
   name: string;
@@ -9,6 +15,7 @@ export type Product = {
   countryCode?: string;
   region?: string;
   image?: string;
+  images?: ProductImage[];
 };
 
 /**
@@ -97,10 +104,26 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
         color = 'red';
       }
 
+      // Handle multiple images
+      const images: ProductImage[] = (item.images || []).map((img: any) => ({
+        id: img.id,
+        image_url: img.image_url.startsWith('http') 
+          ? img.image_url 
+          : `${API_BASE_URL}${img.image_url}`,
+        created_at: img.created_at,
+      }));
+
       // If no token is provided, we show a silhouette placeholder
-      const image = token 
-        ? `/images/wine_${color}.png` 
-        : '/images/bottle-silhouette.svg';
+      // Otherwise, use the first image if available, else fallback to color-based default
+      let image = '/images/bottle-silhouette.svg';
+      
+      if (token) {
+        if (images.length > 0) {
+          image = images[0].image_url;
+        } else {
+          image = `/images/wine_${color}.png`;
+        }
+      }
 
       return {
         id: Number(item.id) || 0,
@@ -112,6 +135,7 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
         sub_type: item.wine_type || 'Classic',
         region: item.region?.name || '',
         image,
+        images,
         countryCode:
           countryMap[item.country?.name] ||
           item.country?.name?.toLowerCase() ||

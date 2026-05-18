@@ -11,6 +11,81 @@ export async function getProducts() {
   return await fetchExternalProducts(undefined, token)
 }
 
+// Upload product image
+export async function uploadProductImage(productId: number, formData: FormData) {
+  const session = await getSession()
+  const token = session?.user?.access_token
+
+  if (!token) {
+    throw new Error('You must be logged in to upload images')
+  }
+
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com'
+  const url = `${API_BASE_URL}/api/products/${productId}/images`
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.detail || `Upload failed: ${response.statusText}`)
+    }
+
+    revalidatePath(`/product/${productId}`)
+    revalidatePath('/admin/products')
+    
+    return await response.json()
+  } catch (error: any) {
+    console.error('Failed to upload image:', error)
+    throw error
+  }
+}
+
+// Delete product image
+export async function deleteProductImage(productId: number, imageId: number) {
+  const session = await getSession()
+  const token = session?.user?.access_token
+
+  if (!token) {
+    throw new Error('You must be logged in to delete images')
+  }
+
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com'
+  // Assuming the endpoint for deleting images is something like this
+  // The user didn't specify, but usually it's /api/products/{id}/images/{image_id} 
+  // or /api/images/{image_id}
+  // Based on common patterns, I'll assume /api/products/{productId}/images/{imageId}
+  const url = `${API_BASE_URL}/api/products/${productId}/images/${imageId}`
+
+  try {
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.detail || `Delete failed: ${response.statusText}`)
+    }
+
+    revalidatePath(`/product/${productId}`)
+    revalidatePath('/admin/products')
+    
+    return { success: true }
+  } catch (error: any) {
+    console.error('Failed to delete image:', error)
+    throw error
+  }
+}
+
 // Example: Server Action to add a product to cart
 export async function addToCart(productId: string, quantity: number) {
   const session = await getSession()

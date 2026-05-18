@@ -49,6 +49,7 @@ export default function AccountSidebar({ user, activePath = '/account' }: Accoun
     { name: t('account.privacy'), icon: ShieldCheck, href: '/account/privacy', active: activePath === '/account/privacy' },
     { name: t('account.reviews'), icon: Star, href: '/account/reviews', active: activePath === '/account/reviews' },
     { name: t('account.points'), icon: Award, href: '/account/points', active: activePath === '/account/points' },
+    { name: 'Manage Products', icon: ClipboardList, href: '/admin/products', active: activePath === '/admin/products' },
   ];
 
   return (
