@@ -383,26 +383,6 @@ export default function ProductGrid({
                           className="h-44 w-auto object-contain sm:h-52"
                         />
                       </div>
-
-                      {/* DEMO */}
-                      {isLoggedIn && (
-                        <div className="absolute bottom-4 left-4">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-
-                              router.push(
-                                `/product/${product.id}?mock=1`
-                              );
-                            }}
-                            className="rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold text-stone-700"
-                          >
-                            Demo
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </Link>
 
@@ -482,9 +462,16 @@ export default function ProductGrid({
                               {t('products.price_label')}
                             </span>
 
-                            <strong className="text-xl font-bold text-stone-900">
-                              {formatPrice(product.price)}
-                            </strong>
+                            <div className="flex items-baseline gap-2">
+                              <strong className="text-xl font-bold text-stone-900">
+                                {formatPrice(product.price)}
+                              </strong>
+                              {product.originalPrice && (
+                                <span className="text-xs font-medium text-stone-400 line-through">
+                                  {formatPrice(product.originalPrice)}
+                                </span>
+                              )}
+                            </div>
                           </div>
 
                           <button

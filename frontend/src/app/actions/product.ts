@@ -57,11 +57,7 @@ export async function deleteProductImage(productId: number, imageId: number) {
   }
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com'
-  // Assuming the endpoint for deleting images is something like this
-  // The user didn't specify, but usually it's /api/products/{id}/images/{image_id} 
-  // or /api/images/{image_id}
-  // Based on common patterns, I'll assume /api/products/{productId}/images/{imageId}
-  const url = `${API_BASE_URL}/api/products/${productId}/images/${imageId}`
+  const url = `${API_BASE_URL}/api/images/${imageId}`
 
   try {
     const response = await fetch(url, {

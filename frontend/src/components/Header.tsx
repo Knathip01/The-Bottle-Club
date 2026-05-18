@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+// Diagnostic: Force recompile - Updated at 2026-05-18
+import * as React from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import type { FormEvent } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -9,6 +11,7 @@ import { Search, ShoppingBag, Menu, X, User, LogOut, ChevronDown, MapPin, Wine, 
 import { logout } from '@/app/actions/auth';
 import { useLanguage } from '@/context/LanguageContext';
 import type { Language } from '@/context/LanguageContext';
+import { readCart, subscribeCart, getEmptyCart } from '@/lib/cart';
 
 interface HeaderProps {
   user?: {
@@ -45,11 +48,14 @@ const languages = [
 ] as const satisfies readonly { code: Language; name: string; flag: string }[];
 
 export default function Header({ user }: HeaderProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLangOpen, setIsLangOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [isLangOpen, setIsLangOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
   const { language, setLanguage, t } = useLanguage();
   const router = useRouter();
+
+  const cartItems = React.useSyncExternalStore(subscribeCart, readCart, getEmptyCart);
+  const cartItemsCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   const handleLogout = async () => {
     localStorage.removeItem('cart');
@@ -208,11 +214,23 @@ export default function Header({ user }: HeaderProps) {
               )}
             </div>
             
+            {user && (
+              <Link 
+                href="/account" 
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-950 shadow-sm transition-all active:scale-95 md:hidden" 
+                aria-label="Account"
+              >
+                <User size={21} strokeWidth={2.5} />
+              </Link>
+            )}
+            
             <Link href="/cart" className="group relative flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-950 shadow-sm transition-all active:scale-95 md:h-12 md:w-12 md:hover:bg-stone-50" aria-label="Cart">
               <ShoppingBag size={21} strokeWidth={2.5} />
-              <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-[#a11a1a] text-[8px] font-black text-white shadow-lg transition-transform group-hover:scale-110">
-                0
-              </span>
+              {cartItemsCount > 0 && (
+                <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-[#a11a1a] text-[8px] font-black text-white shadow-lg transition-transform group-hover:scale-110">
+                  {cartItemsCount}
+                </span>
+              )}
             </Link>
           </div>
         </div>

@@ -48,6 +48,10 @@ export function mergeCartItems(items: unknown[]): CartItem[] {
   return Array.from(merged.values());
 }
 
+export function getEmptyCart(): CartItem[] {
+  return EMPTY_CART;
+}
+
 let cachedCart: CartItem[] = [];
 let lastRaw: string | null = '';
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Product } from '@/lib/products';
+import { Product, getProducts } from '@/lib/products';
 import ProductImageManager from './ProductImageManager';
 import { Search } from 'lucide-react';
 
@@ -20,6 +20,16 @@ export default function AdminProductList({ initialProducts, token }: AdminProduc
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.sub_type?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleUpdate = async () => {
+    const updatedProducts = await getProducts(undefined, token);
+    setProducts(updatedProducts);
+    
+    if (selectedProduct) {
+      const updatedSelected = updatedProducts.find(p => p.id === selectedProduct.id);
+      if (updatedSelected) setSelectedProduct(updatedSelected);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -91,6 +101,11 @@ export default function AdminProductList({ initialProducts, token }: AdminProduc
                   </div>
                   <div className="rounded-lg bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700">
                     Price: ฿{selectedProduct.price.toLocaleString()}
+                    {selectedProduct.originalPrice && (
+                      <span className="ml-2 text-stone-400 line-through">
+                        ฿{selectedProduct.originalPrice.toLocaleString()}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -99,29 +114,7 @@ export default function AdminProductList({ initialProducts, token }: AdminProduc
             <div className="border-t border-stone-100 pt-8">
               <ProductImageManager 
                 product={selectedProduct} 
-                onUpdate={async () => {
-                  // Refresh products list
-                  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
-                  const response = await fetch(`${API_BASE_URL}/api/wines/wines`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
-                  if (response.ok) {
-                    const rawData = await response.json();
-                    // Basic transformation for sync (simplified version of lib/products.ts logic)
-                    const updatedProducts = rawData.map((item: any) => ({
-                      ...item,
-                      id: Number(item.id),
-                      image: item.images?.[0] ? (item.images[0].image_url.startsWith('http') ? item.images[0].image_url : `${API_BASE_URL}${item.images[0].image_url}`) : undefined,
-                      images: item.images?.map((img: any) => ({
-                        ...img,
-                        image_url: img.image_url.startsWith('http') ? img.image_url : `${API_BASE_URL}${img.image_url}`
-                      }))
-                    }));
-                    setProducts(updatedProducts);
-                    const updatedSelected = updatedProducts.find((p: any) => p.id === selectedProduct.id);
-                    if (updatedSelected) setSelectedProduct(updatedSelected);
-                  }
-                }} 
+                onUpdate={handleUpdate} 
               />
             </div>
           </div>

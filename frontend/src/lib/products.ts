@@ -8,6 +8,7 @@ export type Product = {
   id: number;
   name: string;
   price: number;
+  originalPrice?: number;
   color?: string;
   stock: number;
   sub_type?: string;
@@ -16,6 +17,10 @@ export type Product = {
   region?: string;
   image?: string;
   images?: ProductImage[];
+  description?: string;
+  vintage?: number;
+  alcohol?: string;
+  designation?: string;
 };
 
 /**
@@ -82,9 +87,20 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
       Thailand: 'th'
     };
 
+    // Helper to ensure we always get a string from potentially complex API fields
+    const ensureString = (val: any): string => {
+      if (!val) return '';
+      if (typeof val === 'string') return val;
+      if (typeof val === 'object') {
+        // If it's an object, try to find a name or title property
+        return val.name || val.title || '';
+      }
+      return String(val);
+    };
+
     // Transform API response
     let products: Product[] = rawData.map((item: any) => {
-      const wineType = item.wine_type || '';
+      const wineType = ensureString(item.wine_type);
       let color = 'red';
 
       const lowerType = wineType.toLowerCase();
@@ -125,20 +141,30 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
         }
       }
 
+      // Use selling_price if available, otherwise fallback to price
+      const sellingPrice = Number(item.selling_price) || Number(item.price) || 0;
+      const originalPrice = Number(item.price) || 0;
+
       return {
         id: Number(item.id) || 0,
-        name: item.name ?? 'Unknown Wine',
-        price: Number(item.price) || 0,
+        name: ensureString(item.name) || 'Unknown Wine',
+        price: sellingPrice,
+        originalPrice: originalPrice > sellingPrice ? originalPrice : undefined,
         stock: Number(item.stock) || 0,
         color,
-        type: item.type || 'wine',
-        sub_type: item.wine_type || 'Classic',
-        region: item.region?.name || '',
+        type: ensureString(item.type) || 'wine',
+        sub_type: ensureString(item.wine_type) || 'Classic',
+        region: ensureString(item.region),
         image,
         images,
+        description: ensureString(item.description),
+        vintage: item.vintage ? Number(item.vintage) : undefined,
+        alcohol: ensureString(item.alcohol),
+        designation: ensureString(item.designation || item.winery),
         countryCode:
-          countryMap[item.country?.name] ||
-          item.country?.name?.toLowerCase() ||
+          countryMap[ensureString(item.country)] ||
+          ensureString(item.country).toLowerCase() ||
+          ensureString(item.country_code).toLowerCase() ||
           'fr'
       };
     });

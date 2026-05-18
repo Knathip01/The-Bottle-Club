@@ -173,8 +173,15 @@ export default function ProductDetailClient({
                 {t('products.price_label')}
               </div>
 
-              <div className="text-2xl font-bold text-stone-900">
-                {formatPrice(product.price)}
+              <div className="flex items-baseline gap-2">
+                <div className="text-2xl font-bold text-stone-900">
+                  {formatPrice(product.price)}
+                </div>
+                {product.originalPrice && (
+                  <div className="text-sm font-medium text-stone-400 line-through">
+                    {formatPrice(product.originalPrice)}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -188,7 +195,7 @@ export default function ProductDetailClient({
               </div>
 
               <div className="mt-2 text-xs text-stone-400">
-                SKU WWW5231FX
+                {/* SKU */}
               </div>
             </div>
           </div>
@@ -205,8 +212,7 @@ export default function ProductDetailClient({
                 </div>
 
                 <div className="text-sm font-bold">
-                  {(product.countryCode || '').toUpperCase() ||
-                    'THAILAND'}
+                  {(product.countryCode || '').toUpperCase()}
                 </div>
               </div>
             </div>
@@ -220,7 +226,7 @@ export default function ProductDetailClient({
                 </div>
 
                 <div className="text-sm font-bold">
-                  750 ML
+                  {/* Leave blank */}
                 </div>
               </div>
             </div>
@@ -234,7 +240,7 @@ export default function ProductDetailClient({
                 </div>
 
                 <div className="text-sm font-bold">
-                  {product.type || 'WHITE WINE'}
+                  {product.type}
                 </div>
               </div>
             </div>
@@ -248,7 +254,7 @@ export default function ProductDetailClient({
                 </div>
 
                 <div className="text-sm font-bold">
-                  {product.region || 'KHAO YAI'}
+                  {product.region}
                 </div>
               </div>
             </div>
@@ -262,7 +268,7 @@ export default function ProductDetailClient({
                 </div>
 
                 <div className="text-sm font-bold">
-                  {product.sub_type || 'CHENIN BLANC'}
+                  {product.sub_type}
                 </div>
               </div>
             </div>
@@ -276,7 +282,35 @@ export default function ProductDetailClient({
                 </div>
 
                 <div className="text-sm font-bold">
-                  CURRENT VINTAGE
+                  {product.vintage}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="w-8 text-stone-500">🏛️</div>
+
+              <div>
+                <div className="text-xs text-stone-400">
+                  โรงไวน์ (WINERY)
+                </div>
+
+                <div className="text-sm font-bold">
+                  {product.designation}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="w-8 text-stone-500">🧪</div>
+
+              <div>
+                <div className="text-xs text-stone-400">
+                  แอลกอฮอล์ (ALCOHOL)
+                </div>
+
+                <div className="text-sm font-bold">
+                  {product.alcohol ? `${product.alcohol}%` : ''}
                 </div>
               </div>
             </div>
@@ -302,18 +336,17 @@ export default function ProductDetailClient({
             </h3>
 
             <p className="mt-3 text-sm text-stone-600">
-              ไวน์นี้ทำจากองุ่นชินีน บลัง
-              ที่ได้รับการดูแลเป็นพิเศษ
-              และเก็บเกี่ยวด้วยมืออย่างพิถีพิถัน...
+              {product.description}
             </p>
           </div>
         </div>
 
         {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <div className="mt-16 border-t border-stone-100 pt-12">
+        {relatedProducts && relatedProducts.length > 0 && (
+          <div className="mt-8 border-t border-stone-100 pt-8">
 
-            <div className="mb-8">
+            <div className="mb-4 text-left w-full">
+
               <p className="mb-2 text-[11px] font-black uppercase tracking-[0.28em] text-[#a11a1a]">
                 {t('products.recommended_subtitle') ||
                   'Other Wines'}
@@ -324,12 +357,12 @@ export default function ProductDetailClient({
               </h3>
             </div>
 
-            <div className="relative">
+            <div className="relative w-full">
 
               <div
                 ref={scrollContainerRef}
                 onScroll={checkScroll}
-                className="flex gap-4 overflow-x-auto pb-4 scroll-smooth"
+                className="flex gap-4 overflow-x-auto scroll-smooth scrollbar-hide w-full"
               >
                 {relatedProducts.map((relatedProduct) => (
                   <Link
