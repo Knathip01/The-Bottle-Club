@@ -57,7 +57,7 @@ export default function AdminProductList({ initialProducts, token }: AdminProduc
               </div>
               <div className="min-w-0 flex-1">
                 <h4 className="truncate text-sm font-bold">{product.name}</h4>
-                <p={`text-xs ${selectedProduct?.id === product.id ? 'text-stone-400' : 'text-stone-500'}`}>
+                <p className={`text-xs ${selectedProduct?.id === product.id ? 'text-stone-400' : 'text-stone-500'}`}>
                   {product.sub_type}
                 </p>
               </div>
