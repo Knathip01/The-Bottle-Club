@@ -5,8 +5,19 @@ const isDevelopment = process.env.NODE_ENV === "development";
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.1.146"],
   images: {
-    qualities: [75],
     unoptimized: isDevelopment,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'possimon.onrender.com',
+        pathname: '**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'flagcdn.com',
+        pathname: '**',
+      },
+    ],
   },
 };
 

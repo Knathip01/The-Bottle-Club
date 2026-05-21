@@ -14,7 +14,7 @@ export const loginWithProvider = (provider: string) => {
   console.log(`Logging in with ${provider}...`);
   
   if (provider === 'google') {
-    window.location.href = `https://possimon.onrender.com/api/auth/login/google/web`;
+    window.location.href = `${API_BASE_URL}/api/auth/google?source=web`;
   } else {
     // Use /api/auth/login/provider for other OAuth providers
     window.location.href = `${API_BASE_URL}/api/auth/login/${provider}`;

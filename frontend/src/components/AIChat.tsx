@@ -263,7 +263,7 @@ export default function AIChat() {
           transition: isDragging ? 'none' : 'transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)',
           touchAction: 'none'
         }}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 bg-[#8b0000] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 group overflow-hidden border-2 border-white cursor-move select-none ${isDragging ? 'scale-110 shadow-red-900/40 opacity-90' : ''}`}
+        className={`fixed bottom-24 md:bottom-6 right-6 z-50 w-14 h-14 bg-[#8b0000] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 group overflow-hidden border-2 border-white cursor-move select-none ${isDragging ? 'scale-110 shadow-red-900/40 opacity-90' : ''}`}
       >
         {isOpen ? <X size={24} /> : (
           <div className="relative w-full h-full pointer-events-none">

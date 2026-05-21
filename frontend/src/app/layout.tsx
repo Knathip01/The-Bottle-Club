@@ -20,6 +20,7 @@ export const metadata: Metadata = {
 };
 
 import AIChat from "@/components/AIChat";
+import MobileNav from "@/components/MobileNav";
 
 export default async function RootLayout({
   children,
@@ -45,6 +46,7 @@ export default async function RootLayout({
         <LanguageProvider initialLanguage={preferred}>
           {children}
           <AIChat />
+          <MobileNav />
         </LanguageProvider>
       </body>
     </html>

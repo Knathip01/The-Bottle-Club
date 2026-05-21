@@ -38,10 +38,8 @@ export async function uploadProductImage(productId: number, formData: FormData) 
     }
 
     revalidatePath(`/product/${productId}`)
-    revalidatePath('/admin/products')
-    
-    return await response.json()
-  } catch (error: any) {
+
+    return await response.json()  } catch (error: any) {
     console.error('Failed to upload image:', error)
     throw error
   }
@@ -73,7 +71,6 @@ export async function deleteProductImage(productId: number, imageId: number) {
     }
 
     revalidatePath(`/product/${productId}`)
-    revalidatePath('/admin/products')
     
     return { success: true }
   } catch (error: any) {

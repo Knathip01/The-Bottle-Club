@@ -17,7 +17,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative bg-stone-950 text-stone-400 pt-24 overflow-hidden">
+    <footer className="hidden md:block relative bg-stone-950 text-stone-400 pt-24 overflow-hidden">
       {/* Visual Foundation - Background Gradients */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-30">
         <div className="absolute -top-1/2 -left-1/4 w-[1000px] h-[1000px] bg-[#a11a1a]/10 rounded-full blur-[120px]"></div>
