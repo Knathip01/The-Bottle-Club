@@ -3,13 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { MessageSquare, X, Send, Bot, User, ChevronDown, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  stock: number;
-}
+import { getProducts, type Product } from '@/lib/products';
 
 interface Message {
   id: string;
@@ -24,6 +18,7 @@ export default function AIChat() {
   const [position, setPosition] = useState({ x: 0, y: 0 }); 
   const [isDragging, setIsDragging] = useState(false);
   const [isSpeakingEnabled, setIsSpeakingEnabled] = useState(true);
+  const [voicesLoaded, setVoicesLoaded] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const hasMovedRef = useRef(false);
   
@@ -33,17 +28,45 @@ export default function AIChat() {
   const [products, setProducts] = useState<Product[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Initialize voices
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        setVoicesLoaded(true);
+      }
+    };
+
+    loadVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
+    };
+  }, []);
+
   // Initialize with translated greeting
   useEffect(() => {
-    setMessages([
-      {
-        id: '1',
-        text: t('ai.greeting'),
-        sender: 'ai',
-        timestamp: new Date(),
-      },
-    ]);
-  }, [language, t]);
+    setMessages(prev => {
+      if (prev.length === 0) {
+        return [
+          {
+            id: '1',
+            text: t('ai.greeting'),
+            sender: 'ai',
+            timestamp: new Date(),
+          },
+        ];
+      }
+      return prev;
+    });
+  }, [t]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -52,15 +75,15 @@ export default function AIChat() {
     }
   }, [messages, isTyping]);
 
-  // Fetch products for the AI to "know" about them
+  // Fetch products using centralized utility
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
-        const response = await fetch(`${API_BASE_URL}/api/wines/wines`);
-        if (response.ok) {
-          const data = await response.json();
+        const data = await getProducts();
+        if (data && data.length > 0) {
           setProducts(data);
+        } else {
+          console.warn('AI Chat: No products returned from API');
         }
       } catch (error) {
         console.error('AI Chat failed to fetch products:', error);
@@ -73,7 +96,10 @@ export default function AIChat() {
     if (!isSpeakingEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
 
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Clean text for better speech (remove markdown-like characters if any)
+    const cleanText = text.replace(/[*_~`]/g, '');
+    const utterance = new SpeechSynthesisUtterance(cleanText);
     
     const langMap: Record<string, string> = {
       th: 'th-TH',
@@ -105,11 +131,20 @@ export default function AIChat() {
 
     const targetLang = langMap[language] || 'en-US';
     const voices = window.speechSynthesis.getVoices();
-    const voice = voices.find(v => v.lang.startsWith(language) || v.lang.includes(targetLang));
+    
+    // Try to find the best voice for the target language
+    let voice = voices.find(v => v.lang === targetLang);
+    if (!voice) {
+      voice = voices.find(v => v.lang.startsWith(language));
+    }
+    if (!voice) {
+      voice = voices.find(v => v.lang.includes(targetLang.split('-')[0]));
+    }
     
     if (voice) utterance.voice = voice;
     utterance.lang = targetLang;
     utterance.rate = 1.0;
+    utterance.pitch = 1.0;
     
     window.speechSynthesis.speak(utterance);
   }, [language, isSpeakingEnabled]);
@@ -118,11 +153,12 @@ export default function AIChat() {
     if (e) e.preventDefault();
     if (!input.trim()) return;
 
+    const timestamp = new Date();
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: `user-${timestamp.getTime()}`,
       text: input,
       sender: 'user',
-      timestamp: new Date(),
+      timestamp: timestamp,
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -130,19 +166,20 @@ export default function AIChat() {
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI processing
+    // AI processing
     setTimeout(() => {
       const responseText = generateAIResponse(currentInput, products);
+      const aiTimestamp = new Date();
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: `ai-${aiTimestamp.getTime()}`,
         text: responseText,
         sender: 'ai',
-        timestamp: new Date(),
+        timestamp: aiTimestamp,
       };
       setMessages((prev) => [...prev, aiMessage]);
       setIsTyping(false);
       speakMessage(responseText);
-    }, 1000);
+    }, 800);
   };
 
   const generateAIResponse = (query: string, productList: Product[]): string => {
@@ -154,7 +191,9 @@ export default function AIChat() {
 
     // Dynamic Keyword detection using translations
     const checkKeyword = (key: string) => {
-      const keywords = t(key).split(',');
+      const keywordsString = t(key);
+      if (!keywordsString || keywordsString === key) return false;
+      const keywords = keywordsString.split(',');
       return keywords.some(kw => q.includes(kw.trim().toLowerCase()));
     };
 
@@ -230,12 +269,9 @@ export default function AIChat() {
     const newX = e.clientX - dragStartRef.current.x;
     const newY = e.clientY - dragStartRef.current.y;
     
-    const padding = 20;
-    const minX = -(window.innerWidth - 80);
-    const minY = -(window.innerHeight - 80);
-    
-    const limitedX = Math.min(Math.max(newX, minX), 0);
-    const limitedY = Math.min(Math.max(newY, minY), 0);
+    // Bounds check to keep button visible
+    const limitedX = Math.min(Math.max(newX, -(window.innerWidth - 80)), 0);
+    const limitedY = Math.min(Math.max(newY, -(window.innerHeight - 80)), 0);
 
     if (Math.abs(limitedX - position.x) > 1 || Math.abs(limitedY - position.y) > 1) {
       hasMovedRef.current = true;

@@ -214,16 +214,6 @@ export default function Header({ user }: HeaderProps) {
               )}
             </div>
             
-            {user && (
-              <Link 
-                href="/account" 
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-950 shadow-sm transition-all active:scale-95 md:hidden" 
-                aria-label="Account"
-              >
-                <User size={21} strokeWidth={2.5} />
-              </Link>
-            )}
-            
             <Link href="/cart" className="group relative flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-950 shadow-sm transition-all active:scale-95 md:h-12 md:w-12 md:hover:bg-stone-50" aria-label="Cart">
               <ShoppingBag size={21} strokeWidth={2.5} />
               {cartItemsCount > 0 && (
@@ -276,19 +266,6 @@ export default function Header({ user }: HeaderProps) {
             </div>
           </a>
 
-          <form onSubmit={handleSearch} className="relative mb-6">
-            <input 
-              type="text" 
-              placeholder={t('search.placeholder')} 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="min-h-14 w-full rounded-full border border-stone-200 bg-stone-50/80 px-6 pr-14 text-sm font-medium transition-all focus:bg-white focus:outline-none focus:ring-8 focus:ring-[#a11a1a]/5"
-            />
-            <button type="submit" className="absolute right-6 top-1/2 -translate-y-1/2 text-stone-300">
-              <Search size={20} strokeWidth={3} />
-            </button>
-          </form>
-          
           <nav className="flex flex-col gap-3">
             <Link href="#wine-categories" onClick={() => setIsMobileMenuOpen(false)} className="group flex items-center justify-between rounded-3xl bg-stone-50 p-4 transition-all active:scale-95">
               <div className="flex items-center gap-6">
@@ -332,17 +309,6 @@ export default function Header({ user }: HeaderProps) {
                 ))}
               </div>
             </div>
-
-            {!user && (
-              <div className="grid grid-cols-2 gap-3 pt-6">
-                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="flex min-h-14 items-center justify-center rounded-2xl bg-stone-100 px-3 text-center text-[10px] font-black uppercase tracking-[0.16em] text-stone-600 transition-all active:scale-95">
-                  {t('auth.login')}
-                </Link>
-                <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="flex min-h-14 items-center justify-center rounded-2xl bg-stone-950 px-3 text-center text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-xl transition-all active:scale-95">
-                  {t('auth.register')}
-                </Link>
-              </div>
-            )}
           </nav>
         </div>
       )}
