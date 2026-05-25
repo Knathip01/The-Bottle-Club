@@ -23,51 +23,53 @@ export type Product = {
   designation?: string;
 };
 
+function extractWineArray(rawData: unknown): unknown[] {
+  if (Array.isArray(rawData)) return rawData;
+  if (rawData && typeof rawData === 'object') {
+    const obj = rawData as Record<string, unknown>;
+    for (const key of ['wines', 'data', 'items', 'results', 'products']) {
+      if (Array.isArray(obj[key])) return obj[key] as unknown[];
+    }
+  }
+  return [];
+}
+
 /**
- * Fetch wines/products from API
+ * Fetch wines/products from API (server-side or via /api/products proxy for client)
  */
 export async function getProducts(query?: string, token?: string): Promise<Product[]> {
   try {
     const API_BASE_URL =
       process.env.NEXT_PUBLIC_API_URL ||
+      process.env.API_URL ||
       'https://possimon.onrender.com';
 
-    // ✅ CORRECT ENDPOINT
     const url = `${API_BASE_URL}/api/wines/wines`;
 
-    console.log('FETCH URL =', url);
-
     const headers: HeadersInit = {
-      'Accept': 'application/json',
+      Accept: 'application/json',
     };
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    const isServer = typeof window === 'undefined';
     const response = await fetch(url, {
       headers,
-      next: { revalidate: 3600 }
+      ...(isServer ? { next: { revalidate: 300 } } : { cache: 'no-store' }),
     });
 
-    // Handle HTTP errors
     if (!response.ok) {
-      console.error(
-        `API response error: ${response.status} ${response.statusText}`
-      );
-
+      console.error(`API response error: ${response.status} ${response.statusText}`);
       return [];
     }
 
-    // Parse JSON
     const rawData = await response.json();
+    const wineList = extractWineArray(rawData);
 
-    console.log('API DATA =', rawData);
-
-    // Ensure response is array
-    if (!Array.isArray(rawData)) {
-      console.error('API returned non-array data:', rawData);
-
+    if (wineList.length === 0) {
+      console.error('API returned no wine list:', rawData);
       return [];
     }
 
@@ -98,8 +100,7 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
       return String(val);
     };
 
-    // Transform API response
-    let products: Product[] = rawData.map((item: any) => {
+    let products: Product[] = wineList.map((item: any) => {
       const wineType = ensureString(item.wine_type);
       let color = 'red';
 
@@ -121,13 +122,19 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
       }
 
       // Handle multiple images
-      const images: ProductImage[] = (item.images || []).map((img: any) => ({
-        id: img.id,
-        image_url: img.image_url.startsWith('http') 
-          ? img.image_url 
-          : `${API_BASE_URL}${img.image_url}`,
-        created_at: img.created_at,
-      }));
+      const images: ProductImage[] = (item.images || [])
+        .filter((img: any) => img?.image_url)
+        .map((img: any) => {
+          const path = String(img.image_url);
+          const image_url = path.startsWith('http')
+            ? path
+            : `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+          return {
+            id: img.id,
+            image_url,
+            created_at: img.created_at,
+          };
+        });
 
       // If no token is provided, we show a silhouette placeholder
       // Otherwise, use the first image if available, else fallback to color-based default

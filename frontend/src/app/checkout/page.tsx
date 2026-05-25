@@ -16,11 +16,6 @@ export default async function CheckoutPage() {
       <MainHeader />
 
       <div className="flex-1 container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
-        <div className="text-[10px] text-stone-500 uppercase tracking-widest mb-6">
-          HOME / CHECKOUT
-        </div>
-
         <CheckoutForm user={session.user} />
       </div>
 

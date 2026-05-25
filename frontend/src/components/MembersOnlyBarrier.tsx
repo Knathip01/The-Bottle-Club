@@ -205,21 +205,10 @@ export default function MembersOnlyBarrier() {
                 </span>
               </div>
 
-              <div className="mx-auto grid max-w-md grid-cols-1 gap-4 sm:grid-cols-2">
-                {/* LINE - Futuristic style */}
-                <button 
-                  onClick={() => loginWithProvider('line')}
-                  className="group relative flex min-h-14 items-center justify-center overflow-hidden rounded-2xl border border-[#06C755]/20 bg-[#06C755]/5 p-4 text-[#06C755] transition-all duration-500 hover:bg-[#06C755] hover:text-white hover:shadow-[0_0_30px_rgba(6,199,85,0.3)] active:scale-[0.96]"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                  <div className="w-7 h-7 bg-[#06C755] text-white flex items-center justify-center rounded-xl font-black text-[14px] mr-3 shadow-lg group-hover:bg-white group-hover:text-[#06C755] transition-colors duration-300">L</div>
-                  <span className="text-[11px] font-black uppercase tracking-[0.2em] z-10">LINE</span>
-                </button>
-
-                {/* Google - Futuristic style */}
+              <div className="mx-auto max-w-md">
                 <button 
                   onClick={() => loginWithProvider('google')}
-                  className="group relative flex min-h-14 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-stone-300 transition-all duration-500 hover:border-white/20 hover:bg-white/10 hover:text-white hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] active:scale-[0.96]"
+                  className="group relative flex min-h-14 w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-stone-300 transition-all duration-500 hover:border-white/20 hover:bg-white/10 hover:text-white hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] active:scale-[0.96]"
                 >
                   <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
                   <div className="w-7 h-7 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform duration-500">

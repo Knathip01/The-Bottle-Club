@@ -24,7 +24,7 @@ export default function MobileNav() {
   const navItems = [
     { icon: Home, label: t('nav.home') || 'Home', href: '/' },
     { icon: Search, label: t('nav.search') || 'Search', href: 'search_action' },
-    { icon: 'scan', label: 'AI Scan', href: '#' },
+    { icon: 'scan', label: t('nav.scan') || 'AI Scan', href: '#' },
     { icon: ShoppingBag, label: t('nav.cart') || 'Cart', href: '/cart' },
     { icon: User, label: t('nav.account') || 'Account', href: '/account' },
   ];
@@ -91,7 +91,7 @@ export default function MobileNav() {
                   <Camera size={28} />
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-[#8b0000] mt-1">
-                  AI Scan
+                  {t('nav.scan') || 'AI Scan'}
                 </span>
               </button>
             );

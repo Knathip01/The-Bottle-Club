@@ -1,7 +1,7 @@
 'use client';
 
 import { redirect } from 'next/navigation';
-import MainHeader from '@/components/MainHeader';
+import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AccountSidebar from '@/components/account/AccountSidebar';
 import { getSession } from '@/lib/auth-utils';
@@ -33,7 +33,7 @@ export default function AddAddressPage() {
 
   return (
     <main className="min-h-screen flex flex-col bg-white">
-      <MainHeader />
+      <Header user={user} />
 
       <div className="flex-1 container mx-auto px-4 py-8">
         {/* Breadcrumb */}

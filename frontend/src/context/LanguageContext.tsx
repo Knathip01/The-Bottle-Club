@@ -1,6 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useSyncExternalStore } from 'react';
+import { getAiString } from '@/lib/ai-translations';
+import { getAccountString } from '@/lib/account-translations';
+import { getCheckoutString } from '@/lib/checkout-translations';
 
 export type Language = 'th' | 'en' | 'fr' | 'zh' | 'ja' | 'es' | 'de' | 'ko' | 'it' | 'ru' | 'pt' | 'vi' | 'ar' | 'hi' | 'id' | 'tr' | 'nl' | 'pl' | 'sv' | 'da' | 'no' | 'fi' | 'ms' | 'he' | 'el';
 
@@ -22,6 +25,10 @@ const translations = {
     'nav.recommended': 'แนะนำ',
     'nav.wines': 'ไวน์ทั้งหมด',
     'nav.tracking': 'ติดตามพัสดุ',
+    'nav.search': 'ค้นหา',
+    'nav.scan': 'สแกน AI',
+    'nav.cart': 'รถเข็น',
+    'nav.account': 'บัญชีผู้ใช้',
     'tracking.title': 'ติดตามสถานะพัสดุ',
     'tracking.search_placeholder': 'กรอกหมายเลขพัสดุ...',
     'tracking.invalid_id': 'ไม่พบหมายเลขพัสดุนี้',
@@ -31,6 +38,43 @@ const translations = {
     'tracking.status.delivered': 'จัดส่งสำเร็จ',
     'tracking.estimated_arrival': 'คาดว่าจะถึงใน',
     'tracking.minutes': 'นาที',
+    'tracking.subtitle': 'ติดตามรถส่งสินค้าแบบเรียลไทม์ เหมือนแอปเรียกรถ แต่สำหรับพัสดุของคุณ',
+    'tracking.subtitle_intl': 'ติดตามพัสดุจากไทย จีน ญี่ปุ่น อังกฤษ และรัสเซีย — ทั้งเรือและเครื่องบิน',
+    'tracking.subtitle_export': 'ส่งออกจากไทยไปต่างประเทศ — ติดตามเรือและเครื่องบินผ่าน API',
+    'tracking.direction_export': 'ส่งออกจากไทย',
+    'tracking.direction_domestic': 'ส่งในประเทศ',
+    'tracking.select_destination': 'ประเทศปลายทาง',
+    'tracking.origin_thailand': 'ต้นทาง: คลัง / สนามบิน กรุงเทพฯ ประเทศไทย',
+    'tracking.export.ready': 'เตรียมส่งออกจากไทยแล้ว',
+    'tracking.export.arrived_dest': 'ถึงปลายทางแล้ว',
+    'tracking.select_country': 'ประเทศต้นทาง / เส้นทาง',
+    'tracking.select_mode': 'ช่องทางขนส่ง',
+    'tracking.demo_numbers': 'เลขพัสดุตัวอย่าง (กดเพื่อใส่อัตโนมัติ)',
+    'tracking.preview_route': 'ตัวอย่างเส้นทางบนแผนที่',
+    'tracking.mode_sea_desc': 'ส่งออกทางเรือ · ไทย → จีน',
+    'tracking.mode_air_desc': 'ส่งออกทางอากาศ · ไทย → ญี่ปุ่น / UK / รัสเซีย',
+    'tracking.mode_local_desc': 'ส่งในประเทศ · กรุงเทพฯ',
+    'tracking.sea.departed': 'ออกจากท่าเรือแล้ว',
+    'tracking.sea.ocean': 'อยู่ระหว่างทะเล',
+    'tracking.sea.customs': 'ผ่านศุลกากร',
+    'tracking.air.departed': 'ออกจากสนามบินต้นทาง',
+    'tracking.air.in_flight': 'กำลังบินระหว่างทาง',
+    'tracking.air.landed': 'ถึงไทย / รอส่งต่อ',
+    'tracking.contact_carrier': 'ติดต่อผู้ขนส่ง',
+    'tracking.on_the_way': 'กำลังจัดส่ง',
+    'tracking.eta_label': 'ถึงประมาณ',
+    'tracking.safety_center': 'ศูนย์ความปลอดภัย',
+    'tracking.recenter': 'โฟกัสแผนที่',
+    'tracking.items': 'ชิ้น',
+    'tracking.live': 'กำลังเคลื่อนที่',
+    'tracking.call_courier': 'โทรหาคนขับ',
+    'tracking.order_help': 'ช่วยเหลือคำสั่งซื้อ',
+    'tracking.expand_details': 'ดูรายละเอียดการจัดส่ง',
+    'tracking.collapse': 'ย่อ',
+    'tracking.track_btn': 'ติดตาม',
+    'tracking.demo_hint': 'เลือกประเทศและช่องทาง แล้วใช้เลขตัวอย่างด้านล่าง',
+    'tracking.preview_title': 'มุมมองแบบ Grab',
+    'tracking.preview_desc': 'กรอกเลขพัสดุเพื่อเปิดแผนที่เต็มจอ',
     'hero.welcome': 'ยินดีต้อนรับสู่ The Bottle Club',
     'hero.title': 'คัดสรรไวน์ ระดับพรีเมียม เพื่อคุณโดยเฉพาะ',
     'hero.subtitle': 'ไวน์นำเข้าคุณภาพเยี่ยมจากทั่วโลก จัดส่งถึงบ้านคุณภายใน 24 ชั่วโมง',
@@ -263,6 +307,10 @@ const translations = {
     'nav.recommended': 'Recommended',
     'nav.wines': 'All Wines',
     'nav.tracking': 'Track Shipment',
+    'nav.search': 'Search',
+    'nav.scan': 'AI Scan',
+    'nav.cart': 'Cart',
+    'nav.account': 'Account',
     'tracking.title': 'Shipment Tracking',
     'tracking.search_placeholder': 'Enter tracking number...',
     'tracking.invalid_id': 'Invalid tracking number',
@@ -272,6 +320,43 @@ const translations = {
     'tracking.status.delivered': 'Delivered',
     'tracking.estimated_arrival': 'Estimated arrival in',
     'tracking.minutes': 'mins',
+    'tracking.subtitle': 'Follow your delivery van in real time — ride-hailing style, built for packages.',
+    'tracking.subtitle_intl': 'Track shipments from Thailand, China, Japan, the UK, and Russia — by sea and air.',
+    'tracking.subtitle_export': 'Export from Thailand worldwide — track sea and air via API',
+    'tracking.direction_export': 'Export from Thailand',
+    'tracking.direction_domestic': 'Domestic delivery',
+    'tracking.select_destination': 'Destination country',
+    'tracking.origin_thailand': 'Origin: Bangkok warehouse / airport, Thailand',
+    'tracking.export.ready': 'Ready for export from Thailand',
+    'tracking.export.arrived_dest': 'Arrived at destination',
+    'tracking.select_country': 'Country / corridor',
+    'tracking.select_mode': 'Transport mode',
+    'tracking.demo_numbers': 'Sample tracking numbers (tap to fill)',
+    'tracking.preview_route': 'Sample route on map',
+    'tracking.mode_sea_desc': 'Export by sea · Thailand → China',
+    'tracking.mode_air_desc': 'Export by air · Thailand → Japan / UK / Russia',
+    'tracking.mode_local_desc': 'Domestic delivery · Bangkok',
+    'tracking.sea.departed': 'Departed port',
+    'tracking.sea.ocean': 'At sea',
+    'tracking.sea.customs': 'Customs clearance',
+    'tracking.air.departed': 'Departed origin airport',
+    'tracking.air.in_flight': 'In flight',
+    'tracking.air.landed': 'Arrived in Thailand',
+    'tracking.contact_carrier': 'Contact carrier',
+    'tracking.on_the_way': 'Out for delivery',
+    'tracking.eta_label': 'ETA',
+    'tracking.safety_center': 'Safety center',
+    'tracking.recenter': 'Recenter map',
+    'tracking.items': 'items',
+    'tracking.live': 'In transit',
+    'tracking.call_courier': 'Call driver',
+    'tracking.order_help': 'Order help',
+    'tracking.expand_details': 'Delivery details',
+    'tracking.collapse': 'Show less',
+    'tracking.track_btn': 'Track',
+    'tracking.demo_hint': 'Try it now — enter any tracking number',
+    'tracking.preview_title': 'Grab-style view',
+    'tracking.preview_desc': 'Enter a tracking number for full-screen map',
     'hero.welcome': 'Welcome to The Bottle Club',
     'hero.title': 'Premium Wine Selections Curated For You',
     'hero.subtitle': 'Quality imported wines from around the world, delivered to your door within 24 hours.',
@@ -492,6 +577,11 @@ const translations = {
     'nav.regions': 'Régions',
     'nav.premium': 'Premium',
     'nav.wineries': 'Domaines',
+    'nav.home': 'Accueil',
+    'nav.search': 'Rechercher',
+    'nav.scan': 'Scan IA',
+    'nav.cart': 'Panier',
+    'nav.account': 'Compte',
     'hero.welcome': 'Bienvenue chez The Bottle Club',
     'hero.title': 'Sélections de Vins Premium Conçues Pour Vous',
     'hero.subtitle': 'Vins importés de qualité du monde entier.',
@@ -606,6 +696,11 @@ const translations = {
     'nav.regions': '产区',
     'nav.premium': '特级',
     'nav.wineries': '酒庄',
+    'nav.home': '首页',
+    'nav.search': '搜索',
+    'nav.scan': 'AI 扫描',
+    'nav.cart': '购物车',
+    'nav.account': '账户',
     'hero.welcome': '欢迎来到 The Bottle Club',
     'hero.title': '为您精心挑选的高级葡萄酒',
     'hero.subtitle': '来自世界各地的优质进口葡萄酒.',
@@ -2769,21 +2864,13 @@ export function LanguageProvider({
   children: React.ReactNode;
   initialLanguage?: Language;
 }) {
-  // Use state initialized from server snapshot (or provided initialLanguage)
-  // so the initial client render matches the server HTML and avoids
-  // hydration mismatches. After mount we read the real client snapshot
-  // (localStorage) and subscribe to changes.
-  const [language, setLanguageState] = React.useState<Language>(
-    initialLanguage ?? getServerLanguageSnapshot()
+  // Use useSyncExternalStore to sync language state across the app.
+  // The server snapshot uses initialLanguage to match the server-rendered HTML.
+  const language = useSyncExternalStore(
+    subscribeLanguageChange,
+    getLanguageSnapshot,
+    () => initialLanguage ?? getServerLanguageSnapshot()
   );
-
-  useEffect(() => {
-    // On mount, sync to the client snapshot and subscribe to changes
-    const sync = () => setLanguageState(getLanguageSnapshot());
-    sync();
-    const unsubscribe = subscribeLanguageChange(sync);
-    return unsubscribe;
-  }, []);
 
   useEffect(() => {
     syncDocumentLanguage(language);
@@ -2794,11 +2881,25 @@ export function LanguageProvider({
       window.localStorage.setItem('language', lang);
       window.dispatchEvent(new Event(LANGUAGE_CHANGE_EVENT));
     }
-    setLanguageState(lang);
     syncDocumentLanguage(lang);
   };
 
   const t = (key: string) => {
+    if (key.startsWith('ai.')) {
+      return getAiString(language, key);
+    }
+    if (key.startsWith('account.') || key.startsWith('order.') || key.startsWith('common.')) {
+      const accountStr = getAccountString(language, key);
+      if (accountStr !== null) {
+        return accountStr;
+      }
+    }
+    if (key.startsWith('checkout.') || key.startsWith('country.')) {
+      const checkoutStr = getCheckoutString(language, key);
+      if (checkoutStr !== null) {
+        return checkoutStr;
+      }
+    }
     const langData = (translations[language] || translations['en']) as Record<string, string>;
     return langData[key] || (translations['en'] as Record<string, string>)[key] || key;
   };

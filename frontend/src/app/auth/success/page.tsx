@@ -20,7 +20,22 @@ function AuthSuccessContent() {
       // 2. Sync with server session
       const syncSession = async () => {
         try {
-          await setSessionFromToken(token);
+          // Fetch additional profile info if available
+          let userObj = undefined;
+          try {
+            const meRes = await fetch('/api/auth/me', {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            });
+            if (meRes.ok) {
+              userObj = await meRes.json();
+            }
+          } catch (meErr) {
+            console.error('Error fetching /api/auth/me:', meErr);
+          }
+
+          await setSessionFromToken(token, userObj);
           
           // 3. Redirect after successful sync
           const timer = setTimeout(() => {

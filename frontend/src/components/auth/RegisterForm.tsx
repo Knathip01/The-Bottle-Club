@@ -274,22 +274,11 @@ export default function RegisterForm() {
             <span className="bg-white/60 backdrop-blur-md px-6 text-[9px] font-black uppercase tracking-[0.4em] text-stone-400 relative z-10">Premium Security</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-5 relative">
-            <button 
-              type="button"
-              onClick={() => loginWithProvider('line')}
-              className="flex items-center justify-center gap-3 bg-white/60 border border-white/80 p-5 rounded-[1.8rem] hover:bg-[#06C755] hover:text-white transition-all duration-700 group shadow-md hover:shadow-xl hover:shadow-[#06C755]/30 active:scale-95 border-b-4 border-stone-100 hover:border-[#06C755]"
-            >
-              <div className="w-7 h-7 bg-[#06C755] rounded-xl flex items-center justify-center group-hover:bg-white transition-all duration-500 group-hover:rotate-[360deg]">
-                <span className="text-white group-hover:text-[#06C755] font-black text-xs">L</span>
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Line</span>
-            </button>
-
+          <div className="grid grid-cols-2 gap-4">
             <button 
               type="button"
               onClick={() => loginWithProvider('google')}
-              className="flex items-center justify-center gap-3 bg-white/60 border border-white/80 p-5 rounded-[1.8rem] hover:bg-stone-50 transition-all duration-700 shadow-md hover:shadow-xl active:scale-95 border-b-4 border-stone-100 hover:border-stone-200"
+              className="flex w-full items-center justify-center gap-3 bg-white/60 border border-white/80 p-5 rounded-[1.8rem] hover:bg-stone-50 transition-all duration-700 shadow-md hover:shadow-xl active:scale-95 border-b-4 border-stone-100 hover:border-stone-200"
             >
               <div className="group-hover:scale-125 transition-transform duration-500">
                 <svg width="22" height="22" viewBox="0 0 18 18">
@@ -300,6 +289,24 @@ export default function RegisterForm() {
                 </svg>
               </div>
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-600">Google</span>
+            </button>
+
+            <button 
+              type="button"
+              onClick={() => loginWithProvider('line')}
+              className="group relative flex w-full items-center justify-center gap-3 bg-[#06C755] p-5 rounded-[1.8rem] hover:bg-[#05b34c] transition-all duration-500 shadow-[0_15px_30px_-10px_rgba(6,199,85,0.3)] hover:shadow-[0_25px_50px_-12px_rgba(6,199,85,0.5)] active:scale-95 overflow-hidden border-b-4 border-[#04913d]"
+            >
+              {/* Animated Glow Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
+              
+              <div className="relative flex items-center gap-3 transition-transform duration-500 group-hover:scale-105">
+                <div className="bg-white p-1.5 rounded-full shadow-inner flex items-center justify-center">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#06C755">
+                    <path d="M24 10.304c0-5.232-5.383-9.488-12-9.488S0 5.072 0 10.304c0 4.689 4.272 8.608 10.032 9.352.392.08.92.256 1.056.592.12.304.08.776.04 1.08l-.176 1.064c-.056.328-.264 1.28.144 1.392.408.112 1.088-.64 1.528-1.056l3.256-3.232c1.32-1.312 2.368-2.88 2.984-4.592C22.256 13.92 24 12.2 24 10.304zm-14.88 3.536h-2.16c-.28 0-.504-.224-.504-.504v-4.16c0-.28.224-.504.504-.504.28 0 .504.224.504.504v3.656h1.656c.28 0 .504.224.504.504s-.224.504-.504.504zm2.84 0c-.28 0-.504-.224-.504-.504v-4.16c0-.28.224-.504.504-.504s.504.224.504.504v4.16c0 .28-.224.504-.504.504zm4.448 0h-2.16c-.28 0-.504-.224-.504-.504v-4.16c0-.28.224-.504.504-.504.208 0 .384.128.464.312l1.32 2.896v-2.704c0-.28.224-.504.504-.504s.504.224.504.504v4.16c0 .28-.224.504-.504.504-.2 0-.368-.12-.456-.296l-1.32-2.904v2.704c0 .28-.224.504-.504.504zm3.624-1.008h-1.656v-1.152h1.656c.28 0 .504-.224.504-.504s-.224-.504-.504-.504h-1.656v-1h1.656c.28 0 .504-.224.504-.504s-.224-.504-.504-.504h-2.16c-.28 0-.504.224-.504.504v4.16c0 .28.224.504.504.504h2.16c.28 0 .504-.224.504-.504s-.224-.504-.504-.504z"/>
+                  </svg>
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">LINE Login</span>
+              </div>
             </button>
           </div>
         </div>

@@ -5,6 +5,15 @@
   --color-primary-hover: #6b0000;
   --font-sans: var(--font-inter);
   --font-serif: var(--font-playfair);
+
+  @keyframes shimmer {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
 }
 
 body {

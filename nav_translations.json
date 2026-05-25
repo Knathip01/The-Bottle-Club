@@ -1,0 +1,177 @@
+{
+  "th": {
+    "nav.home": "หน้าหลัก",
+    "nav.search": "ค้นหา",
+    "nav.scan": "สแกน AI",
+    "nav.cart": "รถเข็น",
+    "nav.account": "บัญชีผู้ใช้"
+  },
+  "en": {
+    "nav.home": "Home",
+    "nav.search": "Search",
+    "nav.scan": "AI Scan",
+    "nav.cart": "Cart",
+    "nav.account": "Account"
+  },
+  "fr": {
+    "nav.home": "Accueil",
+    "nav.search": "Rechercher",
+    "nav.scan": "Scan IA",
+    "nav.cart": "Panier",
+    "nav.account": "Compte"
+  },
+  "zh": {
+    "nav.home": "首页",
+    "nav.search": "搜索",
+    "nav.scan": "AI 扫描",
+    "nav.cart": "购物车",
+    "nav.account": "账户"
+  },
+  "ja": {
+    "nav.home": "ホーム",
+    "nav.search": "検索",
+    "nav.scan": "AIスキャン",
+    "nav.cart": "カート",
+    "nav.account": "アカウント"
+  },
+  "es": {
+    "nav.home": "Inicio",
+    "nav.search": "Buscar",
+    "nav.scan": "Escaneo IA",
+    "nav.cart": "Carrito",
+    "nav.account": "Cuenta"
+  },
+  "de": {
+    "nav.home": "Home",
+    "nav.search": "Suchen",
+    "nav.scan": "KI-Scan",
+    "nav.cart": "Warenkorb",
+    "nav.account": "Konto"
+  },
+  "ko": {
+    "nav.home": "홈",
+    "nav.search": "검색",
+    "nav.scan": "AI 스캔",
+    "nav.cart": "장바구니",
+    "nav.account": "계정"
+  },
+  "it": {
+    "nav.home": "Home",
+    "nav.search": "Cerca",
+    "nav.scan": "Scan IA",
+    "nav.cart": "Carrello",
+    "nav.account": "Account"
+  },
+  "ru": {
+    "nav.home": "Главная",
+    "nav.search": "Поиск",
+    "nav.scan": "AI сканирование",
+    "nav.cart": "Корзина",
+    "nav.account": "Аккаунт"
+  },
+  "pt": {
+    "nav.home": "Início",
+    "nav.search": "Pesquisar",
+    "nav.scan": "Digitalização IA",
+    "nav.cart": "Carrinho",
+    "nav.account": "Conta"
+  },
+  "vi": {
+    "nav.home": "Trang chủ",
+    "nav.search": "Tìm kiếm",
+    "nav.scan": "Quét AI",
+    "nav.cart": "Giỏ hàng",
+    "nav.account": "Tài khoản"
+  },
+  "ar": {
+    "nav.home": "الرئيسية",
+    "nav.search": "بحث",
+    "nav.scan": "مسح بالذكاء الاصطناعي",
+    "nav.cart": "عربة التسوق",
+    "nav.account": "الحساب"
+  },
+  "hi": {
+    "nav.home": "होम",
+    "nav.search": "खोज",
+    "nav.scan": "एआई स्कैन",
+    "nav.cart": "कार्ट",
+    "nav.account": "खाता"
+  },
+  "id": {
+    "nav.home": "Beranda",
+    "nav.search": "Cari",
+    "nav.scan": "Pemindaian AI",
+    "nav.cart": "Keranjang",
+    "nav.account": "Akun"
+  },
+  "tr": {
+    "nav.home": "Ana Sayfa",
+    "nav.search": "Ara",
+    "nav.scan": "Yapay Zeka Tarama",
+    "nav.cart": "Sepet",
+    "nav.account": "Hesap"
+  },
+  "nl": {
+    "nav.home": "Home",
+    "nav.search": "Zoeken",
+    "nav.scan": "AI-scan",
+    "nav.cart": "Winkelwagen",
+    "nav.account": "Account"
+  },
+  "pl": {
+    "nav.home": "Strona Główna",
+    "nav.search": "Szukaj",
+    "nav.scan": "Skanowanie AI",
+    "nav.cart": "Koszyk",
+    "nav.account": "Konto"
+  },
+  "sv": {
+    "nav.home": "Hem",
+    "nav.search": "Sök",
+    "nav.scan": "AI-skanning",
+    "nav.cart": "Varukorg",
+    "nav.account": "Konto"
+  },
+  "da": {
+    "nav.home": "Hjem",
+    "nav.search": "Søg",
+    "nav.scan": "AI-scanning",
+    "nav.cart": "Kurv",
+    "nav.account": "Konto"
+  },
+  "no": {
+    "nav.home": "Hjem",
+    "nav.search": "Søk",
+    "nav.scan": "AI-skanning",
+    "nav.cart": "Handlekurv",
+    "nav.account": "Konto"
+  },
+  "fi": {
+    "nav.home": "Koti",
+    "nav.search": "Haku",
+    "nav.scan": "AI-skannaus",
+    "nav.cart": "Ostoskori",
+    "nav.account": "Tili"
+  },
+  "ms": {
+    "nav.home": "Utama",
+    "nav.search": "Cari",
+    "nav.scan": "Imbasan AI",
+    "nav.cart": "Troli",
+    "nav.account": "Akaun"
+  },
+  "he": {
+    "nav.home": "בית",
+    "nav.search": "חיפוש",
+    "nav.scan": "סריקת AI",
+    "nav.cart": "עגלת קניות",
+    "nav.account": "חשבון"
+  },
+  "el": {
+    "nav.home": "Αρχική",
+    "nav.search": "Αναζήτηση",
+    "nav.scan": "Σάρωση AI",
+    "nav.cart": "Καλάθι",
+    "nav.account": "Λογαριασμός"
+  }
+}

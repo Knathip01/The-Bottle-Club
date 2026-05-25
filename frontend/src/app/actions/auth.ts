@@ -171,7 +171,7 @@ export async function login(formData: LoginFormData) {
 
 }
 
-export async function setSessionFromToken(token: string) {
+export async function setSessionFromToken(token: string, userData?: any) {
   try {
     // 1. Decode the token payload (it's a base64 encoded JSON)
     const parts = token.split('.');
@@ -180,14 +180,18 @@ export async function setSessionFromToken(token: string) {
     const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
     const payload = JSON.parse(Buffer.from(base64, 'base64').toString());
     
-    // 2. Extract user info from payload
+    // 2. Extract user info from payload and optional userData (handling nested objects)
+    const u = userData?.user || userData?.data?.user || userData?.data || userData;
+    
     // Adjust based on typical JWT structures (id/sub, username/name, email)
     const user = {
-      id: payload.id || payload.sub || 0,
-      username: payload.username || payload.name || payload.email?.split('@')[0] || 'User',
-      email: payload.email || '',
-      first_name: payload.first_name || payload.name?.split(' ')[0] || '',
-      last_name: payload.last_name || payload.name?.split(' ')[1] || '',
+      id: u?.id || payload.id || payload.sub || 0,
+      username: u?.username || payload.username || payload.name || payload.email?.split('@')[0] || 'User',
+      email: u?.email || payload.email || '',
+      first_name: u?.first_name || u?.firstName || payload.first_name || payload.name?.split(' ')[0] || '',
+      last_name: u?.last_name || u?.lastName || payload.last_name || payload.name?.split(' ')[1] || '',
+      avatar: u?.avatar || u?.picture || u?.pictureUrl || u?.avatarUrl || u?.avatar_url || u?.image || u?.imageUrl || u?.profileImage || u?.profileImageUrl || u?.profile_image_url || u?.photo || u?.photoUrl || payload.avatar || payload.picture || payload.pictureUrl || payload.avatarUrl || null,
+      provider: u?.provider || u?.provider_name || u?.type || u?.source || payload.provider || (payload.iss?.includes('google') ? 'google' : payload.iss?.includes('line') ? 'line' : null) || null,
       access_token: token // Keep the token for future API calls
     };
 

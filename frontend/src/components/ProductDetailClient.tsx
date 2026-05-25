@@ -6,7 +6,6 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
-import { loginWithProvider } from '@/lib/auth-client';
 import { addCartItem } from '@/lib/cart';
 import type { Product } from '@/lib/products';
 
@@ -316,21 +315,7 @@ export default function ProductDetailClient({
             </div>
           </div>
 
-          {/* LINE Button */}
           <div className="mt-8">
-            <div className="mb-6 flex justify-center">
-              <button
-                onClick={() => loginWithProvider('line')}
-                className="flex w-full max-w-md items-center justify-center gap-3 rounded-2xl bg-[#06C755] px-6 py-4 font-black uppercase text-white shadow-lg transition-colors hover:bg-[#05b14a]"
-              >
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-white font-bold text-[#06C755]">
-                  L
-                </span>
-
-                แชทกับเราทาง LINE
-              </button>
-            </div>
-
             <h3 className="text-lg font-bold text-stone-900">
               รายละเอียดสินค้า
             </h3>

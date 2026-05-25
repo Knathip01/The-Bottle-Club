@@ -2,13 +2,13 @@
 
 import { useSyncExternalStore } from 'react';
 import type { CartItem } from '@/lib/cart';
-import { readCart, subscribeCart, writeCart, EMPTY_CART } from '@/lib/cart';
+import { readCart, subscribeCart, writeCart, getEmptyCart } from '@/lib/cart';
 import Link from 'next/link';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function CartContent() {
-  const items = useSyncExternalStore(subscribeCart, readCart, () => EMPTY_CART);
+  const items = useSyncExternalStore(subscribeCart, readCart, getEmptyCart);
   const { t } = useLanguage();
 
   const updateQuantity = (id: number, delta: number) => {

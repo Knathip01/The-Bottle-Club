@@ -50,15 +50,28 @@ export default function Footer() {
             </p>
 
             <div className="flex items-center gap-3 pt-2">
-              <div className="p-3.5 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 hover:border-white/10 transition-all cursor-pointer group">
+              <Link 
+                href="https://line.me/ti/p/@thebottleclub" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-3.5 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 hover:border-white/10 transition-all cursor-pointer group"
+              >
                 <MessageCircle size={18} className="text-stone-400 group-hover:text-green-400 transition-colors" />
-              </div>
-              <div className="p-3.5 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 hover:border-white/10 transition-all cursor-pointer group">
+              </Link>
+              <Link 
+                href="https://t.me/thebottleclub" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-3.5 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 hover:border-white/10 transition-all cursor-pointer group"
+              >
                 <Send size={18} className="text-stone-400 group-hover:text-blue-400 transition-colors" />
-              </div>
-              <div className="p-3.5 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 hover:border-white/10 transition-all cursor-pointer group">
+              </Link>
+              <Link 
+                href="tel:0935786466"
+                className="p-3.5 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 hover:border-white/10 transition-all cursor-pointer group"
+              >
                 <Phone size={18} className="text-stone-400 group-hover:text-[#a11a1a] transition-colors" />
-              </div>
+              </Link>
             </div>
           </div>
 

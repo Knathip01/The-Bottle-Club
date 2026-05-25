@@ -7,20 +7,14 @@ const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const isPlaceholderKey = !stripeSecretKey || stripeSecretKey === 'sk_test_placeholder' || stripeSecretKey.includes('your_stripe_');
 
 const stripe = new Stripe(stripeSecretKey || 'sk_test_placeholder', {
-  apiVersion: '2026-04-22.dahlia',
+  apiVersion: '2025-01-27.acacia' as any,
 });
 
 export async function POST(request: Request) {
   try {
     console.log('--- START ORDER CREATION ---');
 
-    if (isPlaceholderKey) {
-      console.error('Order Creation Error: Stripe API Key is not configured or is using a placeholder.');
-      return NextResponse.json({ 
-        error: 'Stripe API Key is not configured. Please set a valid STRIPE_SECRET_KEY in your .env.local file.' 
-      }, { status: 500 });
-    }
-    // 1. Get user session to authenticate the request using unified session
+    // 1. Get user session first
     const session = await getSession();
     const user = session?.user;
     
@@ -38,44 +32,66 @@ export async function POST(request: Request) {
     }
 
     const { items, totalAmount, addressId, successUrl, cancelUrl } = body;
-    console.log('Order Details:', { itemsCount: items?.length, totalAmount, addressId });
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
 
     if (!items || !items.length) {
       console.error('Order Creation Error: Missing items');
       return NextResponse.json({ error: 'Missing items' }, { status: 400 });
     }
 
-    // 2. Create Stripe Checkout Session
-    console.log('Creating Stripe Session...');
     let session_stripe;
-    try {
-      session_stripe = await stripe.checkout.sessions.create({
-        payment_method_types: ['card', 'promptpay'],
-        line_items: items.map((item: any) => ({
-          price_data: {
-            currency: 'thb',
-            product_data: {
-              name: item.name,
+    if (isPlaceholderKey) {
+      console.warn('Local Stripe Key missing, falling back to backend checkout API...');
+      try {
+        const backendRes = await fetch(`${API_BASE_URL}/api/checkout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            items, 
+            successUrl: successUrl || `${request.headers.get('origin')}/account/orders?status=success`, 
+            cancelUrl: cancelUrl || `${request.headers.get('origin')}/checkout` 
+          }),
+        });
+        
+        if (!backendRes.ok) throw new Error('Backend checkout failed');
+        const backendData = await backendRes.json();
+        session_stripe = { id: backendData.id, url: backendData.url };
+      } catch (err) {
+        console.error('Fallback checkout failed:', err);
+        return NextResponse.json({ 
+          error: 'Stripe API Key is not configured. Please set a valid STRIPE_SECRET_KEY in your .env.local file.' 
+        }, { status: 500 });
+      }
+    } else {
+      // Create Stripe Checkout Session locally
+      console.log('Creating Stripe Session locally...');
+      try {
+        session_stripe = await stripe.checkout.sessions.create({
+          payment_method_types: ['card', 'promptpay'],
+          line_items: items.map((item: any) => ({
+            price_data: {
+              currency: 'thb',
+              product_data: {
+                name: item.name,
+              },
+              unit_amount: Math.round(item.price * 100),
             },
-            unit_amount: Math.round(item.price * 100),
+            quantity: item.quantity,
+          })),
+          mode: 'payment',
+          success_url: successUrl || `${request.headers.get('origin')}/account/orders?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: cancelUrl || `${request.headers.get('origin')}/checkout`,
+          metadata: {
+            userId: String(user.id),
           },
-          quantity: item.quantity,
-        })),
-        mode: 'payment',
-        success_url: successUrl || `${request.headers.get('origin')}/account/orders?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: cancelUrl || `${request.headers.get('origin')}/checkout`,
-        metadata: {
-          userId: String(user.id),
-        },
-      });
-      console.log('Stripe Session Created:', session_stripe.id);
-    } catch (stripeError: any) {
-      console.error('Stripe Session Creation Failed:', stripeError.message);
-      return NextResponse.json({ error: 'Stripe Error: ' + stripeError.message }, { status: 500 });
+        });
+      } catch (stripeError: any) {
+        console.error('Stripe Session Creation Failed:', stripeError.message);
+        return NextResponse.json({ error: 'Stripe Error: ' + stripeError.message }, { status: 500 });
+      }
     }
 
     // 3. Save Order to External API (Pending Status)
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
     const token = session?.user?.access_token;
     
     try {
@@ -89,11 +105,10 @@ export async function POST(request: Request) {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      // Payload matching OrderCreate schema
       const orderPayload = {
         user_id: user.id,
         total_amount: totalAmount,
-        payment_method: 'credit_card', // Must be one of: cash, promptpay, qr, credit_card, transfer
+        payment_method: 'credit_card',
         order_type: 'online',
         address_id: addressId ? parseInt(addressId) : null,
         items: items.map((item: any) => ({
@@ -109,45 +124,19 @@ export async function POST(request: Request) {
         body: JSON.stringify(orderPayload),
       });
 
-      if (!apiResponse.ok) {
-        const errorText = await apiResponse.text();
-        console.error('External API Order Error:', errorText);
-        // We continue anyway and use the fallback or just return the Stripe session
-      }
-
       const apiData = await apiResponse.json().catch(() => ({}));
       const orderId = apiData.id || Date.now(); 
 
-      console.log('Order created successfully with ID:', orderId);
-      // 4. Return Checkout URL
       return NextResponse.json({
         url: session_stripe.url,
         orderId: orderId
       });
     } catch (apiError) {
       console.error('External API Exception:', apiError);
-      // Final fallback to local DB
-      try {
-        console.log('Falling back to local DB...');
-        const { query } = await import('@/lib/db');
-        const orderResult = await query(
-          'INSERT INTO orders (user_id, total_amount, status, stripe_payment_intent_id) VALUES ($1, $2, $3, $4) RETURNING id',
-          [String(user.id), totalAmount, 'pending', session_stripe.id]
-        );
-        console.log('Local DB order created:', orderResult.rows[0].id);
-        return NextResponse.json({
-          url: session_stripe.url,
-          orderId: orderResult.rows[0].id
-        });
-      } catch (dbError: any) {
-        console.error('Local DB fallback failed:', dbError.message);
-        // Even if DB fails, we have the Stripe URL, let's try to return it
-        return NextResponse.json({
-          url: session_stripe.url,
-          orderId: 'temp-' + Date.now(),
-          warning: 'Failed to save order to database'
-        });
-      }
+      return NextResponse.json({
+        url: session_stripe.url,
+        orderId: 'temp-' + Date.now()
+      });
     }
 
   } catch (error: any) {

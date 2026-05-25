@@ -1,9 +1,17 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { MessageSquare, X, Send, Bot, User, ChevronDown, Sparkles, Volume2, VolumeX } from 'lucide-react';
+import { X, Send, User, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
-import { getProducts, type Product } from '@/lib/products';
+import type { Language } from '@/context/LanguageContext';
+import type { Product } from '@/lib/products';
+import {
+  AI_SPEECH_LOCALES,
+  AI_PRICE_LOCALES,
+  formatAiPrice,
+  formatAiTemplate,
+  type AiQuickIntent,
+} from '@/lib/ai-translations';
 
 interface Message {
   id: string;
@@ -14,77 +22,162 @@ interface Message {
 
 export default function AIChat() {
   const { language, t } = useLanguage();
+  const locale = AI_PRICE_LOCALES[language] || 'en-US';
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 }); 
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [isSpeakingEnabled, setIsSpeakingEnabled] = useState(true);
-  const [voicesLoaded, setVoicesLoaded] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const hasMovedRef = useRef(false);
-  
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initialize voices
+  const formatTime = useCallback(
+    (date: Date) =>
+      date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false }),
+    [locale]
+  );
+
+  const generateAIResponse = useCallback(
+    (query: string, productList: Product[], intent?: AiQuickIntent): string => {
+      if (productList.length === 0) {
+        return t('ai.error_fetch');
+      }
+
+      const q = query.toLowerCase();
+
+      const checkKeyword = (key: string) => {
+        const keywordsString = t(key);
+        if (!keywordsString || keywordsString === key) return false;
+        return keywordsString.split(',').some((kw) => q.includes(kw.trim().toLowerCase()));
+      };
+
+      const isCheap = intent === 'cheap' || checkKeyword('ai.keyword.cheap');
+      const isExpensive = intent === 'expensive' || checkKeyword('ai.keyword.expensive');
+      const isList = intent === 'list' || checkKeyword('ai.keyword.list');
+      const isRecommend = intent === 'recommend' || checkKeyword('ai.keyword.recommend');
+
+      if (isCheap) {
+        const cheapest = [...productList].sort((a, b) => a.price - b.price)[0];
+        return formatAiTemplate(t('ai.cheapest_response'), {
+          name: cheapest.name,
+          price: formatAiPrice(cheapest.price, language),
+          stock: cheapest.stock,
+        });
+      }
+
+      if (isExpensive) {
+        const expensive = [...productList].sort((a, b) => b.price - a.price)[0];
+        return formatAiTemplate(t('ai.expensive_response'), {
+          name: expensive.name,
+          price: formatAiPrice(expensive.price, language),
+        });
+      }
+
+      if (isList) {
+        const top5 = productList.slice(0, 5);
+        let response = `${t('ai.list_response')}\n`;
+        top5.forEach((p, i) => {
+          response += `${formatAiTemplate(t('ai.list_line'), {
+            index: i + 1,
+            name: p.name,
+            price: formatAiPrice(p.price, language),
+          })}\n`;
+        });
+        if (productList.length > 5) {
+          response += formatAiTemplate(t('ai.list_more'), {
+            count: productList.length - 5,
+          });
+        }
+        return response.trim();
+      }
+
+      const foundProduct = productList.find((p) => q.includes(p.name.toLowerCase()));
+      if (foundProduct) {
+        return formatAiTemplate(t('ai.product_response'), {
+          name: foundProduct.name,
+          price: formatAiPrice(foundProduct.price, language),
+        });
+      }
+
+      if (isRecommend) {
+        const random = productList[Math.floor(Math.random() * productList.length)];
+        return formatAiTemplate(t('ai.recommend_response'), {
+          name: random.name,
+          price: formatAiPrice(random.price, language),
+        });
+      }
+
+      return t('ai.unknown_response');
+    },
+    [language, t]
+  );
+
+  const speakMessage = useCallback(
+    (text: string, lang: Language) => {
+      if (!isSpeakingEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) {
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+      const cleanText = text.replace(/[*_~`#]/g, '');
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      const targetLang = AI_SPEECH_LOCALES[lang] || 'en-US';
+      const voices = window.speechSynthesis.getVoices();
+
+      let voice =
+        voices.find((v) => v.lang === targetLang) ||
+        voices.find((v) => v.lang.startsWith(lang)) ||
+        voices.find((v) => v.lang.startsWith(targetLang.split('-')[0]));
+
+      if (voice) utterance.voice = voice;
+      utterance.lang = targetLang;
+      utterance.rate = lang === 'th' ? 0.95 : 1;
+      utterance.pitch = 1;
+
+      window.speechSynthesis.speak(utterance);
+    },
+    [isSpeakingEnabled]
+  );
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
-    const loadVoices = () => {
-      const voices = window.speechSynthesis.getVoices();
-      if (voices.length > 0) {
-        setVoicesLoaded(true);
-      }
-    };
-
+    const loadVoices = () => window.speechSynthesis.getVoices();
     loadVoices();
     if (window.speechSynthesis.onvoiceschanged !== undefined) {
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
-
     return () => {
-      if (window.speechSynthesis) {
-        window.speechSynthesis.onvoiceschanged = null;
-      }
+      if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = null;
     };
   }, []);
 
-  // Initialize with translated greeting
   useEffect(() => {
-    setMessages(prev => {
-      if (prev.length === 0) {
-        return [
-          {
-            id: '1',
-            text: t('ai.greeting'),
-            sender: 'ai',
-            timestamp: new Date(),
-          },
-        ];
-      }
-      return prev;
-    });
-  }, [t]);
+    setMessages([
+      {
+        id: 'greeting',
+        text: t('ai.greeting'),
+        sender: 'ai',
+        timestamp: new Date(),
+      },
+    ]);
+  }, [language, t]);
 
-  // Auto-scroll to bottom
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // Fetch products using centralized utility
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const data = await getProducts();
-        if (data && data.length > 0) {
-          setProducts(data);
-        } else {
-          console.warn('AI Chat: No products returned from API');
-        }
+        const res = await fetch('/api/products', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = (await res.json()) as Product[];
+        if (Array.isArray(data) && data.length > 0) setProducts(data);
       } catch (error) {
         console.error('AI Chat failed to fetch products:', error);
       }
@@ -92,187 +185,88 @@ export default function AIChat() {
     fetchProducts();
   }, []);
 
-  const speakMessage = useCallback((text: string) => {
-    if (!isSpeakingEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-
-    window.speechSynthesis.cancel();
-    
-    // Clean text for better speech (remove markdown-like characters if any)
-    const cleanText = text.replace(/[*_~`]/g, '');
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    
-    const langMap: Record<string, string> = {
-      th: 'th-TH',
-      en: 'en-US',
-      fr: 'fr-FR',
-      zh: 'zh-CN',
-      ja: 'ja-JP',
-      es: 'es-ES',
-      de: 'de-DE',
-      ko: 'ko-KR',
-      it: 'it-IT',
-      ru: 'ru-RU',
-      pt: 'pt-PT',
-      vi: 'vi-VN',
-      ar: 'ar-SA',
-      hi: 'hi-IN',
-      id: 'id-ID',
-      tr: 'tr-TR',
-      nl: 'nl-NL',
-      pl: 'pl-PL',
-      sv: 'sv-SE',
-      da: 'da-DK',
-      no: 'nb-NO',
-      fi: 'fi-FI',
-      ms: 'ms-MY',
-      he: 'he-IL',
-      el: 'el-GR'
-    };
-
-    const targetLang = langMap[language] || 'en-US';
-    const voices = window.speechSynthesis.getVoices();
-    
-    // Try to find the best voice for the target language
-    let voice = voices.find(v => v.lang === targetLang);
-    if (!voice) {
-      voice = voices.find(v => v.lang.startsWith(language));
+  const resolveCatalog = useCallback(async () => {
+    if (products.length > 0) return products;
+    try {
+      const res = await fetch('/api/products', { cache: 'no-store' });
+      if (!res.ok) return products;
+      const data = (await res.json()) as Product[];
+      if (Array.isArray(data) && data.length > 0) {
+        setProducts(data);
+        return data;
+      }
+    } catch {
+      /* ignore */
     }
-    if (!voice) {
-      voice = voices.find(v => v.lang.includes(targetLang.split('-')[0]));
-    }
-    
-    if (voice) utterance.voice = voice;
-    utterance.lang = targetLang;
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    
-    window.speechSynthesis.speak(utterance);
-  }, [language, isSpeakingEnabled]);
+    return products;
+  }, [products]);
+
+  const replyWithText = useCallback(
+    async (userText: string, intent?: AiQuickIntent) => {
+      const timestamp = new Date();
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `user-${timestamp.getTime()}`,
+          text: userText,
+          sender: 'user',
+          timestamp,
+        },
+      ]);
+      setIsTyping(true);
+
+      const catalog = await resolveCatalog();
+
+      setTimeout(() => {
+        const responseText = generateAIResponse(userText, catalog, intent);
+        const aiTimestamp = new Date();
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `ai-${aiTimestamp.getTime()}`,
+            text: responseText,
+            sender: 'ai',
+            timestamp: aiTimestamp,
+          },
+        ]);
+        setIsTyping(false);
+        speakMessage(responseText, language);
+      }, 800);
+    },
+    [generateAIResponse, language, resolveCatalog, speakMessage]
+  );
 
   const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!input.trim()) return;
-
-    const timestamp = new Date();
-    const userMessage: Message = {
-      id: `user-${timestamp.getTime()}`,
-      text: input,
-      sender: 'user',
-      timestamp: timestamp,
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    const currentInput = input;
+    const text = input.trim();
     setInput('');
-    setIsTyping(true);
-
-    // AI processing
-    setTimeout(() => {
-      const responseText = generateAIResponse(currentInput, products);
-      const aiTimestamp = new Date();
-      const aiMessage: Message = {
-        id: `ai-${aiTimestamp.getTime()}`,
-        text: responseText,
-        sender: 'ai',
-        timestamp: aiTimestamp,
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-      setIsTyping(false);
-      speakMessage(responseText);
-    }, 800);
+    await replyWithText(text);
   };
 
-  const generateAIResponse = (query: string, productList: Product[]): string => {
-    const q = query.toLowerCase();
-    
-    if (productList.length === 0) {
-      return t('ai.error_fetch');
-    }
-
-    // Dynamic Keyword detection using translations
-    const checkKeyword = (key: string) => {
-      const keywordsString = t(key);
-      if (!keywordsString || keywordsString === key) return false;
-      const keywords = keywordsString.split(',');
-      return keywords.some(kw => q.includes(kw.trim().toLowerCase()));
-    };
-
-    const isCheap = checkKeyword('ai.keyword.cheap');
-    const isExpensive = checkKeyword('ai.keyword.expensive');
-    const isList = checkKeyword('ai.keyword.list');
-    const isRecommend = checkKeyword('ai.keyword.recommend');
-
-    // 1. Cheapest products
-    if (isCheap) {
-      const sorted = [...productList].sort((a, b) => a.price - b.price);
-      const cheapest = sorted[0];
-      return t('ai.cheapest_response')
-        .replace('{name}', cheapest.name)
-        .replace('{price}', cheapest.price.toLocaleString())
-        .replace('{stock}', cheapest.stock.toString());
-    }
-
-    // 2. Most expensive
-    if (isExpensive) {
-      const sorted = [...productList].sort((a, b) => b.price - a.price);
-      const expensive = sorted[0];
-      return t('ai.expensive_response')
-        .replace('{name}', expensive.name)
-        .replace('{price}', expensive.price.toLocaleString());
-    }
-
-    // 3. List products
-    if (isList) {
-      const top5 = productList.slice(0, 5);
-      let response = t('ai.list_response') + '\n';
-      top5.forEach((p, i) => {
-        response += `${i + 1}. ${p.name} - ฿${p.price.toLocaleString()}\n`;
-      });
-      if (productList.length > 5) {
-        response += t('ai.list_more').replace('{count}', (productList.length - 5).toString());
-      }
-      return response;
-    }
-
-    // 4. Price inquiry for specific product
-    const foundProduct = productList.find(p => q.includes(p.name.toLowerCase()));
-    if (foundProduct) {
-      return t('ai.product_response')
-        .replace('{name}', foundProduct.name)
-        .replace('{price}', foundProduct.price.toLocaleString());
-    }
-
-    // 5. General help / Recommendation
-    if (isRecommend) {
-      const random = productList[Math.floor(Math.random() * productList.length)];
-      return t('ai.recommend_response')
-        .replace('{name}', random.name)
-        .replace('{price}', random.price.toLocaleString());
-    }
-
-    return t('ai.unknown_response');
+  const handleQuickAction = async (intent: AiQuickIntent) => {
+    const labelKey =
+      intent === 'list'
+        ? 'ai.quick_all'
+        : intent === 'cheap'
+          ? 'ai.quick_cheap'
+          : 'ai.quick_recommend';
+    await replyWithText(t(labelKey), intent);
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
     setIsDragging(true);
     hasMovedRef.current = false;
-    dragStartRef.current = {
-      x: e.clientX - position.x,
-      y: e.clientY - position.y
-    };
+    dragStartRef.current = { x: e.clientX - position.x, y: e.clientY - position.y };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging) return;
-    
     const newX = e.clientX - dragStartRef.current.x;
     const newY = e.clientY - dragStartRef.current.y;
-    
-    // Bounds check to keep button visible
     const limitedX = Math.min(Math.max(newX, -(window.innerWidth - 80)), 0);
     const limitedY = Math.min(Math.max(newY, -(window.innerHeight - 80)), 0);
-
     if (Math.abs(limitedX - position.x) > 1 || Math.abs(limitedY - position.y) > 1) {
       hasMovedRef.current = true;
       setPosition({ x: limitedX, y: limitedY });
@@ -284,9 +278,14 @@ export default function AIChat() {
     (e.target as HTMLElement).releasePointerCapture(e.pointerId);
   };
 
+  const quickActions: { intent: AiQuickIntent; label: string }[] = [
+    { intent: 'list', label: t('ai.quick_all') },
+    { intent: 'cheap', label: t('ai.quick_cheap') },
+    { intent: 'recommend', label: t('ai.quick_recommend') },
+  ];
+
   return (
     <>
-      {/* Floating Button */}
       <button
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -297,22 +296,19 @@ export default function AIChat() {
         style={{
           transform: `translate(${position.x}px, ${position.y}px)`,
           transition: isDragging ? 'none' : 'transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)',
-          touchAction: 'none'
+          touchAction: 'none',
         }}
         className={`fixed bottom-24 md:bottom-6 right-6 z-50 w-14 h-14 bg-[#8b0000] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 group overflow-hidden border-2 border-white cursor-move select-none ${isDragging ? 'scale-110 shadow-red-900/40 opacity-90' : ''}`}
+        aria-label={t('ai.tooltip')}
       >
-        {isOpen ? <X size={24} /> : (
+        {isOpen ? (
+          <X size={24} />
+        ) : (
           <div className="relative w-full h-full pointer-events-none">
-            <img 
-              src="/logos/Thebottleclub.jpg" 
-              alt="AI" 
-              className="w-full h-full object-cover"
-            />
-            <span className="absolute top-1 right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-pulse z-10"></span>
+            <img src="/logos/Thebottleclub.jpg" alt="" className="w-full h-full object-cover" />
+            <span className="absolute top-1 right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-pulse z-10" />
           </div>
         )}
-        
-        {/* Tooltip */}
         {!isOpen && !isDragging && (
           <div className="absolute right-16 bg-white text-stone-800 text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none uppercase tracking-wider border border-stone-100">
             {t('ai.tooltip')}
@@ -320,75 +316,87 @@ export default function AIChat() {
         )}
       </button>
 
-      {/* Chat Window */}
       {isOpen && (
-        <div 
+        <div
           style={{
             transform: `translate(${position.x}px, ${position.y}px)`,
-            transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+            transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
           }}
           className="fixed bottom-24 right-6 z-50 w-[350px] md:w-[400px] h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-stone-200 animate-in slide-in-from-bottom-5 duration-300"
+          lang={language}
         >
-          {/* Header */}
           <div className="bg-[#8b0000] p-4 flex items-center justify-between text-white">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white rounded-full overflow-hidden border-2 border-white/20">
-                <img 
-                  src="/logos/Thebottleclub.jpg" 
-                  alt="The Bottle Club AI" 
-                  className="w-full h-full object-cover"
-                />
+                <img src="/logos/Thebottleclub.jpg" alt="" className="w-full h-full object-cover" />
               </div>
               <div>
                 <h3 className="font-bold text-sm tracking-tight">{t('ai.name')}</h3>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
-                  <span className="text-[10px] opacity-80 uppercase font-medium">Online</span>
+                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />
+                  <span className="text-[10px] opacity-80 uppercase font-medium">{t('ai.online')}</span>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <button 
+              <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsSpeakingEnabled(!isSpeakingEnabled);
                   if (isSpeakingEnabled) window.speechSynthesis.cancel();
                 }}
                 className="hover:bg-white/10 p-1.5 rounded-full transition-colors"
-                title={isSpeakingEnabled ? "Mute" : "Unmute"}
+                title={isSpeakingEnabled ? t('ai.mute') : t('ai.unmute')}
+                aria-label={isSpeakingEnabled ? t('ai.mute') : t('ai.unmute')}
               >
                 {isSpeakingEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
               </button>
-              <button onClick={() => setIsOpen(false)} className="hover:bg-white/10 p-1.5 rounded-full transition-colors">
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="hover:bg-white/10 p-1.5 rounded-full transition-colors"
+                aria-label="Close"
+              >
                 <ChevronDown size={20} />
               </button>
             </div>
           </div>
 
-          {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-stone-50">
             {messages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] flex gap-2 ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                  <div className={`w-8 h-8 rounded-full flex-shrink-0 overflow-hidden flex items-center justify-center ${
-                    msg.sender === 'user' ? 'bg-stone-300' : 'bg-white border border-stone-100 shadow-sm'
-                  }`}>
-                    {msg.sender === 'user' ? <User size={14} /> : (
-                      <img 
-                        src="/logos/Thebottleclub.jpg" 
-                        alt="AI" 
-                        className="w-full h-full object-cover"
-                      />
+              <div
+                key={msg.id}
+                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[85%] flex gap-2 ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+                >
+                  <div
+                    className={`w-8 h-8 rounded-full flex-shrink-0 overflow-hidden flex items-center justify-center ${
+                      msg.sender === 'user'
+                        ? 'bg-stone-300'
+                        : 'bg-white border border-stone-100 shadow-sm'
+                    }`}
+                  >
+                    {msg.sender === 'user' ? (
+                      <User size={14} />
+                    ) : (
+                      <img src="/logos/Thebottleclub.jpg" alt="" className="w-full h-full object-cover" />
                     )}
                   </div>
-                  <div className={`p-3 rounded-2xl text-xs leading-relaxed whitespace-pre-wrap shadow-sm ${
-                    msg.sender === 'user' 
-                      ? 'bg-[#8b0000] text-white rounded-tr-none' 
-                      : 'bg-white text-stone-800 border border-stone-100 rounded-tl-none'
-                  }`}>
+                  <div
+                    className={`p-3 rounded-2xl text-xs leading-relaxed whitespace-pre-wrap shadow-sm ${
+                      msg.sender === 'user'
+                        ? 'bg-[#8b0000] text-white rounded-tr-none'
+                        : 'bg-white text-stone-800 border border-stone-100 rounded-tl-none'
+                    }`}
+                  >
                     {msg.text}
-                    <div className={`text-[9px] mt-1 opacity-50 ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}>
-                      {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <div
+                      className={`text-[9px] mt-1 opacity-50 ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}
+                    >
+                      {formatTime(msg.timestamp)}
                     </div>
                   </div>
                 </div>
@@ -397,35 +405,21 @@ export default function AIChat() {
             {isTyping && (
               <div className="flex justify-start">
                 <div className="bg-white border border-stone-100 p-3 rounded-2xl rounded-tl-none shadow-sm flex gap-1 items-center">
-                  <div className="w-1 h-1 bg-stone-400 rounded-full animate-bounce"></div>
-                  <div className="w-1 h-1 bg-stone-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                  <div className="w-1 h-1 bg-stone-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                  <div className="w-1 h-1 bg-stone-400 rounded-full animate-bounce" />
+                  <div className="w-1 h-1 bg-stone-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                  <div className="w-1 h-1 bg-stone-400 rounded-full animate-bounce [animation-delay:0.4s]" />
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Actions */}
           <div className="p-2 flex gap-2 overflow-x-auto no-scrollbar bg-white border-t border-stone-100">
-            {[
-              { label: t('ai.quick_all'), query: 'list' },
-              { label: t('ai.quick_cheap'), query: 'cheap' },
-              { label: t('ai.quick_recommend'), query: 'recommend' }
-            ].map((btn) => (
-              <button 
-                key={btn.label}
-                onClick={() => {
-                  setInput(btn.label);
-                  // Trigger handleSend via form submission simulation
-                  setTimeout(() => {
-                    const form = document.getElementById('chat-form') as HTMLFormElement;
-                    if (form) {
-                       const event = new Event('submit', { cancelable: true, bubbles: true });
-                       form.dispatchEvent(event);
-                    }
-                  }, 10);
-                }}
+            {quickActions.map((btn) => (
+              <button
+                key={btn.intent}
+                type="button"
+                onClick={() => handleQuickAction(btn.intent)}
                 className="whitespace-nowrap px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-full text-[10px] font-bold transition-colors border border-stone-200"
               >
                 {btn.label}
@@ -433,19 +427,24 @@ export default function AIChat() {
             ))}
           </div>
 
-          {/* Input Area */}
-          <form id="chat-form" onSubmit={handleSend} className="p-4 bg-white border-t border-stone-200 flex gap-2 items-center">
+          <form
+            id="chat-form"
+            onSubmit={handleSend}
+            className="p-4 bg-white border-t border-stone-200 flex gap-2 items-center"
+          >
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={t('ai.placeholder')}
               className="flex-1 bg-stone-100 border-none rounded-full px-4 py-2 text-xs focus:ring-1 focus:ring-[#8b0000] focus:bg-white transition-all outline-none"
+              autoComplete="off"
             />
             <button
               type="submit"
-              disabled={!input.trim()}
+              disabled={!input.trim() || isTyping}
               className="w-10 h-10 bg-[#8b0000] text-white rounded-full flex items-center justify-center disabled:opacity-50 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20"
+              aria-label={t('ai.placeholder')}
             >
               <Send size={18} />
             </button>

@@ -5,9 +5,16 @@
 ## 🌟 ฟีเจอร์ที่พัฒนาแล้ว (Implemented Features)
 
 ### 🔐 ระบบสมาชิกและความปลอดภัย (Authentication & Security)
-- **ระบบ Login / Register**: เชื่อมต่อกับ External API และมีระบบสำรองใน Local Database เพื่อความเสถียร
-- **JWT Session**: จัดการ Session ผ่าน Cookie ด้วย `jose` (Sign/Verify) รองรับการใช้งานทั้งฝั่ง Server และ Client
-- **Middleware Protection**: ระบบความปลอดภัยป้องกันการเข้าถึงหน้าสมาชิก (Account, Orders, Checkout) โดยไม่ได้รับอนุญาต
+- **ระบบ Login / Register**: 
+  - เชื่อมต่อกับ External API พร้อมระบบตรวจสอบข้อผิดพลาดที่ครอบคลุม
+  - ระบบสมัครสมาชิกที่รองรับข้อมูลครบถ้วน (ชื่อ, นามสกุล, อีเมล, เบอร์โทรศัพท์)
+  - ระบบ Login ที่รองรับทั้ง Username และ Email
+- **Advanced JWT Handling**: 
+  - ระบบ Extract และ Normalize Token อัตโนมัติจาก API Payload หลายรูปแบบ
+  - `setSessionFromToken`: ฟังก์ชันกู้คืน Session จาก JWT Token ได้โดยตรง
+- **Secure Session Management**: 
+  - จัดการ Session ผ่าน Cookie ด้วย `jose` (Sign/Verify) บนฝั่ง Server (Secure HttpOnly Cookie)
+  - ระบบตรวจสอบสิทธิ์ (Middleware) ปกป้องเส้นทางที่ต้องระบุตัวตน
 - **Members-Only Barrier**: ระบบบล็อกเนื้อหาและซ่อนราคาสำหรับผู้ที่ยังไม่ได้เข้าสู่ระบบ เพื่อกระตุ้นการสมัครสมาชิก
 
 ### 👤 การจัดการบัญชี (Account Management)
@@ -31,11 +38,21 @@
 ---
 
 ## ✅ อัปเดตล่าสุด (Latest Updates)
+- **Hydration & Localization Fix**: ปรับปรุงระบบจัดการภาษาให้เป็น Hydration-safe ด้วย `useSyncExternalStore`
 - **Product Infrastructure**: ปรับปรุง `getProducts` ให้รองรับการ Authentication (Bearer Token) เมื่อดึงข้อมูลจาก External API
 - **Dynamic Routing Fix**: แก้ไขระบบ Dynamic Params สำหรับหน้า Product Detail ให้รองรับการใช้งานบน Next.js 15
-- **Mapping Logic Enhancement**: เพิ่ม Logic การแยกประเภทไวน์ (Red, White, Rose) ให้แม่นยำยิ่งขึ้นโดยตรวจสอบจาก Keyword ในสายพันธุ์องุ่น
-- **Hybrid Order System**: พัฒนาระบบการสั่งซื้อที่พยายามส่งข้อมูลไปยัง External API ก่อน และจะสลับไปใช้ Local Database อัตโนมัติหากเกิดข้อผิดพลาด (Fallback Strategy)
-- **API Proxy Architecture**: เพิ่ม Route Proxy สำหรับจัดการที่อยู่และคำสั่งซื้อ เพื่อความปลอดภัยของ Token และลดปัญหา Network
+
+---
+
+## 📋 งานที่เพิ่งเสร็จสิ้น (Recent Session - 2026-05-23)
+
+### 🛠️ แก้ไขปัญหา Hydration Mismatch & Refactor Language Context
+- **ปัญหา**: เกิดข้อผิดพลาด React Hydration Error ในหน้าหลัก (ProductGrid) เนื่องจากข้อความแปลภาษาฝั่ง Client ไม่ตรงกับ Server (โดยเฉพาะ `t('products.browse_style')`)
+- **การแก้ไข (Refactoring)**:
+  - **useSyncExternalStore**: ปรับปรุง `LanguageContext.tsx` มาใช้ API มาตรฐานของ React 18+ ในการจัดการ State ภายนอก (localStorage)
+  - **Hydration-Safe Logic**: กำหนดให้ Client render ครั้งแรกต้องใช้ `initialLanguage` จาก Server เสมอ แล้วจึงทำการ Sync กับ `localStorage` ในภายหลัง
+  - **Whitespace Optimization**: ปรับแต่งโค้ดใน `ProductGrid.tsx` ให้กระชับ (Single-line rendering) เพื่อลดปัญหาอักขระว่าง (Whitespace) ที่มักทำให้เกิด Hydration Mismatch
+- **ผลลัพธ์**: แอปพลิเคชันโหลดได้เร็วขึ้น ไม่มี Error กวนใจใน Console และรักษาสถานะภาษาของผู้ใช้ได้อย่างแม่นยำ
 
 ---
 
@@ -136,6 +153,9 @@ JWT_SECRET=your_jwt_secret
 NEXT_PUBLIC_API_URL=https://possimon.onrender.com
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
 STRIPE_SECRET_KEY=your_stripe_secret_key
+# Optional: external shipping carrier API (falls back to built-in routes)
+SHIPPING_API_URL=https://your-carrier-api.example.com
+SHIPPING_API_KEY=your_shipping_api_key
 ```
 รัน Frontend:
 ```bash
@@ -151,13 +171,29 @@ npm install
 ```env
 PORT=3001
 STRIPE_SECRET_KEY=your_stripe_secret_key
+SHIPPING_API_URL=https://your-carrier-api.example.com
+SHIPPING_API_KEY=your_shipping_api_key
 ```
 รัน Backend:
 ```bash
 npm run dev
 ```
 
-### 4. การเตรียมฐานข้อมูล
+### 4. Shipping Tracking API (ส่งออกจากไทย)
+
+| Method | Endpoint | คำอธิบาย |
+|--------|----------|----------|
+| GET | `/api/shipping/track?tracking_number=TBC-EXP-AIR-JP-001` | Next.js (แนะนำสำหรับหน้าเว็บ) |
+| POST | `/api/shipping/track` | Body: `{ "tracking_number", "transport_mode", "destination_country", "direction" }` |
+| GET | `http://localhost:3001/api/shipping/track/:trackingNumber` | Express backend |
+
+เลขพัสดุตัวอย่าง (ส่งออกจากไทย): `TBC-EXP-SEA-CN-001`, `TBC-EXP-AIR-JP-001`, `TBC-EXP-AIR-GB-001`, `TBC-EXP-AIR-RU-001`, ส่งในประเทศ: `TBC-DOM-LOCAL-TH-001`
+
+ตั้ง `SHIPPING_API_URL` เพื่อเชื่อม API ขนส่งภายนอก — ระบบจะใช้ข้อมูลจาก API นั้นก่อน หากไม่สำเร็จจะ fallback เป็นเส้นทางในตัว
+
+โค้ด tracking อยู่ที่ `frontend/src/lib/tracking/`
+
+### 5. การเตรียมฐานข้อมูล
 รันคำสั่งใน `database_init.sql` ใน PostgreSQL Database ของคุณเพื่อสร้างตาราง `users` และ `orders` ที่จำเป็นสำหรับระบบ Fallback
 
 ---

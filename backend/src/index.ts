@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import Stripe from 'stripe';
+import { shippingRouter } from './shipping/routes';
 
 dotenv.config();
 
@@ -27,6 +28,8 @@ app.use((req, res, next) => {
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend is running' });
 });
+
+app.use('/api/shipping', shippingRouter);
 
 // Create Stripe Checkout Session
 app.post('/api/checkout', async (req, res) => {

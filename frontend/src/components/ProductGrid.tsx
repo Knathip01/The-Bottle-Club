@@ -257,17 +257,11 @@ export default function ProductGrid({
           id="wine-categories"
         >
           <div className="mb-7 text-center">
-            <p className="mb-2 text-[11px] font-black uppercase tracking-[0.28em] text-[#a11a1a]">
-              {t('products.browse_style')}
-            </p>
+            <p className="mb-2 text-[11px] font-black uppercase tracking-[0.28em] text-[#a11a1a]">{t('products.browse_style')}</p>
 
-            <h2 className="text-3xl font-black tracking-normal text-stone-950 md:text-5xl">
-              {sectionCopy.winesTitle}
-            </h2>
+            <h2 className="text-3xl font-black tracking-normal text-stone-950 md:text-5xl">{sectionCopy.winesTitle}</h2>
 
-            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-stone-500 md:text-base">
-              {sectionCopy.winesSubtitle}
-            </p>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-stone-500 md:text-base">{sectionCopy.winesSubtitle}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
