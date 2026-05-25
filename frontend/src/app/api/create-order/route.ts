@@ -163,53 +163,40 @@ export async function POST(request: Request) {
       }
     }
 
-    // Helper: save order to local DB (called on both success and graceful failure paths)
+    // Helper: save order to local DB — uses SERIAL id (auto-generated, no overflow risk)
+    // Returns the generated local DB order id.
     async function saveOrderToLocalDB(
-      orderId: number | string,
       totalAmount: number,
-      status: string
-    ) {
+      status: string,
+      apiOrderId?: number | null
+    ): Promise<number> {
       const normalizedFee = Number(shippingFee) || 0;
       const subtotal = totalAmount - normalizedFee;
 
-      // 1. Mirror products to local DB (for reference, not required)
+      // 1. Mirror products to local DB (best-effort, non-fatal)
       for (const item of items) {
         const productId = parseInt(String(item.product_id ?? item.id), 10);
         if (productId && item.name) {
           await dbQuery(
             `INSERT INTO products (id, name, price, stock)
              VALUES ($1, $2, $3, 0)
-             ON CONFLICT (id) DO UPDATE SET
-               name = EXCLUDED.name,
-               price = EXCLUDED.price`,
+             ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, price = EXCLUDED.price`,
             [productId, String(item.name), Number(item.price) || 0]
-          ).catch(() => {}); // Non-fatal
+          ).catch(() => {});
         }
       }
 
-      // 2. Save/Update the order
-      await dbQuery(
+      // 2. Save the order — let SERIAL generate the id
+      const orderResult = await dbQuery(
         `INSERT INTO orders (
-          id, user_id, subtotal_amount, shipping_fee, total_amount, status,
+          user_id, subtotal_amount, shipping_fee, total_amount, status,
           order_type, payment_method, shipping_method, address_id,
           is_full_tax_invoice, tax_id, tax_business_name,
-          use_shipping_as_tax_address, tax_address, created_at
+          use_shipping_as_tax_address, tax_address, created_at,
+          stripe_payment_intent_id
         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
-        ON CONFLICT (id) DO UPDATE SET
-          status = EXCLUDED.status,
-          total_amount = EXCLUDED.total_amount,
-          subtotal_amount = EXCLUDED.subtotal_amount,
-          shipping_fee = EXCLUDED.shipping_fee,
-          payment_method = EXCLUDED.payment_method,
-          shipping_method = EXCLUDED.shipping_method,
-          address_id = EXCLUDED.address_id,
-          is_full_tax_invoice = EXCLUDED.is_full_tax_invoice,
-          tax_id = EXCLUDED.tax_id,
-          tax_business_name = EXCLUDED.tax_business_name,
-          use_shipping_as_tax_address = EXCLUDED.use_shipping_as_tax_address,
-          tax_address = EXCLUDED.tax_address`,
+        RETURNING id`,
         [
-          orderId,
           String(user.id),
           subtotal,
           normalizedFee,
@@ -225,21 +212,26 @@ export async function POST(request: Request) {
           useShippingAsTaxAddress ?? body.use_shipping_as_tax_address ?? true,
           taxAddress ? JSON.stringify(taxAddress ?? body.tax_address) : null,
           new Date().toISOString(),
+          apiOrderId ? String(apiOrderId) : null, // store remote id for reference
         ]
       );
 
-      // 3. Save items to local DB — include name so display works without products table
-      await dbQuery('DELETE FROM order_items WHERE order_id = $1', [orderId]).catch(() => {});
+      const localId: number = orderResult.rows[0].id;
+
+      // 3. Save order items — include name for display without products table
       for (const item of items) {
         const productId = parseInt(String(item.product_id ?? item.id), 10);
         if (productId) {
           await dbQuery(
             `INSERT INTO order_items (order_id, product_id, quantity, price, name)
              VALUES ($1, $2, $3, $4, $5)`,
-            [orderId, productId, Number(item.quantity) || 1, Number(item.price) || 0, String(item.name || `Product #${productId}`)]
-          ).catch(err => console.error('Failed to save order item:', orderId, productId, err));
+            [localId, productId, Number(item.quantity) || 1, Number(item.price) || 0,
+             String(item.name || `Product #${productId}`)]
+          ).catch(err => console.error('Failed to save order item:', localId, productId, err));
         }
       }
+
+      return localId;
     }
 
     // 3. Save Order to External API
@@ -295,14 +287,12 @@ export async function POST(request: Request) {
       if (!apiResponse.ok) {
         // Remote API failed — save locally so the order is not lost
         console.warn('External API order failed, saving to local DB as fallback:', apiData);
-        const fallbackId = Date.now();
         try {
-          await saveOrderToLocalDB(fallbackId, requestTotalAmount, 'pending');
-          console.log('Fallback local DB save succeeded, orderId:', fallbackId);
-          // Return success so CheckoutForm redirects to orders page — order is in local DB
+          const localId = await saveOrderToLocalDB(requestTotalAmount, 'pending', null);
+          console.log('Fallback local DB save succeeded, localId:', localId);
           return NextResponse.json({
             url: session_stripe?.url || null,
-            orderId: fallbackId,
+            orderId: localId,
             warning: 'Order saved locally; fulfilment system unavailable.',
           });
         } catch (dbErr) {
@@ -314,22 +304,23 @@ export async function POST(request: Request) {
         }
       }
 
-      const orderId = apiData.id || Date.now();
+      const apiOrderId = apiData.id || null;
       const totalAmount = apiData.total_price ?? apiData.total_amount ?? requestTotalAmount;
 
       // Mirror the order to the local DB so GET /account/orders can display it.
       // (GET /api/orders on the remote API is admin-only; regular users get 403.)
+      let localId = apiOrderId;
       try {
-        await saveOrderToLocalDB(orderId, totalAmount, apiData.status || 'pending');
-        console.log('Order mirrored to local DB, orderId:', orderId);
+        localId = await saveOrderToLocalDB(totalAmount, apiData.status || 'pending', apiOrderId);
+        console.log('Order saved to local DB, localId:', localId, '(apiOrderId:', apiOrderId, ')');
       } catch (dbErr) {
-        // Non-fatal: order was created in the remote API successfully
-        console.warn('Failed to mirror order to local DB:', dbErr);
+        console.warn('Failed to save order to local DB:', dbErr);
+        localId = apiOrderId;
       }
 
       return NextResponse.json({
         url: session_stripe?.url || null,
-        orderId: orderId
+        orderId: localId || apiOrderId
       });
     } catch (apiError) {
       console.error('External API Exception:', apiError);
