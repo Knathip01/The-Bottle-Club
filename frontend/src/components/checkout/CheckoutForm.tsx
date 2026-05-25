@@ -149,6 +149,7 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
         body: JSON.stringify({
           totalAmount: total,
           addressId: addressId,
+          paymentMethod: paymentMethod,
           items: validItems.map(item => ({
             id: String(item.id),
             name: item.name,

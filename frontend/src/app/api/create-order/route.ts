@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    const { items, totalAmount, addressId, successUrl, cancelUrl } = body;
+    const { items, totalAmount, addressId, paymentMethod, successUrl, cancelUrl } = body;
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
 
     if (!items || !items.length) {
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
       console.log('Creating Stripe Session locally...');
       try {
         session_stripe = await stripe.checkout.sessions.create({
-          payment_method_types: ['card', 'promptpay'],
+          payment_method_types: paymentMethod === 'promptpay' ? ['promptpay'] : ['card'],
           line_items: items.map((item: any) => ({
             price_data: {
               currency: 'thb',
@@ -105,10 +105,13 @@ export async function POST(request: Request) {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      let mappedPaymentMethod = paymentMethod || 'credit_card';
+      if (mappedPaymentMethod === 'wallet') mappedPaymentMethod = 'qr';
+
       const orderPayload = {
         user_id: user.id,
         total_amount: totalAmount,
-        payment_method: 'credit_card',
+        payment_method: mappedPaymentMethod,
         order_type: 'online',
         address_id: addressId ? parseInt(addressId) : null,
         items: items.map((item: any) => ({
