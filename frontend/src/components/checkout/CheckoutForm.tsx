@@ -1,14 +1,128 @@
 'use client';
 
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import type { CartItem } from '@/lib/cart';
 import { readCart, subscribeCart, getEmptyCart } from '@/lib/cart';
 import { User, MapPin, ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
-import { COUNTRIES } from '@/lib/checkout-translations';
 
 interface CheckoutFormProps {
   user: any;
+}
+
+type CheckoutPaymentMethod =
+  | 'cash'
+  | 'transfer'
+  | 'credit_card'
+  | 'promptpay'
+  | 'alipay'
+  | 'wechat_pay'
+  | 'line_pay'
+  | 'shopee_pay'
+  | 'true_wallet';
+
+type SavedAddress = {
+  id: number;
+  [key: string]: unknown;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function getAddressArray(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (!isRecord(payload)) {
+    return [];
+  }
+
+  for (const key of ['addresses', 'items', 'results']) {
+    if (Array.isArray(payload[key])) {
+      return payload[key] as unknown[];
+    }
+  }
+
+  const data = payload.data;
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  if (isRecord(data)) {
+    for (const key of ['addresses', 'items', 'results']) {
+      if (Array.isArray(data[key])) {
+        return data[key] as unknown[];
+      }
+    }
+  }
+
+  return [];
+}
+
+function normalizeSavedAddresses(payload: unknown): SavedAddress[] {
+  return getAddressArray(payload)
+    .filter(isRecord)
+    .map((address) => {
+      const id = Number(address.id);
+      return Number.isInteger(id) && id > 0 ? ({ ...address, id } as SavedAddress) : null;
+    })
+    .filter((address): address is SavedAddress => Boolean(address));
+}
+
+function firstAddressText(address: SavedAddress, keys: string[]) {
+  for (const key of keys) {
+    const value = address[key];
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  return '';
+}
+
+function formatSavedAddress(address: SavedAddress) {
+  const parts = [
+    firstAddressText(address, ['address_line', 'addressLine', 'address']),
+    firstAddressText(address, ['subdistrict', 'sub_district', 'subDistrict']),
+    firstAddressText(address, ['district']),
+    firstAddressText(address, ['province']),
+    firstAddressText(address, ['postal_code', 'postalCode', 'zipcode', 'zip_code']),
+    firstAddressText(address, ['country']),
+  ].filter(Boolean);
+
+  return parts.join(', ') || `Address #${address.id}`;
+}
+
+function getCreatedAddressId(payload: unknown) {
+  if (!isRecord(payload)) {
+    return null;
+  }
+
+  const directId = Number(payload.id);
+  if (Number.isInteger(directId) && directId > 0) {
+    return directId;
+  }
+
+  for (const key of ['data', 'address']) {
+    const nested = payload[key];
+    if (isRecord(nested)) {
+      const nestedId = Number(nested.id);
+      if (Number.isInteger(nestedId) && nestedId > 0) {
+        return nestedId;
+      }
+    }
+  }
+
+  return null;
+}
+
+function isAuthExpiredPayload(payload: unknown) {
+  if (!isRecord(payload)) {
+    return false;
+  }
+
+  return payload.authExpired === true || payload.error === 'AUTH_EXPIRED';
 }
 
 export default function CheckoutForm({ user }: CheckoutFormProps) {
@@ -27,16 +141,89 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
     zipcode: '',
   });
 
-  const [paymentMethod, setPaymentMethod] = useState('credit_card');
-  const [shippingMethod, setShippingMethod] = useState('standard');
+  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>('credit_card');
+  const [shippingMethod, setShippingMethod] = useState<'standard' | 'express'>('standard');
   const [otherCountry, setOtherCountry] = useState('');
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [addressMode, setAddressMode] = useState<'saved' | 'new'>('new');
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
+  const [taxInvoice, setTaxInvoice] = useState({
+    isRequested: false,
+    taxId: '',
+    taxBusinessName: '',
+    useShippingAsTaxAddress: true,
+    taxAddress: '',
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const orderItems = useSyncExternalStore(subscribeCart, readCart, getEmptyCart);
 
+  const redirectToLogin = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    localStorage.removeItem('access_token');
+    alert(language === 'th' ? 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่' : 'Your session expired. Please sign in again.');
+    window.location.href = `/login?next=${encodeURIComponent('/checkout')}`;
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSavedAddresses() {
+      setIsLoadingAddresses(true);
+
+      try {
+        const response = await fetch('/api/customers/addresses', { cache: 'no-store' });
+        if (response.status === 401) {
+          redirectToLogin();
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(`Address API returned ${response.status}`);
+        }
+
+        const data = await response.json().catch(() => []);
+        const addresses = normalizeSavedAddresses(data);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setSavedAddresses(addresses);
+
+        if (addresses.length > 0) {
+          setAddressMode('saved');
+          setSelectedAddressId((current) => current ?? addresses[0].id);
+        } else {
+          setAddressMode('new');
+          setSelectedAddressId(null);
+        }
+      } catch (error) {
+        console.error('Failed to load saved addresses:', error);
+        if (isMounted) {
+          setAddressMode('new');
+          setSelectedAddressId(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingAddresses(false);
+        }
+      }
+    }
+
+    loadSavedAddresses();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const getShippingOptions = () => {
     const subtotalAmt = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    if (formData.country === 'TH') {
+    if (formData.country === 'TH' || formData.country === 'OTHER') {
       return [
         {
           id: 'standard',
@@ -79,6 +266,17 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
   const total = subtotal + shippingFee;
   const points = Math.floor(subtotal / 10);
   const priceBeforeTax = total - tax;
+  const paymentOptions: Array<{ id: CheckoutPaymentMethod; label: string }> = [
+    { id: 'credit_card', label: t('checkout.credit_card') },
+    { id: 'promptpay', label: t('checkout.promptpay') },
+    { id: 'transfer', label: language === 'th' ? 'โอนเงิน' : 'Bank Transfer' },
+    { id: 'cash', label: language === 'th' ? 'เงินสด' : 'Cash' },
+    { id: 'alipay', label: 'Alipay' },
+    { id: 'wechat_pay', label: 'WeChat Pay' },
+    { id: 'line_pay', label: 'LINE Pay' },
+    { id: 'shopee_pay', label: 'ShopeePay' },
+    { id: 'true_wallet', label: 'True Wallet' },
+  ];
 
   const handleCheckout = async () => {
     if (orderItems.length === 0) {
@@ -86,14 +284,38 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
       return;
     }
 
-    if (formData.country === 'OTHER' && !otherCountry) {
-      alert(language === 'th' ? 'กรุณากรอกประเทศในการจัดส่ง' : 'Please specify the shipping country');
+    if (addressMode === 'saved' && !selectedAddressId) {
+      alert(language === 'th' ? 'กรุณาเลือกที่อยู่จัดส่ง' : 'Please select a saved shipping address');
       return;
     }
 
-    if (!formData.firstName || !formData.lastName || !formData.phone || !formData.address || !formData.province || !formData.district || !formData.subDistrict || !formData.zipcode) {
-      alert(t('checkout.complete_address_alert'));
-      return;
+    if (addressMode === 'new') {
+      if (formData.country === 'OTHER' && !otherCountry) {
+        alert(language === 'th' ? 'กรุณากรอกประเทศในการจัดส่ง' : 'Please specify the shipping country');
+        return;
+      }
+
+      if (!formData.firstName || !formData.lastName || !formData.phone || !formData.address || !formData.province || !formData.district || !formData.subDistrict || !formData.zipcode) {
+        alert(t('checkout.complete_address_alert'));
+        return;
+      }
+    }
+
+    if (taxInvoice.isRequested) {
+      if (!/^\d{13}$/.test(taxInvoice.taxId.trim())) {
+        alert(language === 'th' ? 'กรุณากรอกเลขประจำตัวผู้เสียภาษี 13 หลัก' : 'Please enter a 13-digit tax ID');
+        return;
+      }
+
+      if (!taxInvoice.taxBusinessName.trim()) {
+        alert(language === 'th' ? 'กรุณากรอกชื่อสำหรับใบกำกับภาษี' : 'Please enter the tax invoice name');
+        return;
+      }
+
+      if (!taxInvoice.useShippingAsTaxAddress && !taxInvoice.taxAddress.trim()) {
+        alert(language === 'th' ? 'กรุณากรอกที่อยู่สำหรับใบกำกับภาษี' : 'Please enter the tax invoice address');
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -106,41 +328,64 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
         return;
       }
 
-      const countryName = formData.country === 'TH'
-        ? (language === 'th' ? 'ไทย' : 'Thailand')
-        : otherCountry;
+      let addressId = addressMode === 'saved' ? selectedAddressId : null;
 
-      // 1. Save address first
-      console.log('Saving address...');
-      const addressResponse = await fetch('/api/proxy/addresses', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          address_line: formData.address || 'Default Address',
-          subdistrict: formData.subDistrict,
-          district: formData.district,
-          province: formData.province,
-          postal_code: formData.zipcode,
-          country: countryName
-        })
-      });
+      if (addressMode === 'new') {
+        const countryName = formData.country === 'TH'
+          ? (language === 'th' ? 'ไทย' : 'Thailand')
+          : otherCountry;
 
-      let addressId = 1; // Default
-      if (addressResponse.ok) {
-        const addrData = await addressResponse.json().catch(() => ({}));
-        if (addrData && addrData.id) {
-          addressId = addrData.id;
-          console.log('Address saved successfully, ID:', addressId);
+        // Save the new address first, then reuse the returned id for order creation.
+        console.log('Saving address...');
+        const addressResponse = await fetch('/api/customers/addresses', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            phone: formData.phone,
+            address_line: formData.address || 'Default Address',
+            subdistrict: formData.subDistrict,
+            district: formData.district,
+            province: formData.province,
+            postal_code: formData.zipcode,
+            country: countryName
+          })
+        });
+
+        if (!addressResponse.ok) {
+          const addrError = await addressResponse.json().catch(async () => ({
+            error: await addressResponse.text(),
+          }));
+
+          if (addressResponse.status === 401 || isAuthExpiredPayload(addrError)) {
+            redirectToLogin();
+            return;
+          }
+
+          console.error('Address save failed:', addrError);
+          throw new Error('Address save failed');
         }
-      } else {
-        const addrErrorText = await addressResponse.text();
-        console.error('Address save failed:', addrErrorText);
+
+        const addrData = await addressResponse.json().catch(() => ({}));
+        addressId = getCreatedAddressId(addrData);
+
+        if (!addressId) {
+          console.error('Address save response did not include an id:', addrData);
+          throw new Error('Address save response did not include an id');
+        }
+
+        console.log('Address saved successfully, ID:', addressId);
       }
 
-      // 2. Create order using the local Stripe API
-      console.log('Creating Stripe order with items:', validItems);
+      if (!addressId) {
+        throw new Error('Missing address id');
+      }
+
+      // 2. Create order. A payment redirect URL is returned only when the provider is configured.
+      console.log('Creating order with items:', validItems);
       const response = await fetch('/api/create-order', {
         method: 'POST',
         headers: {
@@ -150,6 +395,16 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
           totalAmount: total,
           addressId: addressId,
           paymentMethod: paymentMethod,
+          shippingMethod: shippingMethod,
+          shippingFee: shippingFee,
+          isFullTaxInvoice: taxInvoice.isRequested,
+          taxId: taxInvoice.isRequested ? taxInvoice.taxId.trim() : undefined,
+          taxBusinessName: taxInvoice.isRequested ? taxInvoice.taxBusinessName.trim() : undefined,
+          useShippingAsTaxAddress: taxInvoice.useShippingAsTaxAddress,
+          taxAddress:
+            taxInvoice.isRequested && !taxInvoice.useShippingAsTaxAddress
+              ? { address_line: taxInvoice.taxAddress.trim() }
+              : undefined,
           items: validItems.map(item => ({
             id: String(item.id),
             name: item.name,
@@ -165,6 +420,10 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
         let errorMessage = t('checkout.error_alert');
         try {
           const errorData = await response.json();
+          if (response.status === 401 || isAuthExpiredPayload(errorData)) {
+            redirectToLogin();
+            return;
+          }
           errorMessage = errorData.error || errorMessage;
         } catch (e) {
           const text = await response.text();
@@ -247,7 +506,81 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
             <div className="bg-stone-900 text-white rounded-full p-1"><MapPin size={14} /></div>
             <h3 className="text-sm font-bold uppercase tracking-tight">{t('checkout.shipping_address')}</h3>
           </div>
+
+          <div className="mb-6 space-y-3">
+            {isLoadingAddresses && (
+              <p className="text-[11px] font-medium text-stone-500">
+                {language === 'th' ? 'กำลังโหลดที่อยู่ที่บันทึกไว้...' : 'Loading saved addresses...'}
+              </p>
+            )}
+
+            {savedAddresses.length > 0 && (
+              <>
+                <p className="text-[11px] font-bold uppercase text-stone-900">
+                  {language === 'th' ? 'เลือกที่อยู่ที่บันทึกไว้' : 'Saved addresses'}
+                </p>
+
+                <div className="space-y-2">
+                  {savedAddresses.map((address) => (
+                    <label
+                      key={address.id}
+                      className="flex items-start gap-3 border border-stone-200 p-3 cursor-pointer hover:border-stone-900 transition-colors"
+                    >
+                      <input
+                        type="radio"
+                        name="saved-address"
+                        checked={addressMode === 'saved' && selectedAddressId === address.id}
+                        onChange={() => {
+                          setAddressMode('saved');
+                          setSelectedAddressId(address.id);
+                          
+                          // Pre-fill name and phone if they exist in the saved address
+                          const addrAny = address as any;
+                          if (addrAny.first_name || addrAny.firstName) {
+                            setFormData(prev => ({ ...prev, firstName: String(addrAny.first_name || addrAny.firstName) }));
+                          }
+                          if (addrAny.last_name || addrAny.lastName) {
+                            setFormData(prev => ({ ...prev, lastName: String(addrAny.last_name || addrAny.lastName) }));
+                          }
+                          if (addrAny.phone) {
+                            setFormData(prev => ({ ...prev, phone: String(addrAny.phone) }));
+                          }
+                        }}
+                        className="mt-1 w-4 h-4 border-stone-300 focus:ring-0 accent-stone-900"
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-bold text-stone-900">
+                          {String((address as any).first_name || (address as any).firstName || '')} {String((address as any).last_name || (address as any).lastName || '')}
+                          {(address as any).phone ? ` (${(address as any).phone})` : ''}
+                        </span>
+                        <span className="text-[11px] font-medium leading-relaxed text-stone-700">
+                          {formatSavedAddress(address)}
+                        </span>
+                      </div>
+                    </label>
+                  ))}
+
+                  <label className="flex items-center gap-3 border border-stone-200 p-3 cursor-pointer hover:border-stone-900 transition-colors">
+                    <input
+                      type="radio"
+                      name="saved-address"
+                      checked={addressMode === 'new'}
+                      onChange={() => {
+                        setAddressMode('new');
+                        setSelectedAddressId(null);
+                      }}
+                      className="w-4 h-4 border-stone-300 focus:ring-0 accent-stone-900"
+                    />
+                    <span className="text-[11px] font-bold uppercase text-stone-700">
+                      {language === 'th' ? 'ใช้ที่อยู่ใหม่' : 'Use a new address'}
+                    </span>
+                  </label>
+                </div>
+              </>
+            )}
+          </div>
           
+          {addressMode === 'new' && (
           <div className="space-y-4">
             <div>
               <label className="block text-[11px] font-bold text-stone-900 mb-1.5">{t('checkout.address')} *</label>
@@ -275,7 +608,7 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
                       subDistrict: '',
                       zipcode: ''
                     });
-                    setShippingMethod(selectedCountry === 'TH' ? 'standard' : 'air');
+                    setShippingMethod('standard');
                   }}
                 >
                   <option value="TH">{language === 'th' ? 'ไทย' : 'Thailand'}</option>
@@ -341,16 +674,97 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
               />
             </div>
           </div>
+          )}
           
           <div className="mt-6 space-y-3">
             <label className="flex items-center gap-2 cursor-pointer group">
-              <input type="checkbox" defaultChecked className="w-4 h-4 border-stone-300 rounded focus:ring-0 accent-stone-900" />
-              <span className="text-[11px] text-stone-600">{t('checkout.use_billing')}</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer group">
-              <input type="checkbox" className="w-4 h-4 border-stone-300 rounded focus:ring-0 accent-stone-900" />
+              <input
+                type="checkbox"
+                checked={taxInvoice.isRequested}
+                onChange={(e) =>
+                  setTaxInvoice({
+                    ...taxInvoice,
+                    isRequested: e.target.checked,
+                  })
+                }
+                className="w-4 h-4 border-stone-300 rounded focus:ring-0 accent-stone-900"
+              />
               <span className="text-[11px] text-stone-600">{t('checkout.request_tax_invoice')}</span>
             </label>
+
+            {taxInvoice.isRequested && (
+              <div className="space-y-3 border-t border-stone-100 pt-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-stone-900 mb-1.5">
+                    {language === 'th' ? 'เลขประจำตัวผู้เสียภาษี *' : 'Tax ID *'}
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={13}
+                    value={taxInvoice.taxId}
+                    className="w-full border border-stone-300 p-2.5 text-xs focus:outline-none"
+                    onChange={(e) =>
+                      setTaxInvoice({
+                        ...taxInvoice,
+                        taxId: e.target.value.replace(/\D/g, '').slice(0, 13),
+                      })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-stone-900 mb-1.5">
+                    {language === 'th' ? 'ชื่อบริษัท / ชื่อบุคคล *' : 'Business or legal name *'}
+                  </label>
+                  <input
+                    type="text"
+                    value={taxInvoice.taxBusinessName}
+                    className="w-full border border-stone-300 p-2.5 text-xs focus:outline-none"
+                    onChange={(e) =>
+                      setTaxInvoice({
+                        ...taxInvoice,
+                        taxBusinessName: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={taxInvoice.useShippingAsTaxAddress}
+                    onChange={(e) =>
+                      setTaxInvoice({
+                        ...taxInvoice,
+                        useShippingAsTaxAddress: e.target.checked,
+                      })
+                    }
+                    className="w-4 h-4 border-stone-300 rounded focus:ring-0 accent-stone-900"
+                  />
+                  <span className="text-[11px] text-stone-600">{t('checkout.use_billing')}</span>
+                </label>
+
+                {!taxInvoice.useShippingAsTaxAddress && (
+                  <div>
+                    <label className="block text-[11px] font-bold text-stone-900 mb-1.5">
+                      {language === 'th' ? 'ที่อยู่สำหรับใบกำกับภาษี *' : 'Tax invoice address *'}
+                    </label>
+                    <textarea
+                      value={taxInvoice.taxAddress}
+                      rows={3}
+                      className="w-full resize-none border border-stone-300 p-2.5 text-xs focus:outline-none"
+                      onChange={(e) =>
+                        setTaxInvoice({
+                          ...taxInvoice,
+                          taxAddress: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </section>
       </div>
@@ -368,7 +782,7 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
                   type="radio" 
                   name="shipping" 
                   checked={shippingMethod === option.id}
-                  onChange={() => setShippingMethod(option.id)}
+                  onChange={() => setShippingMethod(option.id as 'standard' | 'express')}
                   className="mt-1 w-4 h-4 border-stone-300 focus:ring-0 accent-stone-900" 
                 />
                 <div className="flex-1">
@@ -394,40 +808,20 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
           <h3 className="text-sm font-bold uppercase tracking-tight mb-6">{t('checkout.payment_method')}</h3>
           
           <div className="space-y-4">
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <input 
-                type="radio" 
-                name="payment" 
-                checked={paymentMethod === 'credit_card'}
-                onChange={() => setPaymentMethod('credit_card')}
-                className="w-4 h-4 border-stone-300 focus:ring-0 accent-stone-900" 
-              />
-              <span className="text-[11px] font-bold uppercase text-stone-600 group-hover:text-stone-900 transition-colors">{t('checkout.credit_card')}</span>
-            </label>
-            
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <input 
-                type="radio" 
-                name="payment" 
-                checked={paymentMethod === 'promptpay'}
-                onChange={() => setPaymentMethod('promptpay')}
-                className="w-4 h-4 border-stone-300 focus:ring-0 accent-stone-900" 
-              />
-              <span className="text-[11px] font-bold uppercase text-stone-600 group-hover:text-stone-900 transition-colors">{t('checkout.promptpay')}</span>
-            </label>
-            
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <input 
-                type="radio" 
-                name="payment" 
-                checked={paymentMethod === 'wallet'}
-                onChange={() => setPaymentMethod('wallet')}
-                className="w-4 h-4 border-stone-300 focus:ring-0 accent-stone-900" 
-              />
-              <div className="flex flex-col">
-                <span className="text-[11px] font-bold uppercase text-stone-600 group-hover:text-stone-900 transition-colors">{t('checkout.wallets')}</span>
-              </div>
-            </label>
+            {paymentOptions.map((option) => (
+              <label key={option.id} className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="payment"
+                  checked={paymentMethod === option.id}
+                  onChange={() => setPaymentMethod(option.id)}
+                  className="w-4 h-4 border-stone-300 focus:ring-0 accent-stone-900"
+                />
+                <span className="text-[11px] font-bold uppercase text-stone-600 group-hover:text-stone-900 transition-colors">
+                  {option.label}
+                </span>
+              </label>
+            ))}
           </div>
         </div>
       </div>

@@ -43,6 +43,9 @@ export default async function OrdersPage() {
           payment_method: order.payment_method || 'API'
         }));
       }
+    } else if (res.status === 401 || res.status === 403) {
+      // Expected for non-admin users — GET /api/orders is admin-only.
+      // Fall back to local DB orders below.
     } else {
       console.error('API response not OK:', res.status);
     }
@@ -54,17 +57,67 @@ export default async function OrdersPage() {
   let localOrders: any[] = [];
   try {
     const userId = user.id || user.user_id;
+    const userEmail = user.email;
     if (userId) {
-      const result = await query('SELECT * FROM orders WHERE user_id::text = $1::text', [userId]);
+      const result = await query(
+        'SELECT * FROM orders WHERE user_id::text = $1::text ORDER BY created_at DESC',
+        [String(userId)]
+      );
       localOrders = result.rows.map(order => ({
         ...order,
-        total_price: Number(order.total_amount),
-        payment_method: 'Stripe/Local',
-        created_at: order.created_at?.toISOString ? order.created_at.toISOString() : (order.created_at || new Date().toISOString())
+        total_price: Number(order.total_amount || 0),
+        total_amount: Number(order.total_amount || 0),
+        subtotal_amount: Number(order.subtotal_amount || 0),
+        shipping_fee: Number(order.shipping_fee || 0),
+        payment_method: order.payment_method || 'credit_card',
+        created_at: order.created_at?.toISOString
+          ? order.created_at.toISOString()
+          : (order.created_at || new Date().toISOString()),
       }));
+
+      // Fetch items — LEFT JOIN so orders show even if products table is empty
+      if (localOrders.length > 0) {
+        const orderIds = localOrders.map(o => o.id);
+        const itemsResult = await query(
+          `SELECT oi.id, oi.order_id, oi.product_id, oi.quantity,
+                  oi.price, COALESCE(oi.name, p.name, 'Product #' || oi.product_id::text) AS name
+           FROM order_items oi
+           LEFT JOIN products p ON p.id = oi.product_id
+           WHERE oi.order_id = ANY($1)`,
+          [orderIds]
+        );
+        localOrders.forEach(order => {
+          order.items = itemsResult.rows
+            .filter(item => item.order_id === order.id)
+            .map(item => ({
+              ...item,
+              price: Number(item.price || 0),
+              quantity: Number(item.quantity || 0),
+            }));
+        });
+      }
     }
   } catch (error) {
     console.error('Failed to fetch orders from local DB:', error);
+  }
+
+  // 3. Fetch Addresses from API to display in Order History
+  let userAddresses: any[] = [];
+  try {
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
+    const token = session?.user?.access_token;
+    if (token) {
+      const res = await fetch(`${API_BASE_URL}/api/customers/addresses`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        next: { revalidate: 0 },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        userAddresses = Array.isArray(data) ? data : (data.addresses || data.data || []);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to fetch addresses for orders page:', err);
   }
 
   // Combine and remove duplicates (by ID if both sources have the same order)
@@ -84,7 +137,7 @@ export default async function OrdersPage() {
       <div className="flex-1 container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-8">
           <AccountSidebar user={user} activePath="/account/orders" />
-          <OrdersContent initialOrders={orders} />
+          <OrdersContent initialOrders={orders} addresses={userAddresses} />
         </div>
       </div>
       <Footer />

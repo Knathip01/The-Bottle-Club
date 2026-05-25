@@ -22,16 +22,34 @@ CREATE TABLE IF NOT EXISTS products (
 CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
     user_id VARCHAR(255), -- Matching User ID
+    subtotal_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    shipping_fee DECIMAL(10, 2) NOT NULL DEFAULT 0,
     total_amount DECIMAL(10, 2) NOT NULL,
     status VARCHAR(50) DEFAULT 'pending',
     order_type VARCHAR(50) NOT NULL, -- 'online', 'pos'
-    payment_method VARCHAR(50) NOT NULL, -- 'cash', 'promptpay', 'qr', 'credit_card', 'transfer'
+    payment_method VARCHAR(50) NOT NULL, -- 'cash', 'transfer', 'credit_card', 'promptpay', 'alipay', 'wechat_pay', 'line_pay', 'shopee_pay', 'true_wallet'
+    shipping_method VARCHAR(50), -- 'standard', 'express', or 'pos'
     address_id INTEGER,
     received_amount DECIMAL(10, 2),
     change_amount DECIMAL(10, 2),
+    is_full_tax_invoice BOOLEAN NOT NULL DEFAULT false,
+    tax_id VARCHAR(13),
+    tax_business_name VARCHAR(255),
+    use_shipping_as_tax_address BOOLEAN NOT NULL DEFAULT true,
+    tax_address JSONB,
     stripe_payment_intent_id VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Keep existing databases compatible with the current order API.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS subtotal_amount DECIMAL(10, 2) NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_fee DECIMAL(10, 2) NOT NULL DEFAULT 0;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_method VARCHAR(50);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS is_full_tax_invoice BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS tax_id VARCHAR(13);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS tax_business_name VARCHAR(255);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS use_shipping_as_tax_address BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS tax_address JSONB;
 
 -- Create order items table
 CREATE TABLE IF NOT EXISTS order_items (

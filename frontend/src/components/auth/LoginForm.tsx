@@ -37,7 +37,11 @@ export default function LoginForm() {
         localStorage.setItem('access_token', result.token);
       }
 
-      router.push('/account');
+      const params = new URLSearchParams(window.location.search);
+      const nextPath = params.get('next');
+      const safeNextPath = nextPath?.startsWith('/') && !nextPath.startsWith('//') ? nextPath : '/account';
+
+      router.push(safeNextPath);
       router.refresh();
     } catch (err) {
       console.error('Login error:', err);

@@ -52,22 +52,13 @@ async function getAuthHeaders() {
 
 async function proxyAddressRequest(method: 'GET' | 'POST', body?: unknown) {
   try {
-    const targetUrl = `${API_BASE_URL}/api/customers/addresses`;
     const headers = await getAuthHeaders();
-    
-    console.log('--- Address Proxy Request ---');
-    console.log('Target:', targetUrl);
-    console.log('Method:', method);
-    
-    // Proxy the request to the external API
-    const response = await fetch(targetUrl, {
+    const response = await fetch(`${API_BASE_URL}/api/customers/addresses`, {
       method,
       headers,
       cache: 'no-store',
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
-
-    console.log('External API Status:', response.status);
 
     const contentType = response.headers.get('content-type') || '';
     const payload = contentType.includes('application/json')
@@ -79,19 +70,21 @@ async function proxyAddressRequest(method: 'GET' | 'POST', body?: unknown) {
     }
 
     if (!response.ok) {
-      console.error('External API Error:', payload);
       return NextResponse.json(
-        { error: 'External API error', status: response.status, details: payload },
+        {
+          error: 'External API error',
+          status: response.status,
+          details: payload,
+        },
         { status: response.status }
       );
     }
 
-    console.log('Address Success:', payload);
     return NextResponse.json(payload);
-  } catch (error: any) {
-    console.error('Proxy Exception:', error.message || error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: 'Internal Proxy Error', details: error.message || String(error) },
+      { error: 'Internal Proxy Error', details: message },
       { status: 500 }
     );
   }
