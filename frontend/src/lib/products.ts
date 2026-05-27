@@ -23,6 +23,15 @@ export type Product = {
   designation?: string;
 };
 
+export type ProductReview = {
+  id: number;
+  product_id: number;
+  user_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+};
+
 function extractWineArray(rawData: unknown): unknown[] {
   if (Array.isArray(rawData)) return rawData;
   if (rawData && typeof rawData === 'object') {
@@ -65,7 +74,12 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
       return [];
     }
 
-    const rawData = await response.json();
+    const responseText = await response.text();
+    if (!responseText) {
+      console.error('API returned empty body');
+      return [];
+    }
+    const rawData = JSON.parse(responseText);
     const wineList = extractWineArray(rawData);
 
     if (wineList.length === 0) {
@@ -204,6 +218,41 @@ export async function getProductById(id: number, token?: string): Promise<Produc
     return found ?? null;
   } catch (error) {
     console.error('Failed to fetch product by id:', error);
+    return null;
+  }
+}
+
+export async function getReviews(productId: number): Promise<ProductReview[]> {
+  try {
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const response = await fetch(`${API_BASE_URL}/api/products/${productId}/reviews`);
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch reviews:', error);
+    return [];
+  }
+}
+
+export async function createReview(
+  productId: number,
+  token: string,
+  data: { rating: number; comment: string; user_name?: string }
+): Promise<ProductReview | null> {
+  try {
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const response = await fetch(`${API_BASE_URL}/api/products/${productId}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to create review:', error);
     return null;
   }
 }

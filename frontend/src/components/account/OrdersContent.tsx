@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
-import { Package } from 'lucide-react';
+import { Package, ShoppingBag, ArrowRight } from 'lucide-react';
 
 interface OrdersContentProps {
   initialOrders: any[];
@@ -22,7 +23,6 @@ export default function OrdersContent({ initialOrders, addresses = [] }: OrdersC
   };
 
   const formatAddress = (order: any) => {
-    // 1. Check if we have the address in the addresses list
     const savedAddress = addresses.find(a => a.id === order.address_id);
     if (savedAddress) {
       const parts = [
@@ -38,17 +38,6 @@ export default function OrdersContent({ initialOrders, addresses = [] }: OrdersC
       ].filter(Boolean);
       return parts.join(' ');
     }
-
-    // 2. Check if we have tax address (sometimes used as fallback)
-    if (order.tax_address) {
-      try {
-        const taxAddr = typeof order.tax_address === 'string' ? JSON.parse(order.tax_address) : order.tax_address;
-        return taxAddr.address_line || taxAddr.address || JSON.stringify(taxAddr);
-      } catch (e) {
-        return String(order.tax_address);
-      }
-    }
-
     return order.address_id ? `${t('order.address_id')} #${order.address_id}` : t('order.no_address');
   };
 
@@ -78,9 +67,7 @@ export default function OrdersContent({ initialOrders, addresses = [] }: OrdersC
                         {new Date(order.created_at).toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', {
                           year: 'numeric',
                           month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
+                          day: 'numeric'
                         })}
                       </p>
                     </div>
@@ -109,8 +96,17 @@ export default function OrdersContent({ initialOrders, addresses = [] }: OrdersC
                     <p className="text-stone-400 text-[9px] uppercase font-bold mb-1.5 tracking-[0.15em]">{language === 'th' ? 'วิธีจัดส่ง' : 'SHIPPING'}</p>
                     <p className="font-bold text-stone-700 text-xs uppercase tracking-tight">{order.shipping_method || 'Standard'}</p>
                   </div>
-                  <div className="flex justify-end">
+                  <div className="flex justify-end gap-4 items-center">
+                    {order.status === 'pending' && (
+                      <Link
+                        href={`/confirm-payment/${order.id}`}
+                        className="text-[10px] font-bold text-[#a11a1a] border border-[#a11a1a] px-3 py-1 hover:bg-[#a11a1a] hover:text-white transition-all uppercase tracking-widest hidden sm:block"
+                      >
+                        {language === 'th' ? 'ยืนยันการชำระเงิน' : 'CONFIRM PAYMENT'}
+                      </Link>
+                    )}
                     <button 
+                      type="button"
                       onClick={() => toggleOrder(order.id)}
                       className="text-[11px] font-bold text-stone-900 border-b-2 border-stone-900 pb-0.5 hover:text-[#a11a1a] hover:border-[#a11a1a] transition-all uppercase tracking-widest"
                     >
@@ -120,30 +116,22 @@ export default function OrdersContent({ initialOrders, addresses = [] }: OrdersC
                 </div>
               </div>
 
-              {/* Expanded Details Section - Replicating Checkout Summary Style */}
               {expandedOrders.includes(order.id) && (
                 <div className="bg-[#fcfcfc] border-t border-stone-100 p-8 animate-in fade-in slide-in-from-top-4 duration-300">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                    {/* Items List */}
                     <div className="lg:col-span-2">
                       <h4 className="text-[11px] font-bold text-stone-900 uppercase mb-6 tracking-widest border-b border-stone-200 pb-2">{t('order.items')}</h4>
-                      {order.items && order.items.length > 0 ? (
-                        <div className="space-y-4">
-                          {order.items.map((item: any, idx: number) => (
-                            <div key={idx} className="flex justify-between items-center text-xs pb-4 border-b border-stone-50 last:border-0">
-                              <div className="flex-1">
-                                <p className="font-bold text-stone-800 uppercase tracking-tight">{item.name}</p>
-                                <p className="text-stone-400 text-[10px] mt-1">QTY: {item.quantity} × ฿{Number(item.price).toLocaleString()}</p>
-                              </div>
-                              <span className="font-bold text-stone-900">฿{(item.quantity * item.price).toLocaleString()}</span>
+                      <div className="space-y-4">
+                        {order.items?.map((item: any, idx: number) => (
+                          <div key={idx} className="flex justify-between items-center text-xs pb-4 border-b border-stone-50 last:border-0">
+                            <div className="flex-1">
+                              <p className="font-bold text-stone-800 uppercase tracking-tight">{item.name}</p>
+                              <p className="text-stone-400 text-[10px] mt-1">QTY: {item.quantity} × ฿{Number(item.price).toLocaleString()}</p>
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-[11px] text-stone-400 italic py-4">
-                          {t('order.no_items_found')}
-                        </p>
-                      )}
+                            <span className="font-bold text-stone-900">฿{(item.quantity * item.price).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
 
                       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
@@ -158,20 +146,12 @@ export default function OrdersContent({ initialOrders, addresses = [] }: OrdersC
                             <div className="space-y-1 text-[11px] text-stone-600 uppercase tracking-tight">
                               <p><span className="font-bold">{language === 'th' ? 'เลขที่ภาษี:' : 'TAX ID:'}</span> {order.tax_id}</p>
                               <p><span className="font-bold">{language === 'th' ? 'ชื่อ:' : 'NAME:'}</span> {order.tax_business_name}</p>
-                              <p className="mt-2 leading-relaxed">
-                                <span className="font-bold">{language === 'th' ? 'ที่อยู่:' : 'ADDRESS:'}</span> {
-                                  order.use_shipping_as_tax_address 
-                                    ? (language === 'th' ? 'เดียวกับที่อยู่จัดส่ง' : 'SAME AS SHIPPING')
-                                    : (typeof order.tax_address === 'string' ? JSON.parse(order.tax_address).address_line : order.tax_address?.address_line)
-                                }
-                              </p>
                             </div>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Order Summary Recap */}
                     <div className="bg-stone-50 p-6 border border-stone-100">
                       <h4 className="text-[11px] font-bold text-stone-900 uppercase mb-6 tracking-widest">{t('checkout.order_summary')}</h4>
                       <div className="space-y-4">
@@ -180,18 +160,10 @@ export default function OrdersContent({ initialOrders, addresses = [] }: OrdersC
                           <span className="font-bold text-stone-900">฿{Number(order.subtotal_amount || 0).toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between items-center text-[11px]">
-                          <span className="text-stone-500 font-medium uppercase">{t('checkout.points_earned')}</span>
-                          <span className="text-stone-800 font-bold">{Math.floor(Number(order.subtotal_amount || 0) / 10)} PTS</span>
-                        </div>
-                        <div className="flex justify-between items-center text-[11px]">
                           <span className="text-stone-500 font-medium uppercase">{language === 'th' ? 'ค่าจัดส่ง' : 'SHIPPING FEE'}</span>
                           <span className="font-bold text-stone-900">
                             {Number(order.shipping_fee) === 0 ? 'FREE' : `฿${Number(order.shipping_fee).toLocaleString()}`}
                           </span>
-                        </div>
-                        <div className="flex justify-between items-center text-[11px]">
-                          <span className="text-stone-500 font-medium uppercase">{t('checkout.tax')} (7%)</span>
-                          <span className="font-bold text-stone-900">฿{Math.round(Number(order.subtotal_amount || 0) * 0.07).toLocaleString()}</span>
                         </div>
                         <div className="pt-4 border-t border-stone-200 flex justify-between items-center">
                           <span className="text-[11px] font-bold uppercase tracking-widest">{t('checkout.total')}</span>
@@ -199,10 +171,17 @@ export default function OrdersContent({ initialOrders, addresses = [] }: OrdersC
                         </div>
                       </div>
                       
-                      <div className="mt-8 pt-6 border-t border-stone-100">
-                        <p className="text-[9px] text-stone-400 uppercase tracking-widest mb-2">{t('order.status')}</p>
-                        <p className="text-xs font-bold text-stone-800 uppercase">{t(`order.status_${order.status}`) || order.status}</p>
-                      </div>
+                      {order.status === 'pending' && (
+                        <div className="mt-8">
+                          <Link
+                            href={`/confirm-payment/${order.id}`}
+                            className="w-full flex items-center justify-center gap-2 bg-[#a11a1a] text-white px-4 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-[#801414] transition-all"
+                          >
+                            <ArrowRight size={14} />
+                            {language === 'th' ? 'ไปหน้าแจ้งชำระเงิน' : 'GO TO PAYMENT CONFIRMATION'}
+                          </Link>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

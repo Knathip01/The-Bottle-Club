@@ -34,7 +34,7 @@ interface AccountSidebarProps {
 }
 
 export default function AccountSidebar({ user, activePath = '/account' }: AccountSidebarProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
   const displayName = fullName || user?.username || user?.email || 'Member';
   
@@ -46,7 +46,7 @@ export default function AccountSidebar({ user, activePath = '/account' }: Accoun
 
   const menuItems = [
     { name: t('account.title'), icon: UserCircle, href: '/account', active: activePath === '/account' },
-    { name: t('account.payment_confirm'), icon: CreditCard, href: '#' },
+    { name: t('account.payment_confirm') || (language === 'th' ? 'แจ้งชำระเงิน' : 'Confirm Payment'), icon: CreditCard, href: '/account/confirm-payment', active: activePath === '/account/confirm-payment' },
     { name: t('account.profile'), icon: User, href: '/account/profile', active: activePath === '/account/profile' },
     { name: t('account.addresses'), icon: MapPin, href: '/account/addresses', active: activePath === '/account/addresses' },
     { name: t('account.orders'), icon: ClipboardList, href: '/account/orders', active: activePath === '/account/orders' },

@@ -2,12 +2,12 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Send } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { addCartItem } from '@/lib/cart';
-import type { Product } from '@/lib/products';
+import { getReviews, createReview, type Product, type ProductReview } from '@/lib/products';
 
 type Props = {
   product: Product;
@@ -34,9 +34,56 @@ export default function ProductDetailClient({
 
   const [activeImage, setActiveImage] = useState(
     isLoggedIn
-      ? product.image || `/images/wine_${product.color || 'red'}.png`
+      ? product.image || `/images/bottle-silhouette.svg`
       : '/images/bottle-silhouette.svg'
   );
+
+  useEffect(() => {
+    if (isLoggedIn && product.image) {
+      setActiveImage(product.image);
+    }
+  }, [isLoggedIn, product.image]);
+
+  const [reviews, setReviews] = useState<ProductReview[]>([]);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    async function loadReviews() {
+      const data = await getReviews(product.id);
+      setReviews(data);
+    }
+    loadReviews();
+  }, [product.id]);
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const newReview = await createReview(product.id, token, {
+      rating,
+      comment,
+      user_name: 'Customer' // Simplified for now, backend will try to get from token if possible
+    });
+
+    if (newReview) {
+      setReviews([newReview, ...reviews]);
+      setComment('');
+      setRating(5);
+    }
+    setIsSubmitting(false);
+  };
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -270,6 +317,7 @@ export default function ProductDetailClient({
                   {product.sub_type}
                 </div>
               </div>
+              
             </div>
 
             <div className="flex items-start gap-4">
@@ -323,6 +371,108 @@ export default function ProductDetailClient({
             <p className="mt-3 text-sm text-stone-600">
               {product.description}
             </p>
+          </div>
+
+          {/* Reviews Section */}
+          <div className="mt-12 border-t border-stone-100 pt-10">
+            <h3 className="text-2xl font-black text-stone-900 mb-6">
+              รีวิวสินค้า (Product Reviews)
+            </h3>
+
+            {/* Review Form */}
+            {isLoggedIn ? (
+              <form onSubmit={handleReviewSubmit} className="mb-10 bg-stone-50 p-6 rounded-3xl">
+                <div className="mb-4">
+                  <label className="block text-xs font-bold uppercase text-stone-400 mb-2">
+                    ให้คะแนน (Rating)
+                  </label>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setRating(star)}
+                        className="focus:outline-none"
+                      >
+                        <Star
+                          size={24}
+                          className={star <= rating ? "fill-yellow-400 text-yellow-400" : "text-stone-300"}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-xs font-bold uppercase text-stone-400 mb-2">
+                    ความคิดเห็น (Comment)
+                  </label>
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    required
+                    rows={3}
+                    className="w-full p-4 rounded-2xl border border-stone-200 focus:ring-2 focus:ring-stone-900 focus:border-transparent outline-none transition-all resize-none text-sm"
+                    placeholder="แชร์ความรู้สึกเกี่ยวกับสินค้าชิ้นนี้..."
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !comment.trim()}
+                  className="flex items-center justify-center gap-2 bg-stone-950 text-white px-6 py-3 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-[#a11a1a] transition-all disabled:bg-stone-300"
+                >
+                  {isSubmitting ? "กำลังส่ง..." : (
+                    <>
+                      ส่งรีวิว <Send size={16} />
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              <div className="mb-10 bg-stone-50 p-6 rounded-3xl text-center">
+                <p className="text-sm text-stone-500">
+                  กรุณา <Link href="/login" className="text-blue-600 underline">เข้าสู่ระบบ</Link> เพื่อเขียนรีวิว
+                </p>
+              </div>
+            )}
+
+            {/* Review List */}
+            <div className="space-y-6">
+              {reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <div key={review.id} className="border-b border-stone-100 pb-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-stone-200 flex items-center justify-center text-[10px] font-bold">
+                          {review.user_name.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-sm font-bold text-stone-900">{review.user_name}</span>
+                      </div>
+                      <span className="text-[10px] text-stone-400">
+                        {new Date(review.created_at).toLocaleDateString('th-TH')}
+                      </span>
+                    </div>
+                    <div className="flex gap-0.5 mb-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          size={12}
+                          className={star <= review.rating ? "fill-yellow-400 text-yellow-400" : "text-stone-200"}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-sm text-stone-600 leading-relaxed">
+                      {review.comment}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-10 bg-white border border-dashed border-stone-200 rounded-3xl">
+                  <p className="text-sm text-stone-400">ยังไม่มีรีวิวสำหรับสินค้านี้</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

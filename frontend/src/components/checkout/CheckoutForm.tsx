@@ -264,7 +264,7 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
   const subtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const tax = Math.round(subtotal * 0.07);
   const total = subtotal + shippingFee;
-  const points = Math.floor(subtotal / 10);
+  const points = Math.floor(subtotal / 25);
   const priceBeforeTax = total - tax;
   const paymentOptions: Array<{ id: CheckoutPaymentMethod; label: string }> = [
     { id: 'credit_card', label: t('checkout.credit_card') },
@@ -439,6 +439,9 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
         console.log('Redirecting to Stripe Checkout:', orderData.url);
         localStorage.removeItem('cart');
         window.location.href = orderData.url;
+      } else if (paymentMethod === 'transfer' || paymentMethod === 'promptpay') {
+        localStorage.removeItem('cart');
+        window.location.href = `/confirm-payment/${orderData.orderId || orderData.id}`;
       } else {
         localStorage.removeItem('cart');
         alert(t('checkout.success_alert'));

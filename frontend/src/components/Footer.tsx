@@ -2,19 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Clock3, Mail, MessageCircle, Phone, Wine, Send, ArrowUpRight, RefreshCw } from "lucide-react";
+import { Clock3, Mail, MessageCircle, Phone, Wine, Send, ArrowUpRight } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import { clearAllCaches } from "@/utils/cache";
 
 export default function Footer() {
   const { t, language } = useLanguage();
 
-  const handleClearCache = () => {
-    if (confirm(t('footer.clear_cache_confirm'))) {
-      clearAllCaches();
-      window.location.reload();
-    }
-  };
+
 
   return (
     <footer className="hidden md:block relative bg-stone-950 text-stone-400 pt-24 overflow-hidden">
@@ -174,25 +168,19 @@ export default function Footer() {
         <div className="py-12 flex flex-col lg:flex-row items-center justify-between gap-10">
           <div className="flex items-center gap-10 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-700 flex-wrap justify-center">
             <span className="text-[10px] font-black text-stone-700 uppercase tracking-[0.4em] w-full lg:w-auto text-center lg:text-left mb-4 lg:mb-0">Delivery Partners</span>
-            <Image src="/logos/dhl.png" alt="DHL" width={60} height={24} className="h-6 w-auto object-contain" style={{ height: '24px', width: 'auto' }} />
-            <Image src="/logos/Lalamove.png" alt="Lalamove" width={90} height={24} className="h-6 w-auto object-contain" style={{ height: '24px', width: 'auto' }} />
+            <Image src="/logos/dhl.png" alt="DHL" width={60} height={24} className="object-contain" />
+            <Image src="/logos/Lalamove.png" alt="Lalamove" width={90} height={24} className="object-contain" />
             </div>
 
-            <button
-            onClick={handleClearCache}
-            className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/5 rounded-xl hover:bg-[#a11a1a]/10 hover:border-[#a11a1a]/20 transition-all group"
-            >
-            <RefreshCw size={14} className="text-stone-600 group-hover:text-[#a11a1a] transition-colors" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-stone-600 group-hover:text-[#a11a1a]">Clear Cache & Sync</span>
-            </button>
+
 
             <div className="flex items-center gap-8 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-700 flex-wrap justify-center">
             <span className="text-[10px] font-black text-stone-700 uppercase tracking-[0.4em] w-full lg:w-auto text-center lg:text-left mb-4 lg:mb-0">Secure Checkout</span>
-            <Image src="/payments/visa.png" alt="Visa" width={40} height={20} className="h-4 w-auto object-contain" style={{ height: '16px', width: 'auto' }} />
-            <Image src="/payments/mastercard.png" alt="Mastercard" width={40} height={20} className="h-4 w-auto object-contain" style={{ height: '16px', width: 'auto' }} />
-            <Image src="/payments/jcb.png" alt="JCB" width={35} height={20} className="h-4 w-auto object-contain" style={{ height: '16px', width: 'auto' }} />
-            <Image src="/payments/promptpay.png" alt="PromptPay" width={55} height={20} className="h-4 w-auto object-contain" style={{ height: '16px', width: 'auto' }} />
-            <Image src="/payments/shopeepay.png" alt="ShopeePay" width={55} height={20} className="h-4 w-auto object-contain" style={{ height: '16px', width: 'auto' }} />
+            <Image src="/payments/visa.png" alt="Visa" width={32} height={16} className="object-contain" />
+            <Image src="/payments/mastercard.png" alt="Mastercard" width={32} height={16} className="object-contain" />
+            <Image src="/payments/jcb.png" alt="JCB" width={28} height={16} className="object-contain" />
+            <Image src="/payments/promptpay.png" alt="PromptPay" width={44} height={16} className="object-contain" />
+            <Image src="/payments/shopeepay.png" alt="ShopeePay" width={44} height={16} className="object-contain" />
 
           </div>
         </div>

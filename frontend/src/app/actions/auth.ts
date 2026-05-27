@@ -1,10 +1,41 @@
 'use server'
 
-import { login as setAuthSession, logout as clearAuthSession } from '@/lib/auth-utils';
+import { login as setAuthSession, logout as clearAuthSession, getSession } from '@/lib/auth-utils';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
+
+export async function syncSession() {
+  const session = await getSession();
+  if (!session || !session.user || !session.user.access_token) return null;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+      headers: {
+        'Authorization': `Bearer ${session.user.access_token}`,
+      },
+    });
+
+    if (response.ok) {
+      const userData = await response.json();
+      const updatedUser = {
+        ...session.user,
+        ...userData,
+      };
+      return updatedUser;
+    }
+  } catch (error) {
+    console.error('Error syncing session:', error);
+  }
+  return session.user;
+}
+
+export async function logout() {
+  await clearAuthSession();
+  revalidatePath('/');
+  redirect('/login');
+}
 
 type LoginFormData = {
   email?: string;
@@ -203,10 +234,4 @@ export async function setSessionFromToken(token: string, userData?: any) {
     console.error('Error in setSessionFromToken:', error);
     return { error: 'Failed to process token' };
   }
-}
-
-export async function logout() {
-  await clearAuthSession();
-  revalidatePath('/');
-  redirect('/login');
 }

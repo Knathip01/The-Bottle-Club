@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    points INTEGER DEFAULT 0
 );
 
 -- Create products table
@@ -38,6 +39,7 @@ CREATE TABLE IF NOT EXISTS orders (
     use_shipping_as_tax_address BOOLEAN NOT NULL DEFAULT true,
     tax_address JSONB,
     stripe_payment_intent_id VARCHAR(255),
+    payment_slip_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -58,6 +60,17 @@ CREATE TABLE IF NOT EXISTS order_items (
     product_id INTEGER REFERENCES products(id),
     quantity INTEGER NOT NULL,
     price DECIMAL(10, 2) NOT NULL
+);
+
+-- Create product reviews table
+CREATE TABLE IF NOT EXISTS product_reviews (
+    id SERIAL PRIMARY KEY,
+    product_id INTEGER NOT NULL,
+    user_id VARCHAR(255) NOT NULL,
+    user_name VARCHAR(255),
+    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Insert some dummy products if table is empty

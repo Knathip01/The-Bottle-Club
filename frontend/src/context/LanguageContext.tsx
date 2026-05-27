@@ -2864,13 +2864,51 @@ export function LanguageProvider({
   children: React.ReactNode;
   initialLanguage?: Language;
 }) {
-  // Use useSyncExternalStore to sync language state across the app.
-  // The server snapshot uses initialLanguage to match the server-rendered HTML.
-  const language = useSyncExternalStore(
-    subscribeLanguageChange,
-    getLanguageSnapshot,
-    () => initialLanguage ?? getServerLanguageSnapshot()
+  const [mounted, setMounted] = React.useState(false);
+  const [languageState, setLanguageState] = React.useState<Language>(
+    initialLanguage ?? getServerLanguageSnapshot()
   );
+
+  useEffect(() => {
+    setMounted(true);
+    // On mount, load from localStorage if a valid preference exists
+    if (typeof window !== 'undefined') {
+      const savedLang = window.localStorage.getItem('language');
+      if (isLanguage(savedLang)) {
+        setLanguageState(savedLang);
+      }
+    }
+  }, []);
+
+  // Listen for language changes from other components/tabs
+  useEffect(() => {
+    if (!mounted) return;
+
+    const handleLanguageChange = () => {
+      const currentSaved = window.localStorage.getItem('language');
+      if (isLanguage(currentSaved)) {
+        setLanguageState(currentSaved);
+      }
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'language' && event.newValue && isLanguage(event.newValue)) {
+        setLanguageState(event.newValue);
+      }
+    };
+
+    window.addEventListener(LANGUAGE_CHANGE_EVENT, handleLanguageChange);
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener(LANGUAGE_CHANGE_EVENT, handleLanguageChange);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [mounted]);
+
+  // During hydration, strictly use initialLanguage to match the server HTML.
+  // After hydration (mounted is true), use the state value.
+  const language = mounted ? languageState : (initialLanguage ?? getServerLanguageSnapshot());
 
   useEffect(() => {
     syncDocumentLanguage(language);
@@ -2879,6 +2917,7 @@ export function LanguageProvider({
   const setLanguage = (lang: Language) => {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('language', lang);
+      setLanguageState(lang);
       window.dispatchEvent(new Event(LANGUAGE_CHANGE_EVENT));
     }
     syncDocumentLanguage(lang);

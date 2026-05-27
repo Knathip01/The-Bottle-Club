@@ -2,7 +2,13 @@
 
 import { useLanguage } from '@/context/LanguageContext';
 
-export default function RewardPointsContent() {
+interface RewardPointsContentProps {
+  user?: {
+    points?: number | null;
+  };
+}
+
+export default function RewardPointsContent({ user }: RewardPointsContentProps) {
   const { t } = useLanguage();
 
   return (
@@ -16,7 +22,7 @@ export default function RewardPointsContent() {
       {/* Points Summary Header */}
       <div className="relative bg-gradient-to-r from-red-400 to-red-200 rounded-3xl p-10 text-white mb-12 flex flex-col items-center justify-center overflow-hidden">
         <div className="text-center z-10">
-          <span className="text-4xl font-bold block mb-1">0</span>
+          <span className="text-4xl font-bold block mb-1">{user?.points || 0}</span>
           <span className="text-[11px] font-bold uppercase tracking-widest opacity-90">{t('account.points_available')}</span>
         </div>
         

@@ -21,12 +21,17 @@ export const metadata: Metadata = {
 
 import AIChat from "@/components/AIChat";
 import MobileNav from "@/components/MobileNav";
+import SessionSync from "@/components/auth/SessionSync";
+import { getSession } from "@/lib/auth-utils";
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getSession();
+  const accessToken = session?.user?.access_token;
+  
   // Determine a preferred language server-side from the Accept-Language
   // header so the initial server render matches the client's preference.
   const hdrs = await headers();
@@ -44,6 +49,7 @@ export default async function RootLayout({
         className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-stone-50 text-stone-900`}
       >
         <LanguageProvider initialLanguage={preferred}>
+          <SessionSync accessToken={accessToken} />
           {children}
           <AIChat />
           <MobileNav />

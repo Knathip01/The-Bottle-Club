@@ -66,8 +66,10 @@ export function shipmentToApiResponse(
       remaining,
     },
     timeline: shipment.timeline.map((step, index) => {
-      const completed = index < timelineLen - 2;
-      const active = index === timelineLen - 2;
+      // Dynamic completion calculation based on progress
+      const stepFraction = index / (timelineLen - 1);
+      const completed = progress >= stepFraction || index === 0;
+      const active = progress >= stepFraction && (index === timelineLen - 1 || progress < (index + 1) / (timelineLen - 1));
       return {
         key: step.key,
         time: step.time,
@@ -77,6 +79,9 @@ export function shipmentToApiResponse(
     }),
     updated_at: new Date().toISOString(),
     provider: 'local',
+    insurance_status: shipment.insuranceStatus || '฿10,000 Standard Transit Protection',
+    customs_status: shipment.customsStatus || 'cleared',
+    delivery_attempt: shipment.deliveryAttempt || '1st Attempt',
   };
 }
 
@@ -130,6 +135,9 @@ function normalizeExternalPayload(
       : [],
     updated_at: String(raw.updated_at || new Date().toISOString()),
     provider: 'external',
+    insurance_status: String(raw.insurance_status || raw.insuranceStatus || '฿10,000 Standard Transit Protection'),
+    customs_status: (raw.customs_status || raw.customsStatus || 'cleared') as TrackingApiResponse['customs_status'],
+    delivery_attempt: String(raw.delivery_attempt || raw.deliveryAttempt || '1st Attempt'),
   };
 }
 
@@ -191,5 +199,8 @@ export function apiResponseToShipment(data: TrackingApiResponse): Shipment {
     progressSpeed:
       data.transport_mode === 'local' ? 0.008 : data.transport_mode === 'air' ? 0.006 : 0.003,
     timeline: data.timeline.map((t) => ({ key: t.key, time: t.time })),
+    insuranceStatus: data.insurance_status,
+    customsStatus: data.customs_status,
+    deliveryAttempt: data.delivery_attempt,
   };
 }

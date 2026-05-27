@@ -1,5 +1,5 @@
 export type TransportMode = 'sea' | 'air' | 'local';
-export type TrackingCountry = 'th' | 'cn' | 'jp' | 'gb' | 'ru';
+export type TrackingCountry = 'th' | 'cn' | 'jp' | 'gb' | 'ru' | 'us' | 'eu';
 export type ShipmentDirection = 'domestic' | 'export';
 
 export type Shipment = {
@@ -19,6 +19,10 @@ export type Shipment = {
   etaTotal: number;
   progressSpeed: number;
   timeline: { key: string; time: string }[];
+  // Premium extra features:
+  insuranceStatus?: string;
+  customsStatus?: 'cleared' | 'pending' | 'review' | 'none';
+  deliveryAttempt?: string;
 };
 
 export type TrackingApiResponse = {
@@ -47,6 +51,10 @@ export type TrackingApiResponse = {
   }>;
   updated_at: string;
   provider: 'local' | 'external';
+  // Premium extra features:
+  insurance_status?: string;
+  customs_status?: 'cleared' | 'pending' | 'review' | 'none';
+  delivery_attempt?: string;
 };
 
 export type TrackShipmentInput = {
@@ -55,3 +63,4 @@ export type TrackShipmentInput = {
   destinationCountry?: TrackingCountry;
   direction?: ShipmentDirection;
 };
+

@@ -4,11 +4,45 @@ import dotenv from 'dotenv';
 import Stripe from 'stripe';
 import { shippingRouter } from './shipping/routes';
 import pool from './db';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
+
+// Ensure upload directory exists
+const uploadDir = 'public/uploads/slips';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Multer configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|pdf/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (extname && mimetype) {
+      return cb(null, true);
+    }
+    cb(new Error('Only images and PDFs are allowed'));
+  }
+});
 
 type OrderType = 'online' | 'pos';
 type PaymentMethod =
@@ -252,6 +286,125 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/shipping', shippingRouter);
 
+// Serve static files for uploaded slips
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+
+// Product Reviews API
+app.get('/api/products/:id/reviews', async (req, res) => {
+  const productId = Number(req.params.id);
+  if (isNaN(productId)) {
+    res.status(400).json({ error: 'Invalid product_id' });
+    return;
+  }
+
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      'SELECT id, product_id, user_name, rating, comment, created_at FROM product_reviews WHERE product_id = $1 ORDER BY created_at DESC',
+      [productId]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Fetch reviews error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+app.post('/api/products/:id/reviews', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const productId = Number(req.params.id);
+  const { rating, comment, user_name } = req.body;
+
+  if (isNaN(productId)) {
+    res.status(400).json({ error: 'Invalid product_id' });
+    return;
+  }
+
+  if (!rating || rating < 1 || rating > 5) {
+    res.status(400).json({ error: 'Rating must be between 1 and 5' });
+    return;
+  }
+
+  const userId = getJwtUserId(authHeader);
+  const client = await pool.connect();
+  try {
+    // Try to get user's name from database
+    let userName = 'Anonymous';
+    const userRes = await client.query('SELECT first_name, last_name FROM users WHERE id::text = $1 OR email = $1', [userId]);
+    if (userRes.rows.length > 0) {
+      const user = userRes.rows[0];
+      userName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Customer';
+    }
+
+    const result = await client.query(
+      'INSERT INTO product_reviews (product_id, user_id, user_name, rating, comment) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [productId, userId, userName, rating, comment]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Create review error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+// Payment Confirmation API
+app.post('/api/orders/:id/confirm-payment', upload.single('slip'), async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const orderId = Number(req.params.id);
+  if (isNaN(orderId)) {
+    res.status(400).json({ error: 'Invalid order_id' });
+    return;
+  }
+
+  if (!req.file) {
+    res.status(400).json({ error: 'Payment slip is required' });
+    return;
+  }
+
+  const userId = getJwtUserId(authHeader);
+  const client = await pool.connect();
+  try {
+    // Check if order belongs to user
+    const orderCheck = await client.query('SELECT user_id FROM orders WHERE id = $1', [orderId]);
+    if (orderCheck.rows.length === 0) {
+      res.status(404).json({ error: 'Order not found' });
+      return;
+    }
+
+    if (String(orderCheck.rows[0].user_id) !== String(userId)) {
+      res.status(403).json({ error: 'Unauthorized to confirm this order' });
+      return;
+    }
+
+    const slipUrl = `/uploads/slips/${req.file.filename}`;
+    await client.query(
+      'UPDATE orders SET status = $1, payment_slip_url = $2 WHERE id = $3',
+      ['paid_pending_review', slipUrl, orderId]
+    );
+
+    res.json({ message: 'Payment confirmed successfully', slip_url: slipUrl });
+  } catch (error) {
+    console.error('Confirm payment error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
 // Order Creation API
 app.post('/api/orders', async (req, res) => {
   const authHeader = req.headers.authorization;
@@ -416,6 +569,25 @@ app.post('/api/orders', async (req, res) => {
       );
     }
 
+    // 5. Update user points (25 THB = 1 point)
+    if (userId && userId !== 'user_placeholder') {
+      const earnedPoints = Math.floor(subtotalAmount / 25);
+      if (earnedPoints > 0) {
+        // Try to update by id (numeric) first, then by email
+        if (!isNaN(Number(userId))) {
+          await client.query('UPDATE users SET points = COALESCE(points, 0) + $1 WHERE id = $2', [
+            earnedPoints,
+            Number(userId),
+          ]);
+        } else {
+          await client.query('UPDATE users SET points = COALESCE(points, 0) + $1 WHERE email = $2', [
+            earnedPoints,
+            userId,
+          ]);
+        }
+      }
+    }
+
     await client.query('COMMIT');
     transactionStarted = false;
 
@@ -429,6 +601,7 @@ app.post('/api/orders', async (req, res) => {
       order_type: order.order_type,
       payment_method: order.payment_method,
       is_full_tax_invoice: order.is_full_tax_invoice,
+      earned_points: Math.floor(subtotalAmount / 25),
     });
     return;
 
@@ -439,6 +612,177 @@ app.post('/api/orders', async (req, res) => {
       });
     }
     console.error('Order creation error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+// Fetch my orders
+app.get('/api/orders/my', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const userId = getJwtUserId(authHeader);
+  if (userId === 'user_placeholder') {
+    res.status(401).json({ error: 'Invalid or missing user identity in token' });
+    return;
+  }
+
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      `SELECT 
+        o.id,
+        o.status,
+        o.total_amount as total_price,
+        o.created_at,
+        o.is_full_tax_invoice,
+        o.tax_id,
+        o.tax_business_name,
+        o.use_shipping_as_tax_address,
+        o.tax_address,
+        o.payment_method,
+        o.shipping_method,
+        o.shipping_fee,
+        o.subtotal_amount,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'product', json_build_object('id', p.id, 'name', p.name, 'price', p.price),
+              'quantity', oi.quantity,
+              'price', oi.price
+            )
+          ) FILTER (WHERE oi.id IS NOT NULL),
+          '[]'
+        ) as items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      LEFT JOIN products p ON oi.product_id = p.id
+      WHERE o.user_id::text = $1::text
+      GROUP BY o.id
+      ORDER BY o.created_at DESC`,
+      [userId]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Fetch my orders error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+// Fetch single order
+app.get('/api/orders/:id', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const userId = getJwtUserId(authHeader);
+  const orderId = req.params.id;
+
+  if (userId === 'user_placeholder') {
+    res.status(401).json({ error: 'Invalid or missing user identity in token' });
+    return;
+  }
+
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      `SELECT 
+        o.id,
+        o.status,
+        o.total_amount as total_price,
+        o.created_at,
+        o.is_full_tax_invoice,
+        o.tax_id,
+        o.tax_business_name,
+        o.use_shipping_as_tax_address,
+        o.tax_address,
+        o.payment_method,
+        o.shipping_method,
+        o.shipping_fee,
+        o.subtotal_amount,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'product', json_build_object('id', p.id, 'name', p.name, 'price', p.price),
+              'quantity', oi.quantity,
+              'price', oi.price
+            )
+          ) FILTER (WHERE oi.id IS NOT NULL),
+          '[]'
+        ) as items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      LEFT JOIN products p ON oi.product_id = p.id
+      WHERE o.id = $1 AND o.user_id::text = $2::text
+      GROUP BY o.id`,
+      [orderId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'Order not found' });
+      return;
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Fetch single order error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+// Fetch current user profile
+app.get('/api/users/me', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const userId = getJwtUserId(authHeader);
+  if (userId === 'user_placeholder') {
+    res.status(401).json({ error: 'Invalid or missing user identity in token' });
+    return;
+  }
+
+  const client = await pool.connect();
+  try {
+    let result;
+    if (!isNaN(Number(userId))) {
+      result = await client.query(
+        `SELECT u.id, u.first_name, u.last_name, u.email, u.points, 
+                (SELECT COUNT(*) FROM orders WHERE user_id::text = u.id::text) as order_count 
+         FROM users u WHERE u.id = $1`,
+        [Number(userId)]
+      );
+    } else {
+      result = await client.query(
+        `SELECT u.id, u.first_name, u.last_name, u.email, u.points, 
+                (SELECT COUNT(*) FROM orders WHERE user_id::text = u.email::text) as order_count 
+         FROM users u WHERE u.email = $1`,
+        [userId]
+      );
+    }
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Fetch user me error:', error);
     res.status(500).json({ error: 'Internal server error' });
   } finally {
     client.release();

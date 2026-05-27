@@ -176,7 +176,9 @@ export default function AIChat() {
       try {
         const res = await fetch('/api/products', { cache: 'no-store' });
         if (!res.ok) return;
-        const data = (await res.json()) as Product[];
+        const text = await res.text();
+        if (!text) return;
+        const data = JSON.parse(text) as Product[];
         if (Array.isArray(data) && data.length > 0) setProducts(data);
       } catch (error) {
         console.error('AI Chat failed to fetch products:', error);
@@ -190,7 +192,9 @@ export default function AIChat() {
     try {
       const res = await fetch('/api/products', { cache: 'no-store' });
       if (!res.ok) return products;
-      const data = (await res.json()) as Product[];
+      const text = await res.text();
+      if (!text) return products;
+      const data = JSON.parse(text) as Product[];
       if (Array.isArray(data) && data.length > 0) {
         setProducts(data);
         return data;

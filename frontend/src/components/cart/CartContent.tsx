@@ -26,7 +26,7 @@ export default function CartContent() {
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const vat = Math.round(subtotal * 0.07);
   const total = subtotal + vat;
-  const points = Math.floor(subtotal / 10);
+  const points = Math.floor(subtotal / 25);
 
   if (items.length === 0) {
     return (

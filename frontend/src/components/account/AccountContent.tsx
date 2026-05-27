@@ -105,12 +105,15 @@ const LINE_AUTH_TRANSLATIONS: Record<string, string> = {
 };
 
 type AccountUser = {
+  id?: string | number | null;
   first_name?: string | null;
   last_name?: string | null;
   email?: string | null;
   username?: string | null;
   avatar?: string | null;
   provider?: string | null;
+  points?: number | null;
+  order_count?: number | string | null;
 };
 
 interface AccountContentProps {
@@ -123,8 +126,8 @@ export default function AccountContent({ user }: AccountContentProps) {
   const displayName = fullName || user?.username || user?.email || 'Member';
 
   const statusItems = [
-    { label: t('account.your_points'), value: '0', icon: Award, tone: 'from-amber-400/20 to-amber-500/5 text-amber-700 border-amber-200/50 hover:shadow-amber-500/5' },
-    { label: t('account.orders'), value: '0', icon: PackageCheck, tone: 'from-emerald-400/20 to-emerald-500/5 text-emerald-700 border-emerald-200/50 hover:shadow-emerald-500/5' },
+    { label: t('account.your_points'), value: String(user?.points || 0), icon: Award, tone: 'from-amber-400/20 to-amber-500/5 text-amber-700 border-amber-200/50 hover:shadow-amber-500/5' },
+    { label: t('account.orders'), value: String(user?.order_count || 0), icon: PackageCheck, tone: 'from-emerald-400/20 to-emerald-500/5 text-emerald-700 border-emerald-200/50 hover:shadow-emerald-500/5' },
     { label: t('account.docs_title'), value: '3', icon: FileText, tone: 'from-sky-400/20 to-sky-500/5 text-sky-700 border-sky-200/50 hover:shadow-sky-500/5' },
     { label: t('account.privacy'), value: 'OK', icon: ShieldCheck, tone: 'from-rose-400/20 to-rose-500/5 text-rose-700 border-rose-200/50 hover:shadow-rose-500/5' },
   ];

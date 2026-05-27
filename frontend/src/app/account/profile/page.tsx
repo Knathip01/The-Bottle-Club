@@ -4,15 +4,14 @@ import Footer from '@/components/Footer';
 import AccountSidebar from '@/components/account/AccountSidebar';
 import { getSession } from '@/lib/auth-utils';
 import ProfileContent from '@/components/account/ProfileContent';
+import { syncSession } from '@/app/actions/auth';
 
 export default async function ProfilePage() {
-  const session = await getSession();
+  const user = await syncSession();
   
-  if (!session) {
+  if (!user) {
     redirect('/login');
   }
-
-  const { user } = session;
 
   return (
     <main className="min-h-screen flex flex-col bg-white">
