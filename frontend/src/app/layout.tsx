@@ -20,6 +20,7 @@ export const metadata: Metadata = {
 };
 
 import AIChat from "@/components/AIChat";
+import VoiceAssistant from "@/components/VoiceAssistant";
 import MobileNav from "@/components/MobileNav";
 import SessionSync from "@/components/auth/SessionSync";
 import { getSession } from "@/lib/auth-utils";
@@ -51,6 +52,7 @@ export default async function RootLayout({
         <LanguageProvider initialLanguage={preferred}>
           <SessionSync accessToken={accessToken} />
           {children}
+          <VoiceAssistant />
           <AIChat />
           <MobileNav />
         </LanguageProvider>

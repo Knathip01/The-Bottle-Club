@@ -48,6 +48,9 @@ export default function ProductDetailClient({
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
+  const [mediaPreviews, setMediaPreviews] = useState<{ id: string; file: File; url?: string; type: 'image' | 'video'; uploading: boolean; error?: string }[]>([]);
 
   useEffect(() => {
     async function loadReviews() {
@@ -56,6 +59,63 @@ export default function ProductDetailClient({
     }
     loadReviews();
   }, [product.id]);
+
+  const handleMediaSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const fileList = Array.from(files);
+    
+    // Generate temporary IDs and add to preview list with uploading: true
+    const newPreviews = fileList.map(file => {
+      const isVideo = file.type.startsWith('video/');
+      return {
+        id: Math.random().toString(36).substring(2, 9),
+        file,
+        type: isVideo ? 'video' as const : 'image' as const,
+        uploading: true
+      };
+    });
+
+    setMediaPreviews(prev => [...prev, ...newPreviews]);
+
+    // Clear input
+    e.target.value = '';
+
+    // Upload each file
+    for (const preview of newPreviews) {
+      const formData = new FormData();
+      formData.append('file', preview.file);
+      formData.append('media', preview.file);
+
+      try {
+        const res = await fetch('/api/reviews/media', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!res.ok) {
+          throw new Error(`Upload failed: ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        const uploadedUrl = data.url || data.file_url || data.data?.url || data.imageUrl || data.videoUrl || '';
+        
+        if (!uploadedUrl) {
+          throw new Error('No URL returned from server');
+        }
+
+        setMediaPreviews(prev => prev.map(p => p.id === preview.id ? { ...p, url: uploadedUrl, uploading: false } : p));
+      } catch (err: any) {
+        console.error('Error uploading file:', err);
+        setMediaPreviews(prev => prev.map(p => p.id === preview.id ? { ...p, uploading: false, error: 'อัปโหลดล้มเหลว' } : p));
+      }
+    }
+  };
+
+  const handleRemoveMedia = (id: string) => {
+    setMediaPreviews(prev => prev.filter(p => p.id !== id));
+  };
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,18 +130,57 @@ export default function ProductDetailClient({
       return;
     }
 
+    // Decode JWT payload to get user_id and username
+    let userId = '';
+    let username = 'Customer';
+    try {
+      const parts = token.split('.');
+      if (parts.length >= 2) {
+        const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(atob(base64));
+        userId = String(payload.id || payload.sub || payload.user_id || '');
+        username =
+          payload.username ||
+          payload.name ||
+          payload.email?.split('@')[0] ||
+          'Customer';
+      }
+    } catch {
+      // fallback to defaults
+    }
+
     setIsSubmitting(true);
-    const newReview = await createReview(product.id, token, {
+    setReviewError(null);
+    setReviewSuccess(false);
+
+    const images = mediaPreviews.filter(p => p.type === 'image' && p.url).map(p => p.url!);
+    const videos = mediaPreviews.filter(p => p.type === 'video' && p.url).map(p => p.url!);
+
+    const result = await createReview({
+      wine_id: Number(product.id),
+      user_id: userId,
+      username,
       rating,
       comment,
-      user_name: 'Customer' // Simplified for now, backend will try to get from token if possible
+      images,
+      videos,
     });
 
-    if (newReview) {
-      setReviews([newReview, ...reviews]);
+    if (result.ok) {
+      // Refresh Strategy: Fetch all reviews again to ensure synchronization with the backend/MongoDB
+      const freshReviews = await getReviews(Number(product.id));
+      setReviews(freshReviews);
       setComment('');
       setRating(5);
+      setMediaPreviews([]); // Reset uploaded previews on success
+      setReviewSuccess(true);
+      setTimeout(() => setReviewSuccess(false), 4000);
+    } else if (result.status === 422) {
+      setReviewError('กรุณาตรวจสอบข้อมูล: คะแนนต้องอยู่ระหว่าง 1–5 และต้องกรอกความคิดเห็น');
+    } else {
+      setReviewError(result.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่');
     }
+
     setIsSubmitting(false);
   };
 
@@ -417,9 +516,87 @@ export default function ProductDetailClient({
                   />
                 </div>
 
+                {/* Media Upload Section */}
+                <div className="mb-6">
+                  <label className="block text-xs font-bold uppercase text-stone-400 mb-2">
+                    แนบรูปภาพหรือวิดีโอ (Add Images or Videos)
+                  </label>
+                  
+                  <div className="flex flex-wrap gap-3 items-center">
+                    {/* Select Files Button */}
+                    <label className="flex flex-col items-center justify-center w-24 h-24 rounded-2xl border-2 border-dashed border-stone-200 hover:border-[#a11a1a] cursor-pointer hover:bg-stone-100/50 transition-all select-none">
+                      <span className="text-xl">📸</span>
+                      <span className="text-[10px] font-bold text-stone-400 mt-1">อัปโหลดสื่อ</span>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*,video/*"
+                        onChange={handleMediaSelect}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {/* Previews List */}
+                    {mediaPreviews.map((preview) => (
+                      <div key={preview.id} className="relative w-24 h-24 rounded-2xl overflow-hidden border border-stone-100 bg-white group shadow-sm">
+                        {preview.uploading ? (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-50 text-[10px] font-bold text-stone-500">
+                            <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#a11a1a] border-t-transparent mb-1" />
+                            <span>กำลังโหลด...</span>
+                          </div>
+                        ) : preview.error ? (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-50 text-[10px] font-bold text-red-500 p-2 text-center">
+                            <span>❌</span>
+                            <span>{preview.error}</span>
+                          </div>
+                        ) : (
+                          <>
+                            {preview.type === 'image' ? (
+                              <img
+                                src={preview.url || URL.createObjectURL(preview.file)}
+                                alt="Preview"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <video
+                                src={preview.url || URL.createObjectURL(preview.file)}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                            {/* Remove button */}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveMedia(preview.id)}
+                              className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/60 hover:bg-red-600 text-white flex items-center justify-center text-xs opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              ✕
+                            </button>
+                            {/* Type badge */}
+                            <span className="absolute bottom-1 left-1 px-1 py-0.5 rounded text-[8px] bg-black/50 text-white font-bold tracking-widest uppercase">
+                              {preview.type}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Error / Success feedback */}
+                {reviewError && (
+                  <div className="mb-4 rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                    {reviewError}
+                  </div>
+                )}
+                {reviewSuccess && (
+                  <div className="mb-4 rounded-2xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+                    ✅ ส่งรีวิวสำเร็จแล้ว ขอบคุณสำหรับความคิดเห็น!
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  disabled={isSubmitting || !comment.trim()}
+                  disabled={isSubmitting || !comment.trim() || mediaPreviews.some(p => p.uploading)}
                   className="flex items-center justify-center gap-2 bg-stone-950 text-white px-6 py-3 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-[#a11a1a] transition-all disabled:bg-stone-300"
                 >
                   {isSubmitting ? "กำลังส่ง..." : (
@@ -445,9 +622,9 @@ export default function ProductDetailClient({
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full bg-stone-200 flex items-center justify-center text-[10px] font-bold">
-                          {review.user_name.charAt(0).toUpperCase()}
+                          {review.username.charAt(0).toUpperCase()}
                         </div>
-                        <span className="text-sm font-bold text-stone-900">{review.user_name}</span>
+                        <span className="text-sm font-bold text-stone-900">{review.username}</span>
                       </div>
                       <span className="text-[10px] text-stone-400">
                         {new Date(review.created_at).toLocaleDateString('th-TH')}
@@ -465,6 +642,20 @@ export default function ProductDetailClient({
                     <p className="text-sm text-stone-600 leading-relaxed">
                       {review.comment}
                     </p>
+
+                    {/* Media Attachments in Review List */}
+                    {((review.images && review.images.length > 0) || (review.videos && review.videos.length > 0)) && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {review.images?.map((imgUrl, idx) => (
+                          <a key={idx} href={imgUrl} target="_blank" rel="noopener noreferrer" className="relative w-16 h-16 rounded-xl overflow-hidden border border-stone-100 bg-stone-50 hover:opacity-90 transition-opacity">
+                            <img src={imgUrl} alt={`Review media ${idx}`} className="w-full h-full object-cover" />
+                          </a>
+                        ))}
+                        {review.videos?.map((vidUrl, idx) => (
+                          <video key={idx} src={vidUrl} controls className="w-24 h-16 rounded-xl border border-stone-100 bg-black object-cover" />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))
               ) : (

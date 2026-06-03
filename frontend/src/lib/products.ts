@@ -25,10 +25,13 @@ export type Product = {
 
 export type ProductReview = {
   id: number;
-  product_id: number;
-  user_name: string;
+  wine_id: number;
+  user_id: string;
+  username: string;
   rating: number;
   comment: string;
+  images?: string[];
+  videos?: string[];
   created_at: string;
 };
 
@@ -222,37 +225,80 @@ export async function getProductById(id: number, token?: string): Promise<Produc
   }
 }
 
-export async function getReviews(productId: number): Promise<ProductReview[]> {
+export async function getReviews(wineId: number): Promise<ProductReview[]> {
   try {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    const response = await fetch(`${API_BASE_URL}/api/products/${productId}/reviews`);
+    const isServer = typeof window === 'undefined';
+    const API_BASE_URL = isServer
+      ? process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com'
+      : '';
+
+    // On client: call our own Next.js proxy (/api/reviews) to avoid CORS.
+    // On server: call the backend directly at /reviews/wine/{wine_id}.
+    const url = isServer
+      ? `${API_BASE_URL}/reviews/wine/${wineId}`
+      : `/api/reviews?wine_id=${wineId}`;
+
+    const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) return [];
-    return await response.json();
+    const data = await response.json();
+    return Array.isArray(data) ? data : data.reviews ?? data.data ?? [];
   } catch (error) {
     console.error('Failed to fetch reviews:', error);
     return [];
   }
 }
 
+export type CreateReviewResult =
+  | { ok: true; review: ProductReview }
+  | { ok: false; status: number; message: string };
+
 export async function createReview(
-  productId: number,
-  token: string,
-  data: { rating: number; comment: string; user_name?: string }
-): Promise<ProductReview | null> {
+  payload: {
+    wine_id: number;
+    user_id: string;
+    username: string;
+    rating: number;
+    comment: string;
+    images?: string[];
+    videos?: string[];
+  }
+): Promise<CreateReviewResult> {
   try {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    const response = await fetch(`${API_BASE_URL}/api/products/${productId}/reviews`, {
+    // Always use the proxy on client-side to avoid CORS
+    const isServer = typeof window === 'undefined';
+    const API_BASE_URL = isServer
+      ? process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com'
+      : '';
+    const url = isServer ? `${API_BASE_URL}/reviews` : '/api/reviews';
+
+    const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        wine_id: Number(payload.wine_id),
+        user_id: payload.user_id,
+        username: payload.username,
+        rating: Number(payload.rating),
+        comment: payload.comment,
+        images: payload.images ?? [],
+        videos: payload.videos ?? [],
+      }),
     });
-    if (!response.ok) return null;
-    return await response.json();
+
+    if (response.ok) {
+      const review: ProductReview = await response.json();
+      return { ok: true, review };
+    }
+
+    let message = 'เกิดข้อผิดพลาด กรุณาลองใหม่';
+    try {
+      const err = await response.json();
+      message = err?.detail || err?.message || message;
+    } catch {/* ignore */}
+
+    return { ok: false, status: response.status, message };
   } catch (error) {
     console.error('Failed to create review:', error);
-    return null;
+    return { ok: false, status: 0, message: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้' };
   }
 }

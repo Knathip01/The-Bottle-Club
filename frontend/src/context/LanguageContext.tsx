@@ -11,6 +11,8 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
+  initialLanguage: Language;
+  serverT: (key: string) => string;
 }
 
 const translations = {
@@ -2923,6 +2925,28 @@ export function LanguageProvider({
     syncDocumentLanguage(lang);
   };
 
+  const serverLang = initialLanguage ?? getServerLanguageSnapshot();
+
+  const serverT = (key: string) => {
+    if (key.startsWith('ai.')) {
+      return getAiString(serverLang, key);
+    }
+    if (key.startsWith('account.') || key.startsWith('order.') || key.startsWith('common.')) {
+      const accountStr = getAccountString(serverLang, key);
+      if (accountStr !== null) {
+        return accountStr;
+      }
+    }
+    if (key.startsWith('checkout.') || key.startsWith('country.')) {
+      const checkoutStr = getCheckoutString(serverLang, key);
+      if (checkoutStr !== null) {
+        return checkoutStr;
+      }
+    }
+    const langData = (translations[serverLang] || translations['en']) as Record<string, string>;
+    return langData[key] || (translations['en'] as Record<string, string>)[key] || key;
+  };
+
   const t = (key: string) => {
     if (key.startsWith('ai.')) {
       return getAiString(language, key);
@@ -2944,7 +2968,7 @@ export function LanguageProvider({
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, initialLanguage: serverLang, serverT }}>
       {children}
       <style dangerouslySetInnerHTML={{ __html: `
         :root {
@@ -2960,5 +2984,19 @@ export function useLanguage() {
   if (context === undefined) {
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
-  return context;
+
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const language = mounted ? context.language : context.initialLanguage;
+  const t = mounted ? context.t : context.serverT;
+
+  return {
+    ...context,
+    language,
+    t,
+  };
 }
