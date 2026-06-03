@@ -356,6 +356,47 @@ app.post('/api/products/:id/reviews', async (req, res) => {
   }
 });
 
+// ── GET /api/users/me/reviews — fetch all reviews by the current user ──────
+app.get('/api/users/me/reviews', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const userId = getJwtUserId(authHeader);
+  if (userId === 'user_placeholder') {
+    res.status(401).json({ error: 'Invalid or missing user identity in token' });
+    return;
+  }
+
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      `SELECT
+        pr.id,
+        pr.product_id,
+        pr.user_id,
+        pr.user_name   AS username,
+        pr.rating,
+        pr.comment,
+        pr.created_at,
+        p.name         AS product_name
+       FROM product_reviews pr
+       LEFT JOIN products p ON p.id = pr.product_id
+       WHERE pr.user_id::text = $1::text
+       ORDER BY pr.created_at DESC`,
+      [userId]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Fetch user reviews error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
 // Payment Confirmation API
 app.post('/api/orders/:id/confirm-payment', upload.single('slip'), async (req, res) => {
   const authHeader = req.headers.authorization;

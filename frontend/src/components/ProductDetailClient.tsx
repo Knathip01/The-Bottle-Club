@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Star, Send } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Send, Camera, X, CheckCircle2, AlertCircle, Play } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { addCartItem } from '@/lib/cart';
 import { getReviews, createReview, type Product, type ProductReview } from '@/lib/products';
@@ -472,198 +472,348 @@ export default function ProductDetailClient({
             </p>
           </div>
 
-          {/* Reviews Section */}
-          <div className="mt-12 border-t border-stone-100 pt-10">
-            <h3 className="text-2xl font-black text-stone-900 mb-6">
-              รีวิวสินค้า (Product Reviews)
-            </h3>
+          {/* ═══════════════════════════════════════════════════════
+               REVIEWS SECTION — 2027 Design
+          ═══════════════════════════════════════════════════════ */}
+          <div className="mt-12 pt-10" style={{borderTop: '1px solid rgba(0,0,0,0.06)'}}>
 
-            {/* Review Form */}
-            {isLoggedIn ? (
-              <form onSubmit={handleReviewSubmit} className="mb-10 bg-stone-50 p-6 rounded-3xl">
-                <div className="mb-4">
-                  <label className="block text-xs font-bold uppercase text-stone-400 mb-2">
-                    ให้คะแนน (Rating)
-                  </label>
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setRating(star)}
-                        className="focus:outline-none"
-                      >
-                        <Star
-                          size={24}
-                          className={star <= rating ? "fill-yellow-400 text-yellow-400" : "text-stone-300"}
+            {/* Section Header */}
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#a11a1a] mb-1">Customer Experience</p>
+                <h3 className="text-2xl font-black text-stone-950 leading-tight">
+                  รีวิวสินค้า
+                </h3>
+              </div>
+              {reviews.length > 0 && (
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-black text-stone-950">
+                    {(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)}
+                  </span>
+                  <div>
+                    <div className="flex gap-0.5 mb-0.5">
+                      {[1,2,3,4,5].map(s => (
+                        <Star key={s} size={11}
+                          className={s <= Math.round(reviews.reduce((a,r)=>a+r.rating,0)/reviews.length) ? 'fill-amber-400 text-amber-400' : 'text-stone-200'}
                         />
-                      </button>
-                    ))}
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-stone-400 font-semibold">{reviews.length} รีวิว</p>
                   </div>
                 </div>
+              )}
+            </div>
 
-                <div className="mb-4">
-                  <label className="block text-xs font-bold uppercase text-stone-400 mb-2">
-                    ความคิดเห็น (Comment)
-                  </label>
-                  <textarea
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    required
-                    rows={3}
-                    className="w-full p-4 rounded-2xl border border-stone-200 focus:ring-2 focus:ring-stone-900 focus:border-transparent outline-none transition-all resize-none text-sm"
-                    placeholder="แชร์ความรู้สึกเกี่ยวกับสินค้าชิ้นนี้..."
-                  />
-                </div>
-
-                {/* Media Upload Section */}
-                <div className="mb-6">
-                  <label className="block text-xs font-bold uppercase text-stone-400 mb-2">
-                    แนบรูปภาพหรือวิดีโอ (Add Images or Videos)
-                  </label>
-                  
-                  <div className="flex flex-wrap gap-3 items-center">
-                    {/* Select Files Button */}
-                    <label className="flex flex-col items-center justify-center w-24 h-24 rounded-2xl border-2 border-dashed border-stone-200 hover:border-[#a11a1a] cursor-pointer hover:bg-stone-100/50 transition-all select-none">
-                      <span className="text-xl">📸</span>
-                      <span className="text-[10px] font-bold text-stone-400 mt-1">อัปโหลดสื่อ</span>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*,video/*"
-                        onChange={handleMediaSelect}
-                        className="hidden"
-                      />
-                    </label>
-
-                    {/* Previews List */}
-                    {mediaPreviews.map((preview) => (
-                      <div key={preview.id} className="relative w-24 h-24 rounded-2xl overflow-hidden border border-stone-100 bg-white group shadow-sm">
-                        {preview.uploading ? (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-50 text-[10px] font-bold text-stone-500">
-                            <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#a11a1a] border-t-transparent mb-1" />
-                            <span>กำลังโหลด...</span>
-                          </div>
-                        ) : preview.error ? (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-50 text-[10px] font-bold text-red-500 p-2 text-center">
-                            <span>❌</span>
-                            <span>{preview.error}</span>
-                          </div>
-                        ) : (
-                          <>
-                            {preview.type === 'image' ? (
-                              <img
-                                src={preview.url || URL.createObjectURL(preview.file)}
-                                alt="Preview"
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <video
-                                src={preview.url || URL.createObjectURL(preview.file)}
-                                className="w-full h-full object-cover"
-                              />
-                            )}
-                            {/* Remove button */}
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveMedia(preview.id)}
-                              className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/60 hover:bg-red-600 text-white flex items-center justify-center text-xs opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              ✕
-                            </button>
-                            {/* Type badge */}
-                            <span className="absolute bottom-1 left-1 px-1 py-0.5 rounded text-[8px] bg-black/50 text-white font-bold tracking-widest uppercase">
-                              {preview.type}
-                            </span>
-                          </>
-                        )}
+            {/* Rating Distribution Bars */}
+            {reviews.length > 0 && (
+              <div className="mb-8 p-5 rounded-2xl" style={{background: 'linear-gradient(135deg,#fafaf9 0%,#f5f5f4 100%)', border: '1px solid rgba(0,0,0,0.05)'}}>
+                <div className="space-y-2">
+                  {[5,4,3,2,1].map(star => {
+                    const count = reviews.filter(r => r.rating === star).length;
+                    const pct = reviews.length ? (count / reviews.length) * 100 : 0;
+                    return (
+                      <div key={star} className="flex items-center gap-3">
+                        <div className="flex items-center gap-1 w-12 flex-shrink-0">
+                          <span className="text-xs font-bold text-stone-700">{star}</span>
+                          <Star size={10} className="fill-amber-400 text-amber-400" />
+                        </div>
+                        <div className="flex-1 h-2 rounded-full bg-stone-200 overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{
+                              width: `${pct}%`,
+                              background: star >= 4 ? 'linear-gradient(90deg,#fbbf24,#f59e0b)'
+                                : star === 3 ? 'linear-gradient(90deg,#94a3b8,#64748b)'
+                                : 'linear-gradient(90deg,#fca5a5,#ef4444)'
+                            }}
+                          />
+                        </div>
+                        <span className="text-[10px] font-bold text-stone-400 w-6 text-right">{count}</span>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
+              </div>
+            )}
 
-                {/* Error / Success feedback */}
-                {reviewError && (
-                  <div className="mb-4 rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                    {reviewError}
-                  </div>
-                )}
-                {reviewSuccess && (
-                  <div className="mb-4 rounded-2xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
-                    ✅ ส่งรีวิวสำเร็จแล้ว ขอบคุณสำหรับความคิดเห็น!
-                  </div>
-                )}
+            {/* ─── Review Form ─── */}
+            {isLoggedIn ? (
+              <form onSubmit={handleReviewSubmit} className="mb-10 rounded-3xl overflow-hidden" style={{background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(250,250,249,0.95) 100%)', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)'}}>
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !comment.trim() || mediaPreviews.some(p => p.uploading)}
-                  className="flex items-center justify-center gap-2 bg-stone-950 text-white px-6 py-3 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-[#a11a1a] transition-all disabled:bg-stone-300"
-                >
-                  {isSubmitting ? "กำลังส่ง..." : (
-                    <>
-                      ส่งรีวิว <Send size={16} />
-                    </>
+                {/* Form top accent */}
+                <div className="h-1 w-full" style={{background: 'linear-gradient(90deg, #a11a1a 0%, #c0392b 50%, #e74c3c 100%)'}} />
+
+                <div className="p-6">
+                  {/* Star Rating */}
+                  <div className="mb-6">
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-3">
+                      ให้คะแนน · Rating
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRating(star)}
+                          className="group relative focus:outline-none transition-transform duration-150 hover:scale-110 active:scale-95"
+                          style={{filter: star <= rating ? 'drop-shadow(0 0 6px rgba(251,191,36,0.7))' : 'none'}}
+                        >
+                          <Star
+                            size={32}
+                            className={`transition-all duration-200 ${
+                              star <= rating
+                                ? 'fill-amber-400 text-amber-400'
+                                : 'text-stone-200 group-hover:text-amber-300'
+                            }`}
+                          />
+                        </button>
+                      ))}
+                      <span className="ml-3 text-sm font-black text-stone-700">
+                        {rating === 5 ? '🌟 ยอดเยี่ยม' : rating === 4 ? '😊 ดีมาก' : rating === 3 ? '😐 ปานกลาง' : rating === 2 ? '😕 พอใช้' : '😞 ต้องปรับปรุง'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Comment */}
+                  <div className="mb-5">
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-3">
+                      ความคิดเห็น · Comment
+                    </label>
+                    <div className="relative">
+                      <textarea
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        required
+                        rows={4}
+                        className="w-full p-4 rounded-2xl outline-none resize-none text-sm text-stone-800 placeholder-stone-300 transition-all duration-200"
+                        style={{
+                          background: 'rgba(250,250,249,0.8)',
+                          border: '1.5px solid',
+                          borderColor: comment ? '#a11a1a' : 'rgba(0,0,0,0.1)',
+                          boxShadow: comment ? '0 0 0 3px rgba(161,26,26,0.08)' : 'none'
+                        }}
+                        placeholder="แชร์ความรู้สึกเกี่ยวกับสินค้าชิ้นนี้..."
+                      />
+                      <div className="absolute bottom-3 right-4 text-[10px] text-stone-300 font-mono">
+                        {comment.length}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Media Upload */}
+                  <div className="mb-6">
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-3">
+                      แนบไฟล์ · Media
+                    </label>
+                    <div className="flex flex-wrap gap-3 items-start">
+                      {/* Upload Button */}
+                      <label className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl cursor-pointer select-none transition-all duration-200 hover:scale-105 group" style={{border: '2px dashed rgba(161,26,26,0.3)', background: 'rgba(161,26,26,0.02)'}}>
+                        <Camera size={20} className="text-[#a11a1a] opacity-70 group-hover:opacity-100 transition-opacity" />
+                        <span className="text-[9px] font-black text-[#a11a1a] opacity-60 group-hover:opacity-100 mt-1.5 tracking-wider">อัปโหลด</span>
+                        <input type="file" multiple accept="image/*,video/*" onChange={handleMediaSelect} className="hidden" />
+                      </label>
+
+                      {/* Previews */}
+                      {mediaPreviews.map((preview) => (
+                        <div key={preview.id} className="relative w-20 h-20 rounded-2xl overflow-hidden group shadow-md" style={{border: '1px solid rgba(0,0,0,0.08)'}}>
+                          {preview.uploading ? (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center" style={{background: 'rgba(250,250,249,0.95)'}}>
+                              <div className="w-6 h-6 rounded-full border-2 border-[#a11a1a] border-t-transparent animate-spin mb-1" />
+                              <span className="text-[8px] font-bold text-stone-400">กำลังโหลด</span>
+                            </div>
+                          ) : preview.error ? (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-50 p-2 text-center">
+                              <AlertCircle size={16} className="text-red-400 mb-1" />
+                              <span className="text-[8px] font-bold text-red-400">{preview.error}</span>
+                            </div>
+                          ) : (
+                            <>
+                              {preview.type === 'image' ? (
+                                <img src={preview.url || URL.createObjectURL(preview.file)} alt="Preview" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="relative w-full h-full bg-stone-900">
+                                  <video src={preview.url || URL.createObjectURL(preview.file)} className="w-full h-full object-cover opacity-70" />
+                                  <Play size={16} className="absolute inset-0 m-auto text-white" />
+                                </div>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMedia(preview.id)}
+                                className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 hover:scale-110"
+                                style={{background: 'rgba(0,0,0,0.7)'}}
+                              >
+                                <X size={10} className="text-white" />
+                              </button>
+                              <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded-md text-[7px] font-black tracking-widest uppercase" style={{background: 'rgba(0,0,0,0.55)', color: 'white'}}>
+                                {preview.type === 'video' ? 'VDO' : 'IMG'}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Error / Success */}
+                  {reviewError && (
+                    <div className="mb-4 flex items-start gap-3 rounded-2xl px-4 py-3" style={{background: 'rgba(254,242,242,0.8)', border: '1px solid rgba(252,165,165,0.5)'}}>
+                      <AlertCircle size={16} className="text-red-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-red-700">{reviewError}</span>
+                    </div>
                   )}
-                </button>
+                  {reviewSuccess && (
+                    <div className="mb-4 flex items-start gap-3 rounded-2xl px-4 py-3" style={{background: 'rgba(240,253,244,0.8)', border: '1px solid rgba(134,239,172,0.5)'}}>
+                      <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-emerald-700">ส่งรีวิวสำเร็จแล้ว! ขอบคุณสำหรับความคิดเห็นของคุณ 🙏</span>
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !comment.trim() || mediaPreviews.some(p => p.uploading)}
+                    className="relative flex items-center justify-center gap-2 px-8 py-3.5 rounded-full text-sm font-black uppercase tracking-widest text-white transition-all duration-300 overflow-hidden disabled:opacity-40 disabled:cursor-not-allowed"
+                    style={{
+                      background: isSubmitting ? '#888' : 'linear-gradient(135deg, #1c1c1c 0%, #3d1010 50%, #a11a1a 100%)',
+                      boxShadow: isSubmitting ? 'none' : '0 4px 20px rgba(161,26,26,0.35), 0 1px 4px rgba(0,0,0,0.2)'
+                    }}
+                  >
+                    {isSubmitting ? (
+                      <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> กำลังส่ง...</>
+                    ) : (
+                      <><Send size={15} /> ส่งรีวิว</>
+                    )}
+                  </button>
+                </div>
               </form>
             ) : (
-              <div className="mb-10 bg-stone-50 p-6 rounded-3xl text-center">
-                <p className="text-sm text-stone-500">
-                  กรุณา <Link href="/login" className="text-blue-600 underline">เข้าสู่ระบบ</Link> เพื่อเขียนรีวิว
+              <div className="mb-10 rounded-3xl p-8 text-center" style={{background: 'linear-gradient(135deg,#fafaf9,#f5f5f4)', border: '1px dashed rgba(0,0,0,0.1)'}}>
+                <div className="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center" style={{background: 'linear-gradient(135deg,#fef2f2,#fee2e2)'}}>
+                  <Star size={20} className="text-[#a11a1a]" />
+                </div>
+                <p className="text-sm font-semibold text-stone-600">
+                  กรุณา{' '}<Link href="/login" className="font-black underline" style={{color:'#a11a1a'}}>เข้าสู่ระบบ</Link>{' '}เพื่อเขียนรีวิว
                 </p>
               </div>
             )}
 
-            {/* Review List */}
-            <div className="space-y-6">
-              {reviews.length > 0 ? (
-                reviews.map((review) => (
-                  <div key={review.id} className="border-b border-stone-100 pb-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full bg-stone-200 flex items-center justify-center text-[10px] font-bold">
-                          {review.username.charAt(0).toUpperCase()}
-                        </div>
-                        <span className="text-sm font-bold text-stone-900">{review.username}</span>
-                      </div>
-                      <span className="text-[10px] text-stone-400">
-                        {new Date(review.created_at).toLocaleDateString('th-TH')}
-                      </span>
-                    </div>
-                    <div className="flex gap-0.5 mb-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          size={12}
-                          className={star <= review.rating ? "fill-yellow-400 text-yellow-400" : "text-stone-200"}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-sm text-stone-600 leading-relaxed">
-                      {review.comment}
-                    </p>
-
-                    {/* Media Attachments in Review List */}
-                    {((review.images && review.images.length > 0) || (review.videos && review.videos.length > 0)) && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {review.images?.map((imgUrl, idx) => (
-                          <a key={idx} href={imgUrl} target="_blank" rel="noopener noreferrer" className="relative w-16 h-16 rounded-xl overflow-hidden border border-stone-100 bg-stone-50 hover:opacity-90 transition-opacity">
-                            <img src={imgUrl} alt={`Review media ${idx}`} className="w-full h-full object-cover" />
-                          </a>
-                        ))}
-                        {review.videos?.map((vidUrl, idx) => (
-                          <video key={idx} src={vidUrl} controls className="w-24 h-16 rounded-xl border border-stone-100 bg-black object-cover" />
-                        ))}
-                      </div>
-                    )}
+            {/* ─── Review List (Scrollable) ─── */}
+            {reviews.length > 0 ? (
+              <div className="relative rounded-3xl overflow-hidden" style={{border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 4px 24px rgba(0,0,0,0.06)'}}>
+                {/* Header bar */}
+                <div className="flex items-center justify-between px-5 py-3.5" style={{background: 'linear-gradient(135deg,#fafaf9,#f5f5f4)', borderBottom: '1px solid rgba(0,0,0,0.06)'}}>
+                  <div className="flex items-center gap-2">
+                    <Star size={13} className="fill-amber-400 text-amber-400" />
+                    <span className="text-xs font-black text-stone-700 uppercase tracking-widest">รีวิวทั้งหมด</span>
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-10 bg-white border border-dashed border-stone-200 rounded-3xl">
-                  <p className="text-sm text-stone-400">ยังไม่มีรีวิวสำหรับสินค้านี้</p>
+                  <span className="text-[10px] font-bold text-stone-400 bg-white px-2.5 py-1 rounded-full" style={{border: '1px solid rgba(0,0,0,0.08)'}}>
+                    {reviews.length} รายการ
+                  </span>
                 </div>
-              )}
-            </div>
+
+                {/* Scrollable area */}
+                <div
+                  className="overflow-y-auto"
+                  style={{
+                    maxHeight: '420px',
+                    background: '#fefefe',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(161,26,26,0.25) transparent',
+                  }}
+                >
+                  <style>{`
+                    .review-scroll::-webkit-scrollbar { width: 5px; }
+                    .review-scroll::-webkit-scrollbar-track { background: transparent; }
+                    .review-scroll::-webkit-scrollbar-thumb { background: rgba(161,26,26,0.25); border-radius: 99px; }
+                    .review-scroll::-webkit-scrollbar-thumb:hover { background: rgba(161,26,26,0.45); }
+                  `}</style>
+                  <div className="review-scroll overflow-y-auto p-4 space-y-3" style={{maxHeight: '420px'}}>
+                    {reviews.map((review) => {
+                      const avatarColors = [
+                        'linear-gradient(135deg,#667eea,#764ba2)',
+                        'linear-gradient(135deg,#f093fb,#f5576c)',
+                        'linear-gradient(135deg,#4facfe,#00f2fe)',
+                        'linear-gradient(135deg,#43e97b,#38f9d7)',
+                        'linear-gradient(135deg,#fa709a,#fee140)',
+                        'linear-gradient(135deg,#a18cd1,#fbc2eb)',
+                        'linear-gradient(135deg,#fda085,#f6d365)',
+                        'linear-gradient(135deg,#a1c4fd,#c2e9fb)',
+                      ];
+                      const avatarGradient = avatarColors[review.username.charCodeAt(0) % avatarColors.length];
+                      return (
+                        <div key={review.id} className="rounded-2xl p-4 transition-all duration-200 hover:shadow-md" style={{background: 'linear-gradient(135deg,#ffffff,#fafaf9)', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 1px 6px rgba(0,0,0,0.03)'}}>
+                          {/* Header */}
+                          <div className="flex items-center justify-between mb-2.5">
+                            <div className="flex items-center gap-2.5">
+                              <div
+                                className="h-9 w-9 rounded-xl flex items-center justify-center text-sm font-black text-white flex-shrink-0"
+                                style={{background: avatarGradient, boxShadow: '0 2px 8px rgba(0,0,0,0.15)'}}
+                              >
+                                {review.username.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <span className="text-sm font-black text-stone-900">{review.username}</span>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <div className="flex gap-0.5">
+                                    {[1,2,3,4,5].map(star => (
+                                      <Star key={star} size={10}
+                                        className={star <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-stone-200'}
+                                      />
+                                    ))}
+                                  </div>
+                                  <span className="text-[10px] text-stone-300">·</span>
+                                  <span className="text-[10px] font-semibold text-stone-400">
+                                    {new Date(review.created_at).toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'2-digit'})}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg" style={{background: review.rating >= 4 ? 'rgba(251,191,36,0.12)' : 'rgba(0,0,0,0.04)', border: review.rating >= 4 ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(0,0,0,0.06)'}}>
+                              <Star size={9} className={review.rating >= 4 ? 'fill-amber-400 text-amber-400' : 'fill-stone-400 text-stone-400'} />
+                              <span className="text-[11px] font-black" style={{color: review.rating >= 4 ? '#b45309' : '#78716c'}}>{review.rating}.0</span>
+                            </div>
+                          </div>
+
+                          {/* Comment */}
+                          <p className="text-sm text-stone-600 leading-relaxed pl-[46px]">
+                            {review.comment}
+                          </p>
+
+                          {/* Media */}
+                          {((review.images && review.images.length > 0) || (review.videos && review.videos.length > 0)) && (
+                            <div className="mt-3 pl-[46px] flex flex-wrap gap-2">
+                              {review.images?.map((imgUrl, i) => (
+                                <a key={i} href={imgUrl} target="_blank" rel="noopener noreferrer"
+                                  className="relative w-14 h-14 rounded-xl overflow-hidden transition-all hover:scale-105 hover:shadow-lg"
+                                  style={{border: '1.5px solid rgba(0,0,0,0.08)'}}
+                                >
+                                  <img src={imgUrl} alt={`Review photo ${i+1}`} className="w-full h-full object-cover" />
+                                </a>
+                              ))}
+                              {review.videos?.map((vidUrl, i) => (
+                                <div key={i} className="relative w-20 h-14 rounded-xl overflow-hidden" style={{border: '1.5px solid rgba(0,0,0,0.08)', background: '#000'}}>
+                                  <video src={vidUrl} controls className="w-full h-full object-cover" />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Bottom fade overlay */}
+                <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none" style={{background: 'linear-gradient(to top, rgba(254,254,254,0.9), transparent)'}} />
+              </div>
+            ) : (
+              <div className="py-16 text-center rounded-3xl" style={{background: 'linear-gradient(135deg,#fafaf9,#f5f5f4)', border: '1.5px dashed rgba(0,0,0,0.08)'}}>
+                <div className="w-14 h-14 rounded-3xl mx-auto mb-4 flex items-center justify-center" style={{background: 'linear-gradient(135deg,#f8fafc,#e2e8f0)'}}>
+                  <Star size={24} className="text-stone-300" />
+                </div>
+                <p className="text-sm font-semibold text-stone-400">ยังไม่มีรีวิว เป็นคนแรกที่แบ่งปันความคิดเห็น!</p>
+              </div>
+            )}
           </div>
         </div>
 
