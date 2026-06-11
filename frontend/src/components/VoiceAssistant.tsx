@@ -1,24 +1,26 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Mic, MicOff, Sparkles, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { logout } from '@/app/actions/auth';
 
 
 export default function VoiceAssistant() {
+  const pathname = usePathname();
   const router = useRouter();
+  if (pathname?.startsWith('/admin')) return null;
   const [isSupported, setIsSupported] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [showStatusIndicator, setShowStatusIndicator] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [matchedCommand, setMatchedCommand] = useState<{ path: string; name: string } | null>(null);
-  const [isActive, setIsActive] = useState(true); // mirrors shouldListenRef for reactive UI
+  const [isActive, setIsActive] = useState(false); // mirrors shouldListenRef for reactive UI
 
   // Reference to track if we should automatically keep listening
-  const shouldListenRef = useRef<boolean>(true);
+  const shouldListenRef = useRef<boolean>(false);
   const isSpeakingRef = useRef<boolean>(false);
   const isRecognitionActiveRef = useRef<boolean>(false);
   const isProcessingRef = useRef<boolean>(false);
@@ -29,23 +31,7 @@ export default function VoiceAssistant() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Pre-warm microphone with advanced voice constraints to filter background noise at OS level
-    if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
-      })
-      .then((stream) => {
-        // Stop all tracks immediately to release the microphone lock while enabling hardware filtering
-        stream.getTracks().forEach(track => track.stop());
-      })
-      .catch((err) => {
-        console.debug('Microphone pre-warming skipped or denied:', err);
-      });
-    }
+    // Microphone pre-warming removed to prevent permission request dialog immediately on page mount
 
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -171,17 +157,8 @@ export default function VoiceAssistant() {
 
     recognitionRef.current = rec;
 
-    // Start listening automatically on mount
-    shouldListenRef.current = true;
-    try {
-      if (!isRecognitionActiveRef.current) {
-        rec.start();
-      }
-    } catch (e: any) {
-      if (e.name !== 'InvalidStateError' && !e.message?.includes('already started')) {
-        console.warn('Initial auto-start failed:', e);
-      }
-    }
+    // Do not start listening automatically on mount (Off by default)
+    shouldListenRef.current = false;
 
     // Clean up on unmount
     return () => {
@@ -660,10 +637,10 @@ export default function VoiceAssistant() {
     <>
       {/* Floating Ambient Mic Status Button (Ultra-Modern 2027 Aesthetic) */}
       {isSupported && (
-        <div className="fixed bottom-24 md:bottom-6 right-24 z-50 flex flex-col items-end">
+        <div className="fixed bottom-24 right-4 z-50 flex flex-col items-end md:hidden">
           <button
             onClick={toggleSpeechSystem}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 cursor-pointer select-none group relative shadow-[0_0_20px_rgba(0,0,0,0.4)] hover:shadow-[0_0_25px_rgba(245,158,11,0.25)] ${
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 cursor-pointer select-none group relative shadow-[0_0_20px_rgba(0,0,0,0.4)] hover:shadow-[0_0_25px_rgba(245,158,11,0.25)] ${
               isActive
                 ? 'bg-stone-950/90 text-white border border-stone-800'
                 : 'bg-stone-900 text-stone-500 border border-stone-800/60'
@@ -676,10 +653,10 @@ export default function VoiceAssistant() {
                 animate={{
                   rotate: 360,
                   boxShadow: [
-                    '0 0 12px rgba(16,185,129,0.3)',
-                    '0 0 20px rgba(139,0,0,0.5)',
-                    '0 0 12px rgba(245,158,11,0.3)',
-                    '0 0 12px rgba(16,185,129,0.3)'
+                    '0 0 8px rgba(16,185,129,0.3)',
+                    '0 0 14px rgba(139,0,0,0.5)',
+                    '0 0 8px rgba(245,158,11,0.3)',
+                    '0 0 8px rgba(16,185,129,0.3)'
                   ]
                 }}
                 transition={{
@@ -712,18 +689,13 @@ export default function VoiceAssistant() {
                     animate={isListening ? { scale: [1, 1.1, 1] } : {}}
                     transition={{ repeat: Infinity, duration: 1.5 }}
                   >
-                    <Mic size={18} className="text-stone-100 group-hover:text-amber-400 transition-colors z-20 relative" />
+                    <Mic size={14} className="text-stone-100 group-hover:text-amber-400 transition-colors z-20 relative" />
                   </motion.div>
                 </div>
               ) : (
-                <MicOff size={18} className="text-stone-600 group-hover:text-stone-400 transition-colors z-20 relative" />
+                <MicOff size={14} className="text-stone-600 group-hover:text-stone-400 transition-colors z-20 relative" />
               )}
             </div>
-
-            {/* Hover Tooltip */}
-            <span className="absolute right-14 bg-stone-950/95 text-stone-300 text-[9px] font-bold px-2.5 py-1.5 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap uppercase tracking-widest border border-stone-800 pointer-events-none z-30">
-              {isActive ? 'VOICE: ACTIVE' : 'VOICE: MUTED'}
-            </span>
           </button>
         </div>
       )}

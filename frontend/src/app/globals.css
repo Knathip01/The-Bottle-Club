@@ -43,3 +43,287 @@ video,
 canvas {
   max-width: 100%;
 }
+
+/* ==========================================================================
+   🍷 Premium Admin Panel 2027 UI Styles
+   ========================================================================== */
+
+/* Glassmorphic floating card with glowing borders */
+.admin-glass-panel {
+  background: rgba(20, 18, 17, 0.45) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5) !important;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.admin-glass-panel:hover {
+  border-color: rgba(239, 68, 68, 0.2) !important;
+  box-shadow: 
+    0 15px 45px -10px rgba(0, 0, 0, 0.7),
+    0 0 25px 0 rgba(239, 68, 68, 0.05) !important;
+  transform: translateY(-2px);
+}
+
+/* Glowing text highlight */
+.admin-glow-text {
+  text-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+}
+
+/* Glowing button with gradient and border accents */
+.admin-glow-btn {
+  background: linear-gradient(135deg, #7f1d1d 0%, #4c0519 100%) !important;
+  border: 1px solid rgba(244, 63, 94, 0.25) !important;
+  box-shadow: 0 4px 15px rgba(127, 29, 29, 0.25) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.admin-glow-btn:hover {
+  background: linear-gradient(135deg, #991b1b 0%, #5c051e 100%) !important;
+  box-shadow: 
+    0 8px 25px rgba(153, 27, 27, 0.4),
+    0 0 15px rgba(244, 63, 94, 0.3) !important;
+  transform: translateY(-1px);
+}
+
+/* Customized no-scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ==========================================================================
+   ✨ Luxury Ambient Animations & Grid Overlay
+   ========================================================================== */
+
+/* Fine technical mesh grid */
+.bg-grid-pattern {
+  background-size: 50px 50px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+/* Drifting background glow animations */
+@keyframes float-slow-1 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(50px, -70px) scale(1.15);
+  }
+  66% {
+    transform: translate(-30px, 40px) scale(0.9);
+  }
+}
+
+@keyframes float-slow-2 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(-60px, 60px) scale(1.2);
+  }
+}
+
+@keyframes float-slow-3 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(40px, 30px) scale(0.95);
+  }
+}
+
+.animate-float-1 {
+  animation: float-slow-1 18s infinite ease-in-out;
+}
+
+.animate-float-2 {
+  animation: float-slow-2 24s infinite ease-in-out;
+}
+
+.animate-float-3 {
+  animation: float-slow-3 20s infinite ease-in-out;
+}
+
+/* Smooth Entrance Transition */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Pulsing premium glows */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 10px 40px -10px rgba(0, 0, 0, 0.6),
+      0 0 15px -3px rgba(220, 38, 38, 0.05);
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+  50% {
+    box-shadow: 
+      0 10px 40px -10px rgba(0, 0, 0, 0.6),
+      0 0 25px 2px rgba(220, 38, 38, 0.15);
+    border-color: rgba(220, 38, 38, 0.25);
+  }
+}
+
+.admin-glass-pulse {
+  animation: glow-pulse 7s infinite ease-in-out;
+}
+
+/* Button Shimmer Sweep Effect */
+@keyframes shimmer-sweep {
+  0% {
+    left: -150%;
+  }
+  50% {
+    left: 150%;
+  }
+  100% {
+    left: 150%;
+  }
+}
+
+.shimmer-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 150%;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 30%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.15) 70%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  animation: shimmer-sweep 6s infinite ease-in-out;
+}
+
+/* ==========================================================================
+   🤖 AI 2026 / Cybernetic Interface Elements
+   ========================================================================== */
+
+/* Neon Tech glow effects */
+.text-cyber-glow {
+  text-shadow: 
+    0 0 6px rgba(239, 68, 68, 0.5), 
+    0 0 15px rgba(239, 68, 68, 0.2), 
+    0 0 30px rgba(239, 68, 68, 0.1);
+}
+
+.border-cyber-glow {
+  box-shadow: 
+    0 0 15px 0 rgba(239, 68, 68, 0.15),
+    inset 0 0 15px 0 rgba(239, 68, 68, 0.05);
+}
+
+/* Sci-fi Corner Brackets */
+.hud-bracket {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: rgba(239, 68, 68, 0.45);
+  border-style: solid;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+.hud-bracket-tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+.hud-bracket-tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; }
+.hud-bracket-bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; }
+.hud-bracket-br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+/* Interactive Hover Brackets Expansion */
+.admin-glass-pulse:hover .hud-bracket-tl { transform: translate(-2px, -2px); border-color: rgba(245, 158, 11, 0.7); }
+.admin-glass-pulse:hover .hud-bracket-tr { transform: translate(2px, -2px); border-color: rgba(245, 158, 11, 0.7); }
+.admin-glass-pulse:hover .hud-bracket-bl { transform: translate(-2px, 2px); border-color: rgba(245, 158, 11, 0.7); }
+.admin-glass-pulse:hover .hud-bracket-br { transform: translate(2px, 2px); border-color: rgba(245, 158, 11, 0.7); }
+
+/* Futuristic Laser Scanning Sweep */
+@keyframes scan-sweep {
+  0% {
+    top: -5%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 105%;
+    opacity: 0;
+  }
+}
+
+.ai-scanline {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    transparent 5%,
+    rgba(239, 68, 68, 0.1) 15%,
+    rgba(239, 68, 68, 0.9) 45%,
+    rgba(245, 158, 11, 0.95) 50%,
+    rgba(239, 68, 68, 0.9) 55%,
+    rgba(239, 68, 68, 0.1) 85%,
+    transparent 95%
+  );
+  box-shadow: 
+    0 0 12px 2px rgba(239, 68, 68, 0.5),
+    0 0 4px 1px rgba(245, 158, 11, 0.7);
+  z-index: 30;
+  pointer-events: none;
+  animation: scan-sweep 3.5s infinite linear;
+}
+
+/* Cyber telemetry scroll simulated */
+@keyframes marquee-telemetry {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+.telemetry-scroller {
+  animation: marquee-telemetry 12s infinite linear;
+}
+
+/* Rotating hud graphics */
+@keyframes spin-clockwise {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes spin-counter {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-clockwise 30s infinite linear;
+}
+.animate-spin-counter {
+  animation: spin-counter 20s infinite linear;
+}
+
+
+

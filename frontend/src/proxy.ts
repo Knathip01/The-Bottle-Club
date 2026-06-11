@@ -1,8 +1,19 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession as updateCustomSession } from '@/lib/auth-utils'
+import { updateAdminSession } from '@/lib/admin-auth'
 
 export default async function proxy(request: NextRequest) {
-  // 1. Update Custom JWT Session
+  const pathname = request.nextUrl.pathname
+
+  // 1. Update Admin JWT Session for Admin pages and API routes.
+  if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
+    const adminResponse = await updateAdminSession(request)
+    if (adminResponse) {
+      return adminResponse
+    }
+  }
+
+  // 2. Update Custom JWT Session
   const customResponse = await updateCustomSession(request)
   
   if (customResponse) {

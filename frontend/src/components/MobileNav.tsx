@@ -9,6 +9,7 @@ import Webcam from 'react-webcam';
 
 export default function MobileNav() {
   const pathname = usePathname();
+  if (pathname?.startsWith('/admin')) return null;
   const router = useRouter();
   const { t } = useLanguage();
   const [isScanOpen, setIsScanOpen] = useState(false);
