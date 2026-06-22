@@ -41,7 +41,7 @@ const RANK_CONFIG = [
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
-  show: (i: number) => ({ opacity: 1, y: 0, transition: { type: 'spring', stiffness: 80, damping: 16, delay: i * 0.06 } }),
+  show: (i: number) => ({ opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 80, damping: 16, delay: i * 0.06 } }),
 };
 
 /* ─── Helpers ─── */

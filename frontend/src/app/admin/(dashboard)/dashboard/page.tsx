@@ -245,7 +245,7 @@ export default function AdminDashboardPage() {
               </span>
             </div>
 
-            <div className="flex-1 divide-y" style={{ divideColor: 'rgba(255,255,255,0.04)' }}>
+            <div className="flex-1 divide-y divide-black/5">
               {data.lowStockProducts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
                   <Package className="w-8 h-8 text-stone-700" />
