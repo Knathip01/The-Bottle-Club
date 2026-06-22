@@ -10,7 +10,6 @@ import { logout } from '@/app/actions/auth';
 export default function VoiceAssistant() {
   const pathname = usePathname();
   const router = useRouter();
-  if (pathname?.startsWith('/admin')) return null;
   const [isSupported, setIsSupported] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -26,6 +25,8 @@ export default function VoiceAssistant() {
   const isProcessingRef = useRef<boolean>(false);
   const hideTimeoutRef = useRef<any>(null);
   const recognitionRef = useRef<any>(null);
+
+  if (pathname?.startsWith('/admin')) return null;
 
   // Initialize SpeechRecognition on client mount
   useEffect(() => {

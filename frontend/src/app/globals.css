@@ -325,5 +325,254 @@ canvas {
   animation: spin-counter 20s infinite linear;
 }
 
+/* ==========================================================================
+   🎨 2026 Premium Admin Design System — New Utilities
+   ========================================================================== */
 
+/* Admin card base — cleaner variant with subtle inner highlight */
+.admin-card {
+  background: linear-gradient(135deg, rgba(28, 24, 23, 0.7) 0%, rgba(15, 12, 11, 0.8) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 1px 0 0 rgba(255,255,255,0.04) inset,
+    0 20px 50px -15px rgba(0, 0, 0, 0.6);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
 
+.admin-card:hover {
+  border-color: rgba(196, 30, 58, 0.2);
+  box-shadow: 
+    0 1px 0 0 rgba(255,255,255,0.05) inset,
+    0 25px 60px -15px rgba(0, 0, 0, 0.7),
+    0 0 30px -5px rgba(196, 30, 58, 0.08);
+  transform: translateY(-3px);
+}
+
+/* Stat value typography */
+.stat-value {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  background: linear-gradient(135deg, #f5f5f4 30%, #a8a29e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Status badges */
+.badge-pending {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+}
+.badge-confirmed {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+}
+.badge-shipped {
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  color: #c084fc;
+}
+.badge-delivered {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #34d399;
+}
+.badge-rejected {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+.badge-cancelled {
+  background: rgba(113, 113, 122, 0.1);
+  border: 1px solid rgba(113, 113, 122, 0.25);
+  color: #a1a1aa;
+}
+
+/* Table row hover */
+.admin-table-row {
+  transition: background 0.2s ease;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.admin-table-row:hover {
+  background: rgba(255,255,255,0.025);
+}
+
+/* Sidebar nav item active state */
+.sidebar-nav-active {
+  background: linear-gradient(90deg, rgba(196, 30, 58, 0.18) 0%, rgba(196, 30, 58, 0.05) 100%);
+  border: 1px solid rgba(196, 30, 58, 0.2);
+  color: #fca5a5;
+  box-shadow: 0 4px 20px rgba(196, 30, 58, 0.1);
+}
+
+.sidebar-nav-inactive {
+  border: 1px solid transparent;
+  color: #a8a29e;
+}
+
+.sidebar-nav-inactive:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.06);
+  color: #e7e5e4;
+  transform: translateX(4px);
+}
+
+/* Input focus ring for admin forms */
+.admin-input {
+  background: rgba(10, 9, 8, 0.6);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #e7e5e4;
+  transition: all 0.25s ease;
+}
+
+.admin-input:focus {
+  outline: none;
+  border-color: rgba(196, 30, 58, 0.5);
+  box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1), 0 0 20px rgba(196, 30, 58, 0.08);
+  background: rgba(15, 12, 11, 0.7);
+}
+
+/* Primary CTA button */
+.admin-btn-primary {
+  background: linear-gradient(135deg, #9b1c1c 0%, #7f1d1d 50%, #450a0a 100%);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  box-shadow: 
+    0 4px 15px rgba(127, 29, 29, 0.3),
+    0 1px 0 rgba(255,255,255,0.05) inset;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  color: white;
+}
+
+.admin-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 50%, #5c0a0a 100%);
+  box-shadow: 
+    0 8px 25px rgba(153, 27, 27, 0.45),
+    0 0 20px rgba(244, 63, 94, 0.25),
+    0 1px 0 rgba(255,255,255,0.08) inset;
+  transform: translateY(-1px);
+}
+
+.admin-btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Secondary button */
+.admin-btn-secondary {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #a8a29e;
+  transition: all 0.2s ease;
+}
+
+.admin-btn-secondary:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.12);
+  color: #e7e5e4;
+}
+
+/* Noise texture overlay for depth */
+.noise-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px 128px;
+  pointer-events: none;
+}
+
+/* Animated gradient border */
+@keyframes gradient-border-rotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animated-border-card {
+  position: relative;
+}
+
+.animated-border-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(196,30,58,0.4), rgba(245,158,11,0.2), rgba(196,30,58,0.1), rgba(255,255,255,0.05));
+  background-size: 300% 300%;
+  animation: gradient-border-rotate 6s ease infinite;
+  z-index: -1;
+}
+
+/* Count-up number animation */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-count-up {
+  animation: count-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Slide in from left */
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Neon flicker for status dots */
+@keyframes neon-flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.4; }
+  94% { opacity: 1; }
+  96% { opacity: 0.6; }
+  97% { opacity: 1; }
+}
+
+.animate-neon-flicker {
+  animation: neon-flicker 4s infinite;
+}
+
+/* Scan line for login page */
+@keyframes login-scan {
+  0% { top: 0%; opacity: 0.5; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* Quick action card hover */
+.quick-action-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.quick-action-card:hover {
+  background: rgba(196, 30, 58, 0.08);
+  border-color: rgba(196, 30, 58, 0.2);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(196, 30, 58, 0.1);
+}
+
+/* Activity timeline dot */
+.timeline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+/* Divider with gradient fade */
+.admin-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.08) 70%, transparent);
+}

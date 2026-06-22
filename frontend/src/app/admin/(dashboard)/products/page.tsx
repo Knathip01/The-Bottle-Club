@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import DataTable, { Column } from '@/components/admin/DataTable';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { Wine, Search, Plus, Edit2, Trash2, ArrowUpDown, ShieldAlert, CheckCircle2, RotateCcw, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -116,27 +117,27 @@ export default function AdminProductsPage() {
   const columns: Column<ProductRow>[] = [
     {
       header: 'รหัสสินค้า',
-      accessor: (row) => <span className="font-bold text-stone-400">#{row.id}</span>,
+      accessor: (row) => <span className="font-bold text-stone-500">#{row.id}</span>,
       sortable: true,
       sortKey: 'id',
     },
     {
       header: 'ชื่อสินค้า',
-      accessor: (row) => <span className="font-bold text-stone-200">{row.name}</span>,
+      accessor: (row) => <span className="font-bold text-stone-800">{row.name}</span>,
     },
     {
       header: 'ราคาสินค้า',
-      accessor: (row) => <span className="font-bold text-stone-200">฿{row.price.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>,
+      accessor: (row) => <span className="font-bold text-stone-800">฿{row.price.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>,
     },
     {
       header: 'สถานะสต็อก',
       accessor: (row) => {
         if (row.stock === 0) {
-          return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-red-500/10 text-red-400 border-red-500/20">สินค้าหมด (Out)</span>;
+          return <span className="badge-rejected text-[10px] font-bold px-2.5 py-1 rounded-full">สินค้าหมด (Out)</span>;
         } else if (row.stock <= 10) {
-          return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-amber-500/10 text-amber-400 border-amber-500/20">ใกล้หมด (Low)</span>;
+          return <span className="badge-pending text-[10px] font-bold px-2.5 py-1 rounded-full">ใกล้หมด (Low)</span>;
         } else {
-          return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-green-500/10 text-green-400 border-green-500/20">ปกติ (In Stock)</span>;
+          return <span className="badge-delivered text-[10px] font-bold px-2.5 py-1 rounded-full">ปกติ (In Stock)</span>;
         }
       }
     },
@@ -147,14 +148,14 @@ export default function AdminProductsPage() {
           <button
             onClick={() => handleAdjustStock(row.id, row.stock, -1)}
             disabled={row.stock <= 0}
-            className="w-8 h-8 rounded-lg bg-stone-950 border border-white/10 hover:border-red-800/30 text-stone-300 disabled:opacity-30 hover:text-red-400 cursor-pointer flex items-center justify-center font-black text-sm transition"
+            className="admin-icon-btn w-8 h-8 font-black text-sm disabled:opacity-30"
           >
             -
           </button>
-          <span className="font-bold text-stone-100 min-w-8 text-center text-sm">{row.stock}</span>
+          <span className="font-bold text-stone-800 min-w-8 text-center text-sm">{row.stock}</span>
           <button
             onClick={() => handleAdjustStock(row.id, row.stock, 1)}
-            className="w-8 h-8 rounded-lg bg-stone-950 border border-white/10 hover:border-red-800/30 text-stone-300 hover:text-red-400 cursor-pointer flex items-center justify-center font-black text-sm transition"
+            className="admin-icon-btn w-8 h-8 font-black text-sm"
           >
             +
           </button>
@@ -167,14 +168,14 @@ export default function AdminProductsPage() {
         <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
           <Link
             href={`/admin/products/${row.id}/edit`}
-            className="p-2.5 bg-white/5 border border-white/5 hover:border-red-800/30 hover:bg-red-850/10 text-stone-300 hover:text-red-400 rounded-xl transition cursor-pointer"
+            className="admin-icon-btn"
             title="แก้ไขสินค้า"
           >
             <Edit2 className="w-4 h-4" />
           </Link>
           <button
             onClick={() => handleDeleteProduct(row.id, row.name)}
-            className="p-2.5 bg-white/5 border border-white/5 hover:border-red-800/30 hover:bg-red-950/10 text-stone-300 hover:text-red-400 rounded-xl transition cursor-pointer"
+            className="admin-icon-btn"
             title="ลบสินค้า"
           >
             <Trash2 className="w-4 h-4" />
@@ -186,40 +187,28 @@ export default function AdminProductsPage() {
   ];
 
   return (
-    <div className="space-y-6 select-none font-sans">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-bold font-serif text-stone-100 flex items-center gap-2">
-            <Wine className="w-5 h-5 text-red-500" /> จัดการข้อมูลสินค้า
-          </h2>
-          <p className="text-xs text-stone-400 mt-0.5">เพิ่ม ลบ แก้ไขข้อมูลไวน์ และปรับสต็อกสินค้าด่วน</p>
-        </div>
-        <Link
-          href="/admin/products/new"
-          className="inline-flex items-center gap-2 px-5 py-3 bg-red-800 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-red-950/20 transition cursor-pointer"
-        >
-          <Plus className="w-4 h-4" /> เพิ่มสินค้าใหม่
-        </Link>
-      </div>
+    <div className="space-y-5 sm:space-y-6 select-none font-sans">
+      <AdminPageHeader
+        title="จัดการข้อมูลสินค้า"
+        subtitle="เพิ่ม ลบ แก้ไขข้อมูลไวน์ และปรับสต็อกสินค้าด่วน"
+        icon={Wine}
+        action={
+          <Link href="/admin/products/new" className="admin-btn-primary inline-flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold cursor-pointer shimmer-btn">
+            <Plus className="w-4 h-4" /> เพิ่มสินค้าใหม่
+          </Link>
+        }
+      />
 
-      {/* Notifications */}
       {notification && (
-        <div className={`p-4 rounded-xl border text-sm flex items-start gap-3 animate-fade-in ${
-          notification.type === 'success' 
-            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
-            : 'bg-red-900/10 border-red-800/20 text-red-400'
-        }`}>
+        <div className={`flex items-start gap-3 ${notification.type === 'success' ? 'admin-alert-success' : 'admin-alert-error'}`}>
           {notification.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
           <span>{notification.message}</span>
         </div>
       )}
 
-      {/* Search and Filters */}
-      <div className="bg-stone-900 border border-white/5 rounded-2xl p-6 shadow-lg flex flex-col md:flex-row gap-4">
-        {/* Search */}
+      <div className="admin-panel flex flex-col md:flex-row gap-3">
         <div className="relative flex-1">
-          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-500">
+          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
             <Search className="w-4 h-4" />
           </span>
           <input
@@ -227,39 +216,29 @@ export default function AdminProductsPage() {
             placeholder="ค้นหาชื่อสินค้า หรือ รหัสสินค้า..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3.5 bg-stone-950 border border-white/10 rounded-xl text-stone-200 text-xs placeholder:text-stone-700 focus:outline-none focus:border-red-800 transition"
+            className="admin-input w-full pl-11 pr-4 py-3 rounded-xl text-xs"
           />
         </div>
 
-        {/* Stock status filter */}
         <div className="w-full md:w-64">
-          <select
-            value={stockStatus}
-            onChange={(e) => setStockStatus(e.target.value)}
-            className="w-full p-3.5 bg-stone-950 border border-white/10 rounded-xl text-stone-300 text-xs focus:outline-none focus:border-red-800 transition"
-          >
+          <select value={stockStatus} onChange={(e) => setStockStatus(e.target.value)} className="admin-select">
             <option value="">ทั้งหมด (สถานะสต็อก)</option>
             <option value="instock">มีสินค้าคลัง (&gt;10)</option>
             <option value="low">ใกล้หมดสต็อก (1-10)</option>
             <option value="out">สินค้าหมด (0)</option>
           </select>
         </div>
-        
-        {/* Reset */}
+
         {(search || stockStatus) && (
-          <button
-            onClick={() => { setSearch(''); setStockStatus(''); }}
-            className="px-4.5 py-3.5 bg-white/5 border border-white/5 hover:border-white/10 text-stone-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
-          >
+          <button onClick={() => { setSearch(''); setStockStatus(''); }} className="admin-btn-secondary px-4 py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
             <RotateCcw className="w-3.5 h-3.5" /> ล้าง
           </button>
         )}
       </div>
 
-      {/* Error state */}
       {error && (
-        <div className="p-4 rounded-xl bg-red-950/30 border border-red-800/30 text-red-200 text-sm flex items-start gap-3">
-          <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5 text-red-400" />
+        <div className="admin-alert-error flex items-start gap-3">
+          <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
       )}

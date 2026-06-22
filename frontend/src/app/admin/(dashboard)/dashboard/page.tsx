@@ -5,7 +5,12 @@ import KPICard from '@/components/admin/KPICard';
 import SalesChart from '@/components/admin/SalesChart';
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge';
 import { motion } from 'framer-motion';
-import { DollarSign, ShoppingBag, Users, AlertTriangle, ArrowRight, ShieldCheck, Wine } from 'lucide-react';
+import {
+  DollarSign, ShoppingBag, Users, AlertTriangle,
+  ArrowRight, ShieldCheck, Wine, Plus, Eye,
+  Package, Star, BarChart3, Clock, Zap, RefreshCw,
+  TrendingUp,
+} from 'lucide-react';
 import Link from 'next/link';
 
 interface DashboardData {
@@ -36,131 +41,159 @@ interface DashboardData {
   }[];
 }
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 90, damping: 18 } },
+};
+
+const container = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.07 } },
+};
+
+const quickActions = [
+  { label: 'เพิ่มสินค้า', icon: Plus, href: '/admin/products/new', color: '#c41e3a' },
+  { label: 'ดูออเดอร์', icon: Eye, href: '/admin/orders', color: '#3b82f6' },
+  { label: 'รายงาน', icon: BarChart3, href: '/admin/reports', color: '#10b981' },
+  { label: 'จัดการสมาชิก', icon: Users, href: '/admin/members', color: '#a855f7' },
+];
+
+// Sparkline data stubs (last 7 data points trend)
+const sparklines = {
+  revenue: [4200, 3800, 5100, 6200, 4900, 7100, 8300],
+  orders: [3, 5, 2, 7, 4, 6, 8],
+  members: [1, 2, 1, 3, 2, 4, 3],
+  stock: [2, 3, 2, 4, 3, 2, 2],
+};
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse select-none">
+      <div className="h-28 rounded-2xl" style={{ background: 'rgba(0,0,0,0.05)' }} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-32 rounded-2xl" style={{ background: 'rgba(0,0,0,0.05)' }} />)}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="lg:col-span-2 h-80 rounded-2xl" style={{ background: 'rgba(0,0,0,0.05)' }} />
+        <div className="h-80 rounded-2xl" style={{ background: 'rgba(0,0,0,0.05)' }} />
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const res = await fetch('/api/admin/dashboard', { cache: 'no-store' });
-        if (!res.ok) {
-          throw new Error('ไม่สามารถดึงข้อมูลแดชบอร์ดได้');
-        }
-        const json = await res.json();
-        setData(json);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+  const loadData = async () => {
+    try {
+      const res = await fetch('/api/admin/dashboard', { cache: 'no-store' });
+      if (!res.ok) throw new Error('ไม่สามารถดึงข้อมูลแดชบอร์ดได้');
+      const json = await res.json();
+      setData(json);
+      setLastUpdated(new Date());
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
-  if (loading) {
-    return (
-      <div className="space-y-8 animate-pulse select-none">
-        {/* KPI Grid Skeleton */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-32 bg-stone-900 border border-white/5 rounded-2xl" />
-          ))}
-        </div>
-        {/* Grid Charts Skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 h-80 bg-stone-900 border border-white/5 rounded-2xl" />
-          <div className="h-80 bg-stone-900 border border-white/5 rounded-2xl" />
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton />;
 
   if (error || !data) {
     return (
-      <div className="p-8 text-center bg-stone-900 border border-white/5 rounded-2xl text-red-400 select-none">
-        <AlertTriangle className="w-12 h-12 mx-auto mb-4" />
-        <p className="font-bold text-lg">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
-        <p className="text-stone-500 text-sm mt-1">{error || 'ข้อมูลไม่สมบูรณ์'}</p>
+      <div className="admin-card rounded-2xl p-10 flex flex-col items-center gap-4 text-center select-none">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+          <AlertTriangle className="w-8 h-8 text-red-600" />
+        </div>
+        <div>
+          <p className="font-bold text-stone-800 text-base">โหลดข้อมูลไม่สำเร็จ</p>
+          <p className="text-stone-500 text-sm mt-1">{error || 'ข้อมูลไม่สมบูรณ์'}</p>
+        </div>
         <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-5 py-2.5 bg-red-800 hover:bg-red-700 text-stone-100 text-xs font-bold rounded-xl transition cursor-pointer"
+          onClick={() => { setError(null); setLoading(true); loadData(); }}
+          className="admin-btn-primary flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold cursor-pointer"
         >
-          ลองใหม่อีกครั้ง
+          <RefreshCw className="w-3.5 h-3.5" /> ลองใหม่อีกครั้ง
         </button>
       </div>
     );
   }
 
-  // Animation variants for staggered load
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.08,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
-    show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 100 } },
-  };
-
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-      className="space-y-8 select-none"
-    >
-      {/* Welcome Banner */}
-      <motion.div
-        variants={itemVariants}
-        className="relative bg-gradient-to-r from-red-950/35 via-stone-950/60 to-stone-950/90 border border-white/10 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 overflow-hidden shadow-[0_8px_30px_rgba(220,38,38,0.04)] admin-glass-pulse group"
-      >
-        {/* Tech Corner HUD Brackets */}
-        <div className="hud-bracket hud-bracket-tl" />
-        <div className="hud-bracket hud-bracket-tr" />
-        <div className="hud-bracket hud-bracket-bl" />
-        <div className="hud-bracket hud-bracket-br" />
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6 select-none">
 
-        {/* Scanline Effect */}
-        <div className="ai-scanline opacity-30" />
+      {/* ─── Welcome Banner ─── */}
+      <motion.div variants={fadeUp}>
+        <div
+          className="relative overflow-hidden rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+          style={{
+            background: 'rgba(255,255,255,0.82)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.95)',
+            borderTop: '1px solid white',
+            boxShadow: '0 4px 24px rgba(196,30,58,0.06), 0 1px 0 white inset',
+          }}
+        >
+          {/* Top crimson line */}
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(to right, transparent, #c41e3a 40%, #f59e0b 60%, transparent)' }} />
+          {/* Corner glow */}
+          <div className="absolute top-0 right-0 w-64 h-40 pointer-events-none" style={{ background: 'radial-gradient(ellipse at top right, rgba(196,30,58,0.05), transparent 70%)' }} />
 
-        <div className="absolute top-0 right-0 w-64 h-64 bg-red-950/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="flex flex-col md:flex-row md:items-center justify-between w-full relative z-10 gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-red-900/20 border border-red-500/40 flex items-center justify-center text-red-500 shrink-0 shadow-[0_0_15px_rgba(239,68,68,0.25)]">
-              <ShieldCheck className="w-6 h-6 text-red-400 animate-pulse" />
+          {/* Left info */}
+          <div className="flex items-center gap-4 relative z-10">
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: 'rgba(196,30,58,0.08)', border: '1px solid rgba(196,30,58,0.2)' }}
+            >
+              <ShieldCheck className="w-5 h-5 text-red-600" />
             </div>
             <div>
-              <h2 className="text-lg font-bold font-serif text-stone-100 text-cyber-glow">ระบบจัดการร้านค้า The Bottle Club [AI Core Enabled]</h2>
-              <p className="text-xs text-stone-400 mt-0.5 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                <span>ADMIN PROTOCOL: ACTIVE (PORTAL v2.26)</span>
-              </p>
+              <h2 className="font-serif font-black text-stone-800 text-base leading-tight">The Bottle Club — Control Center</h2>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[11px] text-stone-500 font-semibold">ระบบทำงานปกติ</span>
+                {lastUpdated && (
+                  <span className="text-[10px] text-stone-400">· อัพเดต {lastUpdated.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex gap-4 font-mono text-[9px] text-stone-500 bg-stone-950/50 p-2.5 rounded-xl border border-white/5 md:self-center">
-            <div>CPU_TEMP: <span className="text-red-400">38.4°C</span></div>
-            <div className="border-l border-white/10 pl-2">LATENCY: <span className="text-emerald-500">8ms</span></div>
-            <div className="border-l border-white/10 pl-2">SECURE_LINK: <span className="text-amber-500">SHA-512</span></div>
+
+          {/* Quick actions */}
+          <div className="flex items-center gap-2 relative z-10 flex-wrap">
+            {quickActions.map((qa) => {
+              const Icon = qa.icon;
+              return (
+                <Link
+                  key={qa.href}
+                  href={qa.href}
+                  className="quick-action-card flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-bold text-stone-600 hover:text-red-700"
+                >
+                  <Icon className="w-3.5 h-3.5" style={{ color: qa.color }} />
+                  {qa.label}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </motion.div>
 
-      {/* KPI Cards Grid */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* ─── KPI Cards ─── */}
+      <motion.div variants={fadeUp} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="ยอดขายวันนี้"
           value={data.metrics.todayRevenue}
           change="+12.5%"
           trend="up"
           icon={DollarSign}
+          sparkline={sparklines.revenue}
         />
         <KPICard
           title="ออเดอร์รอดำเนินการ"
@@ -168,6 +201,7 @@ export default function AdminDashboardPage() {
           change="+3 ออเดอร์"
           trend="up"
           icon={ShoppingBag}
+          sparkline={sparklines.orders}
         />
         <KPICard
           title="สมาชิกใหม่เดือนนี้"
@@ -175,142 +209,177 @@ export default function AdminDashboardPage() {
           change="+18%"
           trend="up"
           icon={Users}
+          sparkline={sparklines.members}
         />
         <KPICard
           title="สินค้าใกล้หมดคลัง"
           value={data.metrics.lowStockAlerts.toString()}
-          change="ควรเติมสต็อก"
+          change={data.metrics.lowStockAlerts > 0 ? 'ควรเติมสต็อก' : 'สต็อกเพียงพอ'}
           trend={data.metrics.lowStockAlerts > 0 ? 'down' : 'neutral'}
           icon={AlertTriangle}
+          sparkline={sparklines.stock}
         />
       </motion.div>
 
-      {/* Charts & Alerts Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Sales Chart Area */}
-        <motion.div variants={itemVariants} className="lg:col-span-2">
+      {/* ─── Chart + Low Stock ─── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <motion.div variants={fadeUp} className="lg:col-span-2">
           <SalesChart data={data.salesData} />
         </motion.div>
 
-        {/* Low Stock Alerts Area */}
-        <motion.div
-          variants={itemVariants}
-          className="admin-glass-panel admin-glass-pulse rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group"
-        >
-          {/* Tech Corner HUD Brackets */}
-          <div className="hud-bracket hud-bracket-tl" />
-          <div className="hud-bracket hud-bracket-tr" />
-          <div className="hud-bracket hud-bracket-bl" />
-          <div className="hud-bracket hud-bracket-br" />
-          <div>
+        {/* Low Stock Panel */}
+        <motion.div variants={fadeUp}>
+          <div className="admin-card rounded-2xl p-5 h-full flex flex-col">
+            <div className="absolute top-0 left-6 right-6 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(0,0,0,0.06), transparent)' }} />
+
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-stone-100 font-serif">สินค้าใกล้หมดคลัง</h3>
-              <span className="text-[10px] bg-red-950/30 border border-red-800/20 text-red-400 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                Low Stock Warning
+              <div>
+                <h3 className="text-sm font-black text-stone-800 font-serif">สต็อกใกล้หมด</h3>
+                <p className="text-[10px] text-stone-400 uppercase tracking-wider font-bold mt-0.5">Low Stock Alert</p>
+              </div>
+              <span
+                className="text-[9px] font-extrabold px-2 py-1 rounded-full uppercase tracking-widest"
+                style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#991b1b' }}
+              >
+                {data.lowStockProducts.length} รายการ
               </span>
             </div>
-            <div className="divide-y divide-white/5">
+
+            <div className="flex-1 divide-y" style={{ divideColor: 'rgba(255,255,255,0.04)' }}>
               {data.lowStockProducts.length === 0 ? (
-                <p className="text-xs text-stone-500 py-4 text-center">สินค้าทั้งหมดมีสต็อกเพียงพอ</p>
+                <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
+                  <Package className="w-8 h-8 text-stone-700" />
+                  <p className="text-xs text-stone-600 font-semibold">สินค้าทั้งหมดมีสต็อกเพียงพอ</p>
+                </div>
               ) : (
                 data.lowStockProducts.map((prod) => (
-                  <div key={prod.id} className="py-3.5 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-stone-200 truncate">{prod.name}</p>
-                      <p className="text-[10px] text-stone-500 mt-0.5">ราคา: ฿{prod.price.toLocaleString('th-TH')}</p>
+                  <div key={prod.id} className="py-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center" style={{ background: 'rgba(196,30,58,0.07)', border: '1px solid rgba(196,30,58,0.15)' }}>
+                        <Wine className="w-3.5 h-3.5 text-red-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-stone-700 truncate">{prod.name}</p>
+                        <p className="text-[10px] text-stone-400 mt-0.5">฿{prod.price.toLocaleString('th-TH')}</p>
+                      </div>
                     </div>
-                    <div className="shrink-0 flex items-center gap-2">
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
-                        prod.stock <= 2 
-                          ? 'bg-red-500/10 border border-red-500/20 text-red-400' 
-                          : 'bg-amber-500/10 border border-amber-500/20 text-amber-400'
-                      }`}>
-                        เหลือ {prod.stock} ชิ้น
-                      </span>
-                    </div>
+                    <span
+                      className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-lg ${
+                        prod.stock <= 2
+                          ? 'badge-rejected'
+                          : 'badge-pending'
+                      }`}
+                    >
+                      {prod.stock} ชิ้น
+                    </span>
                   </div>
                 ))
               )}
             </div>
+
+            <Link
+              href="/admin/products"
+              className="mt-4 w-full py-2.5 admin-btn-primary text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer"
+            >
+              จัดการสินค้า <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
-          <Link
-            href="/admin/products"
-            className="mt-6 w-full py-3 admin-glow-btn text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2"
-          >
-            ไปหน้าจัดการสินค้า <ArrowRight className="w-4 h-4" />
-          </Link>
         </motion.div>
       </div>
 
-      {/* Recent Orders Section */}
-      <motion.div
-        variants={itemVariants}
-        className="admin-glass-panel admin-glass-pulse rounded-2xl p-6 relative overflow-hidden group"
-      >
-        {/* Tech Corner HUD Brackets */}
-        <div className="hud-bracket hud-bracket-tl" />
-        <div className="hud-bracket hud-bracket-tr" />
-        <div className="hud-bracket hud-bracket-bl" />
-        <div className="hud-bracket hud-bracket-br" />
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-sm font-bold text-stone-100 font-serif">รายการคำสั่งซื้อล่าสุด</h3>
-            <p className="text-[10px] text-stone-500 font-bold uppercase tracking-wider mt-1">10 ออเดอร์ล่าสุดที่เข้ามา</p>
-          </div>
-          <Link
-            href="/admin/orders"
-            className="text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-1 transition"
-          >
-            ดูคำสั่งซื้อทั้งหมด <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
+      {/* ─── Recent Orders Table ─── */}
+      <motion.div variants={fadeUp}>
+        <div className="admin-card rounded-2xl p-6 relative overflow-hidden">
+          <div className="absolute top-0 left-8 right-8 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent)' }} />
 
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-white/5 text-[10px] font-bold text-stone-500 uppercase tracking-widest pb-3">
-                <th className="pb-3 text-stone-500">ออเดอร์</th>
-                <th className="pb-3 text-stone-500">ลูกค้า</th>
-                <th className="pb-3 text-stone-500">ยอดชำระ</th>
-                <th className="pb-3 text-stone-500">ช่องทาง</th>
-                <th className="pb-3 text-stone-500">ประเภท</th>
-                <th className="pb-3 text-stone-500">สถานะ</th>
-                <th className="pb-3 text-stone-500">วันที่สร้าง</th>
-                <th className="pb-3 text-right text-stone-500">ดูรายละเอียด</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {data.recentOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-8 text-center text-xs text-stone-500">
-                    ไม่พบรายการคำสั่งซื้อล่าสุด
-                  </td>
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h3 className="text-sm font-black font-serif text-stone-800">คำสั่งซื้อล่าสุด</h3>
+              <p className="text-[10px] text-stone-400 uppercase tracking-wider font-bold mt-0.5">10 ออเดอร์ล่าสุด</p>
+            </div>
+            <Link
+              href="/admin/orders"
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl transition-all duration-200 text-red-700 hover:text-white admin-action-btn"
+              style={{ background: 'rgba(196,30,58,0.08)', border: '1px solid rgba(196,30,58,0.15)' }}
+            >
+              ดูทั้งหมด <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="overflow-x-auto -mx-1">
+            <table className="w-full text-left min-w-[640px]">
+              <thead>
+                <tr className="text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ color: '#a8a29e' }}>
+                  <th className="pb-3 pl-1 pr-3">#ออเดอร์</th>
+                  <th className="pb-3 pr-3">ลูกค้า</th>
+                  <th className="pb-3 pr-3">ยอดชำระ</th>
+                  <th className="pb-3 pr-3">ช่องทาง</th>
+                  <th className="pb-3 pr-3">ประเภท</th>
+                  <th className="pb-3 pr-3">สถานะ</th>
+                  <th className="pb-3 pr-3">วันที่</th>
+                  <th className="pb-3 text-right">Action</th>
                 </tr>
-              ) : (
-                data.recentOrders.map((order) => (
-                  <tr key={order.id} className="text-xs hover:bg-white/5 transition-colors">
-                    <td className="py-4 font-bold text-stone-300">#{order.id}</td>
-                    <td className="py-4 text-stone-400 truncate max-w-[150px]">{order.customer}</td>
-                    <td className="py-4 font-bold text-stone-300">{order.total}</td>
-                    <td className="py-4 uppercase text-stone-500 font-semibold">{order.paymentMethod}</td>
-                    <td className="py-4 uppercase text-stone-500 font-semibold">{order.type}</td>
-                    <td className="py-4">
-                      <OrderStatusBadge status={order.status} />
-                    </td>
-                    <td className="py-4 text-stone-500 font-medium">{order.date}</td>
-                    <td className="py-4 text-right">
-                      <Link
-                        href={`/admin/orders/${order.id}`}
-                        className="inline-flex py-1.5 px-3 bg-white/5 border border-white/5 hover:border-red-800/30 hover:bg-red-900/10 text-stone-300 hover:text-red-400 font-bold rounded-lg transition"
-                      >
-                        เปิดดู
-                      </Link>
+              </thead>
+              <tbody>
+                {data.recentOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center">
+                      <div className="flex flex-col items-center gap-2 text-stone-600">
+                        <ShoppingBag className="w-8 h-8" />
+                        <p className="text-xs font-semibold">ยังไม่มีคำสั่งซื้อ</p>
+                      </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  data.recentOrders.map((order, idx) => (
+                    <tr
+                      key={order.id}
+                      className="admin-table-row text-xs group/row"
+                    >
+                      <td className="py-3.5 pl-1 pr-3 font-black text-stone-300">
+                        <span className="font-mono" style={{ color: '#1c1917' }}>#{String(order.id).padStart(4, '0')}</span>
+                      </td>
+                      <td className="py-3.5 pr-3">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black text-white shrink-0"
+                            style={{ background: `hsl(${(idx * 47) % 360}, 50%, 40%)` }}
+                          >
+                            {order.customer.slice(0, 2).toUpperCase()}
+                          </div>
+                          <span className="truncate max-w-[120px]" style={{ color: '#57534e' }}>{order.customer}</span>
+                        </div>
+                      </td>
+                      <td className="py-3.5 pr-3 font-bold" style={{ color: '#292524' }}>{order.total}</td>
+                      <td className="py-3.5 pr-3">
+                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(0,0,0,0.04)', color: '#78716c' }}>
+                          {order.paymentMethod}
+                        </span>
+                      </td>
+                      <td className="py-3.5 pr-3">
+                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(0,0,0,0.04)', color: '#78716c' }}>
+                          {order.type}
+                        </span>
+                      </td>
+                      <td className="py-3.5 pr-3">
+                        <OrderStatusBadge status={order.status} size="sm" />
+                      </td>
+                      <td className="py-3.5 pr-3 text-stone-600 font-medium text-[10px]">{order.date}</td>
+                      <td className="py-3.5 text-right">
+                        <Link
+                          href={`/admin/orders/${order.id}`}
+                          className="admin-action-btn"
+                          style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.08)' }}
+                        >
+                          <Eye className="w-3 h-3" /> ดู
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </motion.div>
     </motion.div>

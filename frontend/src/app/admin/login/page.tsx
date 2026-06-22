@@ -3,228 +3,209 @@
 import React, { useState } from 'react';
 import { adminLoginAction } from '@/app/actions/admin/auth';
 import { useRouter } from 'next/navigation';
-import { Wine, Lock, Mail, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, AlertCircle, Loader2, Eye, EyeOff, ArrowLeft, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import '../admin-theme.css';
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [email,       setEmail]       = useState('');
+  const [password,    setPassword]    = useState('');
+  const [showPw,      setShowPw]      = useState(false);
+  const [error,       setError]       = useState<string | null>(null);
+  const [loading,     setLoading]     = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError('กรุณากรอกข้อมูลให้ครบถ้วน');
-      return;
-    }
-
-    setError(null);
-    setLoading(true);
-
+    if (!email || !password) { setError('กรุณากรอกข้อมูลให้ครบถ้วน'); return; }
+    setError(null); setLoading(true);
     try {
       const result = await adminLoginAction({ email, password });
-      if (result?.error) {
-        setError(result.error);
-        setLoading(false);
-      } else {
-        router.push('/admin/dashboard');
-      }
-    } catch (err) {
-      console.error(err);
+      if (result?.error) { setError(result.error); setLoading(false); }
+      else               { router.push('/admin/dashboard'); }
+    } catch {
       setError('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-[#070605] flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans select-none">
-      {/* High-tech Mesh Grid Overlay */}
-      <div className="absolute inset-0 bg-grid-pattern pointer-events-none opacity-45" />
+    <main
+      className="min-h-screen flex font-sans select-none"
+      style={{ background: 'linear-gradient(135deg, #faf9f7 0%, #f5f3f0 50%, #faf8f6 100%)', color: '#1c1917' }}
+    >
+      {/* Dot grid */}
+      <div className="fixed inset-0 pointer-events-none z-0"
+        style={{ backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px)', backgroundSize: '28px 28px', opacity: 0.6 }} />
 
-      {/* Decorative Drifting Neon Core Glows */}
-      <div className="absolute top-[5%] left-[5%] w-[450px] h-[450px] rounded-full bg-red-950/20 blur-[130px] pointer-events-none animate-float-1" />
-      <div className="absolute bottom-[5%] right-[5%] w-[550px] h-[550px] rounded-full bg-stone-900/60 blur-[140px] pointer-events-none animate-float-2" />
-      <div className="absolute top-[40%] right-[20%] w-[350px] h-[350px] rounded-full bg-red-900/10 blur-[120px] pointer-events-none animate-float-3" />
+      {/* Ambient glows */}
+      <div className="fixed top-[-10%] left-[-5%] w-[45%] h-[50%] rounded-full pointer-events-none z-0 animate-float-1"
+        style={{ background: 'radial-gradient(circle, rgba(196,30,58,0.07) 0%, transparent 65%)', filter: 'blur(60px)' }} />
+      <div className="fixed bottom-[-10%] right-[-5%] w-[40%] h-[45%] rounded-full pointer-events-none z-0 animate-float-2"
+        style={{ background: 'radial-gradient(circle, rgba(196,30,58,0.05) 0%, transparent 65%)', filter: 'blur(80px)' }} />
 
-      <div className="w-full max-w-md relative z-10 flex flex-col items-center">
-        {/* Brand Logo & Cyber HUD with entrance animation */}
-        <div className="flex flex-col items-center mb-6 animate-fade-in-up">
-          {/* Logo with rotating tech rings */}
-          <div className="relative mb-6 flex items-center justify-center">
-            <div className="absolute w-28 h-28 border border-dashed border-red-500/20 rounded-full animate-spin-slow pointer-events-none" />
-            <div className="absolute w-24 h-24 border border-dotted border-rose-500/35 rounded-full animate-spin-counter pointer-events-none" />
-            
-            <div className="relative group cursor-pointer z-10">
-              <div className="absolute -inset-1.5 bg-gradient-to-r from-red-700 via-rose-800 to-amber-600 rounded-2xl blur-md opacity-45 group-hover:opacity-75 transition duration-500" />
-              <img
-                src="/logos/Thebottleclub.jpg"
-                alt="The Bottle Club Logo"
-                className="relative w-16 h-16 rounded-2xl object-cover border border-white/10 shadow-2xl transition-all duration-500 group-hover:scale-105"
-              />
+      {/* ─── Left Brand Panel ─── */}
+      <div
+        className="hidden lg:flex flex-col justify-between w-[420px] xl:w-[480px] shrink-0 p-10 relative z-10 overflow-hidden"
+        style={{
+          background: 'rgba(255,255,255,0.75)',
+          backdropFilter: 'blur(32px) saturate(1.8)',
+          WebkitBackdropFilter: 'blur(32px) saturate(1.8)',
+          borderRight: '1px solid rgba(255,255,255,0.95)',
+          boxShadow: '4px 0 32px rgba(0,0,0,0.05)',
+        }}
+      >
+        {/* Top crimson line */}
+        <div className="absolute top-0 left-0 right-0 h-[3px]"
+          style={{ background: 'linear-gradient(to right, #c41e3a 0%, #f59e0b 50%, #c41e3a 100%)' }} />
+
+        {/* Brand */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-14">
+            <div className="relative">
+              <div className="absolute -inset-1 rounded-xl opacity-60"
+                style={{ background: 'linear-gradient(135deg, rgba(196,30,58,0.3), rgba(245,158,11,0.2))' }} />
+              <img src="/logos/Thebottleclub.jpg" alt="The Bottle Club"
+                className="relative w-10 h-10 rounded-xl object-cover"
+                style={{ border: '1px solid rgba(0,0,0,0.08)' }} />
+            </div>
+            <div>
+              <p className="font-serif font-black text-stone-800 text-sm tracking-tight">THE BOTTLE CLUB</p>
+              <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#a8a29e' }}>Admin Portal</p>
             </div>
           </div>
 
-          <h1 className="font-serif text-3.5xl font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-b from-stone-50 via-stone-200 to-stone-400 text-center uppercase select-none">
-            The Bottle Club
+          <h1 className="font-serif font-black text-4xl leading-tight mb-4" style={{ color: '#1c1917' }}>
+            ระบบจัดการ<br />
+            <span style={{ background: 'linear-gradient(135deg, #c41e3a, #9b1c1c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ร้านค้า</span>
           </h1>
-          
-          <div className="flex items-center gap-2 mt-2 font-mono text-[9px] tracking-[0.3em] text-red-500 text-cyber-glow">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-            <span>SYSTEM SECURE AI PORTAL [v2.26]</span>
-          </div>
+          <p className="text-sm leading-relaxed" style={{ color: '#78716c' }}>
+            เข้าสู่ระบบเพื่อจัดการออเดอร์ สินค้า<br />
+            สมาชิก และรายงานยอดขายทั้งหมด
+          </p>
         </div>
 
-        {/* Form Container (Futuristic HUD Panel) */}
-        <div className="admin-glass-panel admin-glass-pulse w-full p-8 rounded-3xl shadow-2xl relative overflow-hidden animate-fade-in-up [animation-delay:150ms] border border-white/10 border-cyber-glow">
-          {/* Tech Corner HUD Brackets */}
-          <div className="hud-bracket hud-bracket-tl" />
-          <div className="hud-bracket hud-bracket-tr" />
-          <div className="hud-bracket hud-bracket-bl" />
-          <div className="hud-bracket hud-bracket-br" />
-
-          {/* Active Laser Scanline */}
-          <div className="ai-scanline" />
-
-          {/* Laser scanning header effect */}
-          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-red-800/40 to-transparent" />
-          
-          {/* Heading */}
-          <h2 className="text-sm font-mono font-bold text-stone-200 mb-5 flex items-center justify-between border-b border-white/5 pb-3">
-            <span className="flex items-center gap-2">
-              <Wine className="w-4 h-4 text-red-500 shrink-0" />
-              <span>// SECURITY_INITIALIZATION</span>
-            </span>
-            <span className="text-[10px] text-stone-500 tracking-wider">LEVEL_3_AUTH</span>
-          </h2>
-
-          {/* Simulated AI System Parameters */}
-          <div className="grid grid-cols-3 gap-2 p-2 bg-stone-950/80 rounded-xl border border-white/5 font-mono text-[9px] text-stone-400 mb-5">
-            <div className="text-center border-r border-white/5">
-              <div className="text-stone-500 uppercase tracking-widest text-[8px]">Core Status</div>
-              <div className="text-emerald-500 font-bold tracking-wider mt-0.5">SECURE-v4</div>
+        {/* Feature list */}
+        <div className="relative z-10 space-y-2.5">
+          {[
+            { icon: '🛒', label: 'จัดการออเดอร์แบบ Real-time' },
+            { icon: '📊', label: 'Dashboard & รายงานยอดขาย' },
+            { icon: '👥', label: 'ระบบจัดการสมาชิก' },
+            { icon: '🍷', label: 'คลังสินค้าและสต็อก' },
+          ].map((f) => (
+            <div key={f.label} className="flex items-center gap-3 px-4 py-3 rounded-xl"
+              style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+              <span className="text-lg">{f.icon}</span>
+              <span className="text-xs font-semibold" style={{ color: '#57534e' }}>{f.label}</span>
             </div>
-            <div className="text-center border-r border-white/5">
-              <div className="text-stone-500 uppercase tracking-widest text-[8px]">Network</div>
-              <div className="text-red-400 font-bold tracking-wider animate-pulse mt-0.5">AI-LINKED</div>
-            </div>
-            <div className="text-center">
-              <div className="text-stone-500 uppercase tracking-widest text-[8px]">Crypt Auth</div>
-              <div className="text-stone-300 font-bold tracking-wider mt-0.5">SHA-512</div>
-            </div>
-          </div>
-
-          {error && (
-            <div className="mb-5 p-4 rounded-xl bg-red-950/45 border border-red-800/30 text-red-200 font-mono text-xs flex items-start gap-3 animate-[shake_0.4s_ease-in-out_forwards] backdrop-blur-md">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
-              <div>
-                <span className="text-[9px] text-red-500 font-bold block mb-1">SYSTEM_ALERT:</span>
-                <span>{error}</span>
-              </div>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email Field */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest block">
-                // USERNAME_IDENTIFIER (EMAIL)
-              </label>
-              <div className="relative group/input">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-500 group-focus-within/input:text-red-500 transition-colors duration-250">
-                  <Mail className="w-4 h-4" />
-                </span>
-                <input
-                  type="email"
-                  required
-                  placeholder="admin@thebottleclub.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3.5 bg-stone-950/70 border border-white/10 rounded-xl text-stone-100 font-mono text-xs placeholder-stone-700 focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700 transition-all duration-300 shadow-inner"
-                />
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest block">
-                // ACCESS_PASS_KEY (PASSWORD)
-              </label>
-              <div className="relative group/input">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-500 group-focus-within/input:text-red-500 transition-colors duration-250">
-                  <Lock className="w-4 h-4" />
-                </span>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-11 py-3.5 bg-stone-950/70 border border-white/10 rounded-xl text-stone-100 font-mono text-xs placeholder-stone-700 focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700 transition-all duration-300 shadow-inner"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-stone-500 hover:text-stone-300 transition-colors focus:outline-none cursor-pointer"
-                  title={showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full mt-2 py-3.5 px-4 bg-gradient-to-r from-red-800 to-rose-950 hover:from-red-700 hover:to-rose-900 disabled:from-red-900/40 disabled:to-stone-900 text-white rounded-xl text-xs font-mono font-bold tracking-widest shadow-lg shadow-red-950/30 hover:shadow-red-900/40 transition duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed relative overflow-hidden shimmer-btn"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin text-red-500" />
-                  <span className="animate-pulse">DECRYPTING USER CREDENTIALS...</span>
-                </>
-              ) : (
-                'ENGAGE CORE ACCESS'
-              )}
-            </button>
-          </form>
-
-          {/* AI Terminal Telemetry Log Drawer */}
-          <div className="mt-5 border-t border-white/5 pt-4">
-            <div className="h-14 overflow-hidden bg-black/55 rounded-xl border border-white/5 p-2 font-mono text-[8px] text-stone-500 relative select-none">
-              <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
-              <div className="telemetry-scroller space-y-1">
-                <div>[01/SYS] INITIALIZING NEURAL BACKBONE...</div>
-                <div>[02/NET] HANDSHAKE ESTABLISHED WITH CLOUD_SECURE</div>
-                <div>[03/AI]  AI-CORE: MONITORING FOR SECURITY ANOMALIES</div>
-                <div>[04/SEC] FIREWALL ENGAGED: PORT 443 SECURED</div>
-                <div>[05/KEY] ENCRYPTING TRANSMISSION IN SHA-512...</div>
-                <div>[06/SYS] CORE TEMPERATURE: 38.4°C - NORMAL</div>
-                <div>[07/SYS] TERMINAL ONLINE AND READY FOR LINK</div>
-                <div>[01/SYS] INITIALIZING NEURAL BACKBONE...</div>
-                <div>[02/NET] HANDSHAKE ESTABLISHED WITH CLOUD_SECURE</div>
-                <div>[03/AI]  AI-CORE: MONITORING FOR SECURITY ANOMALIES</div>
-                <div>[04/SEC] FIREWALL ENGAGED: PORT 443 SECURED</div>
-                <div>[05/KEY] ENCRYPTING TRANSMISSION IN SHA-512...</div>
-                <div>[06/SYS] CORE TEMPERATURE: 38.4°C - NORMAL</div>
-                <div>[07/SYS] TERMINAL ONLINE AND READY FOR LINK</div>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Back Link with transition */}
-        <div className="text-center mt-6 animate-fade-in-up [animation-delay:300ms]">
-          <Link
-            href="/"
-            className="group/link text-stone-500 hover:text-stone-300 text-xs font-semibold tracking-wide transition duration-200 flex items-center justify-center gap-1.5"
+        <div className="relative z-10 pt-5" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+          <p className="text-[10px] font-semibold" style={{ color: '#d1cdc9' }}>© 2026 The Bottle Club — Admin v2.26</p>
+        </div>
+      </div>
+
+      {/* ─── Right Form Panel ─── */}
+      <div className="flex-1 flex items-center justify-center p-6 relative z-10">
+        <div className="w-full max-w-sm">
+          {/* Mobile logo */}
+          <div className="lg:hidden flex items-center gap-3 mb-8">
+            <div className="relative">
+              <div className="absolute -inset-1 rounded-xl opacity-50"
+                style={{ background: 'linear-gradient(135deg, rgba(196,30,58,0.3), rgba(245,158,11,0.2))' }} />
+              <img src="/logos/Thebottleclub.jpg" alt="" className="relative w-9 h-9 rounded-xl object-cover"
+                style={{ border: '1px solid rgba(0,0,0,0.08)' }} />
+            </div>
+            <div>
+              <p className="font-serif font-black text-stone-800 text-sm">THE BOTTLE CLUB</p>
+              <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: '#a8a29e' }}>Admin Portal</p>
+            </div>
+          </div>
+
+          {/* Card */}
+          <div className="rounded-2xl p-8 relative overflow-hidden"
+            style={{
+              background: 'rgba(255,255,255,0.85)',
+              backdropFilter: 'blur(24px) saturate(1.6)',
+              WebkitBackdropFilter: 'blur(24px) saturate(1.6)',
+              border: '1px solid rgba(255,255,255,0.98)',
+              borderTop: '1px solid white',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.08), 0 1px 0 white inset',
+            }}
           >
-            <span className="transform group-hover/link:-translate-x-1 transition-transform duration-200">←</span>
-            กลับสู่หน้าหลักร้านค้า
-          </Link>
+            {/* Top accent */}
+            <div className="absolute top-0 left-0 right-0 h-[2px]"
+              style={{ background: 'linear-gradient(to right, transparent, #c41e3a 40%, #f59e0b 60%, transparent)' }} />
+
+            <div className="mb-7">
+              <h2 className="text-2xl font-black font-serif leading-tight" style={{ color: '#1c1917' }}>ยินดีต้อนรับกลับ</h2>
+              <p className="text-sm mt-1.5" style={{ color: '#a8a29e' }}>เข้าสู่ระบบบัญชีผู้ดูแลของคุณ</p>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="mb-5 p-3.5 rounded-xl flex items-start gap-3 animate-fade-in-up"
+                style={{ background: 'rgba(196,30,58,0.05)', border: '1px solid rgba(196,30,58,0.2)' }}>
+                <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-bold text-red-600">เกิดข้อผิดพลาด</p>
+                  <p className="text-xs mt-0.5" style={{ color: '#dc2626' }}>{error}</p>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Email */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: '#78716c' }}>อีเมล</label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#a8a29e' }} />
+                  <input type="email" required placeholder="admin@thebottleclub.com"
+                    value={email} onChange={e => setEmail(e.target.value)}
+                    className="admin-input w-full pl-10 pr-4 py-3 rounded-xl text-sm" />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: '#78716c' }}>รหัสผ่าน</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#a8a29e' }} />
+                  <input type={showPw ? 'text' : 'password'} required placeholder="••••••••"
+                    value={password} onChange={e => setPassword(e.target.value)}
+                    className="admin-input w-full pl-10 pr-10 py-3 rounded-xl text-sm" />
+                  <button type="button" onClick={() => setShowPw(!showPw)}
+                    className="absolute inset-y-0 right-0 px-3.5 flex items-center cursor-pointer transition-colors"
+                    style={{ color: '#a8a29e' }}>
+                    {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit */}
+              <button type="submit" disabled={loading}
+                className="admin-btn-primary w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 mt-2 cursor-pointer shimmer-btn">
+                {loading ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /><span>กำลังเข้าสู่ระบบ...</span></>
+                ) : (
+                  <><Sparkles className="w-4 h-4" /><span>เข้าสู่ระบบ</span></>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Back link */}
+          <div className="mt-6 flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-1.5 text-xs font-semibold transition-colors"
+              style={{ color: '#a8a29e' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#78716c')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#a8a29e')}
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> กลับสู่หน้าร้าน
+            </Link>
+            <p className="text-[10px] font-semibold" style={{ color: '#d1cdc9' }}>Secure · v2.26</p>
+          </div>
         </div>
       </div>
     </main>

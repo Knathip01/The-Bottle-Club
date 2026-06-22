@@ -1,95 +1,132 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { Bell, Search, Calendar, ChevronRight } from 'lucide-react';
+import { Bell, Search, ChevronRight, Home } from 'lucide-react';
+
+const sectionMap: Record<string, { label: string; emoji: string }> = {
+  dashboard: { label: 'แดชบอร์ด',    emoji: '📊' },
+  orders:    { label: 'คำสั่งซื้อ',  emoji: '🛒' },
+  products:  { label: 'สินค้า',      emoji: '🍷' },
+  members:   { label: 'สมาชิก',      emoji: '👥' },
+  reviews:   { label: 'รีวิว',       emoji: '⭐' },
+  pos:       { label: 'POS',         emoji: '🖥️' },
+  reports:   { label: 'รายงาน',      emoji: '📈' },
+  settings:  { label: 'ตั้งค่า',    emoji: '⚙️' },
+};
+
+function useCurrentTime() {
+  const [time, setTime] = useState('');
+  useEffect(() => {
+    const tick = () =>
+      setTime(new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return time;
+}
 
 export default function AdminHeader() {
   const pathname = usePathname();
+  const time     = useCurrentTime();
+  const [focused, setFocused] = useState(false);
 
-  // Determine current section title based on pathname
-  const getSectionTitle = () => {
-    if (pathname.includes('/admin/dashboard')) return 'แดชบอร์ด';
-    if (pathname.includes('/admin/orders')) return 'จัดการคำสั่งซื้อ';
-    if (pathname.includes('/admin/products')) return 'จัดการสินค้าคลัง';
-    if (pathname.includes('/admin/members')) return 'จัดการสมาชิก';
-    if (pathname.includes('/admin/reviews')) return 'รีวิวและการอนุมัติ';
-    if (pathname.includes('/admin/pos')) return 'ขายหน้าร้าน POS';
-    if (pathname.includes('/admin/reports')) return 'รายงานยอดขาย';
-    if (pathname.includes('/admin/settings')) return 'ตั้งค่าระบบ';
-    return 'ผู้ดูแลระบบ';
-  };
-
-  const getBreadcrumbs = () => {
-    const segments = pathname.split('/').filter(Boolean);
-    return segments.map((seg, idx) => {
-      let label = seg;
-      if (seg === 'admin') label = 'Admin';
-      else if (seg === 'dashboard') label = 'Dashboard';
-      else if (seg === 'orders') label = 'Orders';
-      else if (seg === 'products') label = 'Products';
-      else if (seg === 'members') label = 'Members';
-      else if (seg === 'reviews') label = 'Reviews';
-      else if (seg === 'pos') label = 'POS';
-      else if (seg === 'reports') label = 'Reports';
-      else if (seg === 'settings') label = 'Settings';
-      
-      const href = '/' + segments.slice(0, idx + 1).join('/');
-
-      return (
-        <React.Fragment key={idx}>
-          {idx > 0 && <ChevronRight className="w-3.5 h-3.5 text-stone-600" />}
-          <span className={`${idx === segments.length - 1 ? 'text-stone-100 font-bold' : 'text-stone-500'}`}>
-            {label}
-          </span>
-        </React.Fragment>
-      );
-    });
-  };
-
-  const today = new Date().toLocaleDateString('th-TH', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const segments = pathname.split('/').filter(Boolean);
+  const crumbs   = segments.map((seg, idx) => ({
+    seg,
+    label: sectionMap[seg]?.label ?? (seg.charAt(0).toUpperCase() + seg.slice(1)),
+    href:  '/' + segments.slice(0, idx + 1).join('/'),
+    isLast: idx === segments.length - 1,
+  }));
+  const current = sectionMap[segments[segments.length - 1]];
+  const today   = new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
-    <header className="bg-stone-950/40 backdrop-blur-xl border-b border-white/10 py-4 px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20 select-none shadow-[0_4px_30px_rgba(0,0,0,0.3)]">
-      {/* Title & Breadcrumbs */}
-      <div className="flex flex-col gap-1.5 pl-12 lg:pl-0">
-        <h1 className="text-xl font-bold font-serif text-stone-100 leading-none">
-          {getSectionTitle()}
-        </h1>
-        <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider">
-          {getBreadcrumbs()}
+    <header
+      className="sticky top-0 z-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 select-none"
+      style={{
+        height: 56,
+        minHeight: 56,
+        background: 'rgba(255,255,255,0.80)',
+        backdropFilter: 'blur(24px) saturate(1.6)',
+        WebkitBackdropFilter: 'blur(24px) saturate(1.6)',
+        borderBottom: '1px solid rgba(0,0,0,0.07)',
+        boxShadow: '0 2px 16px rgba(0,0,0,0.05), 0 1px 0 rgba(255,255,255,0.8) inset',
+      }}
+    >
+      {/* Left: breadcrumb + title */}
+      <div className="flex flex-col gap-0.5 pl-11 sm:pl-12 lg:pl-0 min-w-0 flex-1">
+        <div className="hidden sm:flex items-center gap-1 text-[10px] font-semibold tracking-wider" style={{ color: '#a8a29e' }}>
+          <Home className="w-3 h-3" style={{ color: '#d1cdc9' }} />
+          {crumbs.map((c) => (
+            <React.Fragment key={c.href}>
+              <ChevronRight className="w-3 h-3" style={{ color: '#e7e5e4' }} />
+              <span className={c.isLast ? 'text-stone-500 font-bold' : 'text-stone-400'}>{c.label}</span>
+            </React.Fragment>
+          ))}
         </div>
+        <h1 className="text-sm sm:text-base font-black font-serif leading-none tracking-tight truncate" style={{ color: '#1c1917' }}>
+          {current ? `${current.emoji} ${current.label}` : 'Admin Panel'}
+        </h1>
       </div>
 
-      {/* Right Actions */}
-      <div className="flex items-center gap-5">
-        {/* Date Display */}
-        <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-stone-400">
-          <Calendar className="w-4 h-4 text-stone-500" />
-          <span>{today}</span>
+      {/* Right */}
+      <div className="flex items-center gap-3">
+        {/* Clock */}
+        <div className="hidden md:flex flex-col items-end">
+          <span className="font-mono text-xs font-bold tabular-nums leading-none" style={{ color: '#292524' }}>{time}</span>
+          <span className="text-[10px] font-medium leading-none mt-0.5 truncate max-w-[200px]" style={{ color: '#a8a29e' }}>{today}</span>
         </div>
 
-        {/* Global Search Bar */}
+        <div className="hidden md:block w-px h-8" style={{ background: 'rgba(0,0,0,0.08)' }} />
+
+        {/* Mobile search icon */}
+        <button
+          className="sm:hidden w-9 h-9 flex items-center justify-center rounded-xl text-stone-500 cursor-pointer"
+          style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.08)' }}
+          aria-label="ค้นหา"
+        >
+          <Search className="w-4 h-4" />
+        </button>
+
+        {/* Search */}
         <div className="relative hidden sm:block">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-500">
-            <Search className="w-4 h-4" />
-          </span>
+          <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none transition-colors duration-200 ${focused ? 'text-red-500' : 'text-stone-400'}`} />
           <input
             type="text"
             placeholder="ค้นหาด่วน..."
-            className="w-48 lg:w-64 pl-9 pr-4 py-2.5 bg-stone-950/65 border border-white/10 focus:border-red-650 focus:shadow-[0_0_15px_rgba(239,68,68,0.15)] rounded-full text-xs text-stone-200 focus:outline-none transition duration-300 placeholder:text-stone-600"
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            className="w-44 lg:w-52 pl-9 pr-10 py-2 text-xs rounded-xl placeholder:text-stone-400 transition-all duration-250"
+            style={{
+              background: focused ? 'rgba(255,255,255,0.95)' : 'rgba(0,0,0,0.04)',
+              border: focused ? '1px solid rgba(196,30,58,0.4)' : '1px solid rgba(0,0,0,0.1)',
+              color: '#292524',
+              boxShadow: focused ? '0 0 0 3px rgba(196,30,58,0.08)' : 'none',
+              outline: 'none',
+            }}
           />
+          <kbd className="absolute inset-y-0 right-2.5 flex items-center pointer-events-none">
+            <span className="text-[9px] font-bold px-1 py-0.5 rounded" style={{ color: '#a8a29e', background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.08)' }}>⌘K</span>
+          </kbd>
         </div>
 
-        {/* Notification Bell */}
-        <button className="p-2 hover:bg-white/5 text-stone-400 hover:text-stone-100 rounded-full relative transition duration-200 cursor-pointer">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
+        {/* Online pill */}
+        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+          style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Online</span>
+        </div>
+
+        {/* Bell */}
+        <button
+          className="relative w-9 h-9 flex items-center justify-center rounded-xl text-stone-500 hover:text-stone-700 transition-all duration-200 cursor-pointer group"
+          style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.08)' }}
+        >
+          <Bell className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-red-500"
+            style={{ boxShadow: '0 0 5px rgba(196,30,58,0.6)' }} />
         </button>
       </div>
     </header>

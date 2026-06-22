@@ -60,28 +60,25 @@ export default function DataTable<T extends { id: any }>({
   const renderSortIcon = (column: Column<T>) => {
     if (!column.sortable) return null;
     const key = column.sortKey || (typeof column.accessor === 'string' ? (column.accessor as string) : '');
-    if (sortKey !== key) return <ChevronsUpDown className="w-3.5 h-3.5 text-stone-600" />;
+    if (sortKey !== key) return <ChevronsUpDown className="w-3.5 h-3.5 text-stone-400" />;
     return sortDirection === 'asc' ? (
-      <ChevronUp className="w-3.5 h-3.5 text-red-500" />
+      <ChevronUp className="w-3.5 h-3.5 text-red-600" />
     ) : (
-      <ChevronDown className="w-3.5 h-3.5 text-red-500" />
+      <ChevronDown className="w-3.5 h-3.5 text-red-600" />
     );
   };
 
   return (
-    <div className="bg-stone-900 border border-white/5 rounded-2xl overflow-hidden shadow-lg select-none">
-      {/* Table Container */}
+    <div className="admin-table-wrap select-none">
       <div className="overflow-x-auto w-full">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse min-w-[640px]">
           <thead>
-            <tr className="bg-stone-950 border-b border-white/5">
+            <tr className="admin-table-head">
               {columns.map((col, idx) => (
                 <th
                   key={idx}
                   onClick={() => handleSort(col)}
-                  className={`px-6 py-4.5 text-xs font-bold text-stone-400 uppercase tracking-wider ${
-                    col.sortable ? 'cursor-pointer hover:bg-white/5 hover:text-stone-200' : ''
-                  } ${col.className || ''}`}
+                  className={`${col.sortable ? 'sortable' : ''} ${col.className || ''}`}
                 >
                   <div className="flex items-center gap-1.5">
                     <span>{col.header}</span>
@@ -93,32 +90,27 @@ export default function DataTable<T extends { id: any }>({
           </thead>
           <tbody>
             {loading ? (
-              // Loading Skeleton State
-              Array.from({ length: itemsPerPage }).map((_, rIdx) => (
-                <tr key={rIdx} className="border-b border-white/5 animate-pulse">
+              Array.from({ length: Math.min(itemsPerPage, 5) }).map((_, rIdx) => (
+                <tr key={rIdx} className="admin-table-row animate-pulse">
                   {columns.map((_, cIdx) => (
-                    <td key={cIdx} className="px-6 py-4.5">
-                      <div className="h-4 bg-stone-800 rounded w-2/3" />
+                    <td key={cIdx} className="px-5 py-4">
+                      <div className="h-4 rounded-md" style={{ background: 'rgba(0,0,0,0.06)', width: '66%' }} />
                     </td>
                   ))}
                 </tr>
               ))
             ) : data.length === 0 ? (
-              // Empty State
               <tr>
-                <td colSpan={columns.length} className="px-6 py-16 text-center text-sm text-stone-500">
+                <td colSpan={columns.length} className="px-6 py-16 text-center text-sm text-stone-500 font-semibold">
                   {emptyMessage}
                 </td>
               </tr>
             ) : (
-              // Render Rows
               data.map((row) => (
                 <tr
                   key={row.id}
                   onClick={() => onRowClick && onRowClick(row)}
-                  className={`border-b border-white/5 transition-colors hover:bg-white/5 ${
-                    onRowClick ? 'cursor-pointer' : ''
-                  }`}
+                  className={`admin-table-row text-sm ${onRowClick ? 'cursor-pointer' : ''}`}
                 >
                   {columns.map((col, cIdx) => {
                     let cellContent: React.ReactNode;
@@ -129,7 +121,7 @@ export default function DataTable<T extends { id: any }>({
                     }
 
                     return (
-                      <td key={cIdx} className={`px-6 py-4.5 text-sm text-stone-300 font-medium ${col.className || ''}`}>
+                      <td key={cIdx} className={`px-5 py-4 font-medium text-stone-600 ${col.className || ''}`}>
                         {cellContent}
                       </td>
                     );
@@ -141,33 +133,37 @@ export default function DataTable<T extends { id: any }>({
         </table>
       </div>
 
-      {/* Pagination Controls */}
       {totalPages > 1 && onPageChange && (
-        <div className="bg-stone-950 px-6 py-4.5 border-t border-white/5 flex items-center justify-between">
+        <div className="admin-table-pagination flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="text-xs text-stone-500 font-semibold">
-            แสดง {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} -{' '}
-            {Math.min(currentPage * itemsPerPage, totalItems)} จากทั้งหมด {totalItems} รายการ
+            แสดง {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} –{' '}
+            {Math.min(currentPage * itemsPerPage, totalItems)} จาก {totalItems} รายการ
           </span>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 flex-wrap justify-center">
             <button
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="p-2 bg-stone-900 border border-white/10 hover:bg-stone-800 disabled:opacity-30 rounded-xl text-stone-300 hover:text-stone-100 cursor-pointer disabled:cursor-not-allowed transition"
+              className="admin-page-btn flex items-center justify-center p-2"
             >
-              <ChevronLeft className="w-4.5 h-4.5" />
+              <ChevronLeft className="w-4 h-4" />
             </button>
-            {Array.from({ length: totalPages }).map((_, idx) => {
-              const p = idx + 1;
+            {Array.from({ length: Math.min(totalPages, 7) }).map((_, idx) => {
+              let p: number;
+              if (totalPages <= 7) {
+                p = idx + 1;
+              } else if (currentPage <= 4) {
+                p = idx + 1;
+              } else if (currentPage >= totalPages - 3) {
+                p = totalPages - 6 + idx;
+              } else {
+                p = currentPage - 3 + idx;
+              }
               const isCurrent = p === currentPage;
               return (
                 <button
                   key={p}
                   onClick={() => onPageChange(p)}
-                  className={`w-9.5 h-9.5 text-xs font-bold rounded-xl transition cursor-pointer ${
-                    isCurrent
-                      ? 'bg-red-800 text-white'
-                      : 'bg-stone-900 hover:bg-stone-800 border border-white/10 text-stone-300 hover:text-stone-100'
-                  }`}
+                  className={`admin-page-btn ${isCurrent ? 'admin-page-btn-active' : ''}`}
                 >
                   {p}
                 </button>
@@ -176,9 +172,9 @@ export default function DataTable<T extends { id: any }>({
             <button
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="p-2 bg-stone-900 border border-white/10 hover:bg-stone-800 disabled:opacity-30 rounded-xl text-stone-300 hover:text-stone-100 cursor-pointer disabled:cursor-not-allowed transition"
+              className="admin-page-btn flex items-center justify-center p-2"
             >
-              <ChevronRight className="w-4.5 h-4.5" />
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
