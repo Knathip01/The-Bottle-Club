@@ -168,21 +168,22 @@ export default function Footer() {
         <div className="py-12 flex flex-col lg:flex-row items-center justify-between gap-10">
           <div className="flex items-center gap-10 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-700 flex-wrap justify-center">
             <span className="text-[10px] font-black text-stone-700 uppercase tracking-[0.4em] w-full lg:w-auto text-center lg:text-left mb-4 lg:mb-0">Delivery Partners</span>
-            <Image src="/logos/dhl.png" alt="DHL" width={60} height={24} className="object-contain" />
-            <Image src="/logos/Lalamove.png" alt="Lalamove" width={90} height={24} className="object-contain" />
+            <Image src="/logos/dhl.png" alt="DHL" width={60} height={24} className="object-contain" style={{ height: 'auto' }} />
+            <Image src="/logos/Lalamove.png" alt="Lalamove" width={90} height={24} className="object-contain" style={{ height: 'auto' }} />
             </div>
 
 
 
             <div className="flex items-center gap-8 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-700 flex-wrap justify-center">
             <span className="text-[10px] font-black text-stone-700 uppercase tracking-[0.4em] w-full lg:w-auto text-center lg:text-left mb-4 lg:mb-0">Secure Checkout</span>
-            <Image src="/payments/visa.png" alt="Visa" width={32} height={16} className="object-contain" />
-            <Image src="/payments/mastercard.png" alt="Mastercard" width={32} height={16} className="object-contain" />
-            <Image src="/payments/jcb.png" alt="JCB" width={28} height={16} className="object-contain" />
-            <Image src="/payments/promptpay.png" alt="PromptPay" width={44} height={16} className="object-contain" />
-            <Image src="/payments/shopeepay.png" alt="ShopeePay" width={44} height={16} className="object-contain" />
+            <Image src="/payments/visa.png" alt="Visa" width={32} height={16} className="object-contain" style={{ height: 'auto' }} />
+            <Image src="/payments/mastercard.png" alt="Mastercard" width={32} height={16} className="object-contain" style={{ height: 'auto' }} />
+            <Image src="/payments/jcb.png" alt="JCB" width={28} height={16} className="object-contain" style={{ height: 'auto' }} />
+            <Image src="/payments/promptpay.png" alt="PromptPay" width={44} height={16} className="object-contain" style={{ height: 'auto' }} />
+            <Image src="/payments/shopeepay.png" alt="ShopeePay" width={44} height={16} className="object-contain" style={{ height: 'auto' }} />
 
           </div>
+
         </div>
 
         {/* Cache Control & Copyright */}

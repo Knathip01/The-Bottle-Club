@@ -26,8 +26,6 @@ export default function VoiceAssistant() {
   const hideTimeoutRef = useRef<any>(null);
   const recognitionRef = useRef<any>(null);
 
-  if (pathname?.startsWith('/admin')) return null;
-
   // Initialize SpeechRecognition on client mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -172,6 +170,28 @@ export default function VoiceAssistant() {
       }
     };
   }, []);
+
+  // Turn off speech system when navigating to admin pages
+  useEffect(() => {
+    if (pathname?.startsWith('/admin')) {
+      shouldListenRef.current = false;
+      setIsActive(false);
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          // ignore
+        }
+      }
+      setIsListening(false);
+      isRecognitionActiveRef.current = false;
+      setShowStatusIndicator(false);
+      setTranscript('');
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+  }, [pathname]);
 
   // Helper to parse and match voice queries
   const checkQueryMatch = (text: string): { path: string; name: string } | null => {
@@ -633,6 +653,9 @@ export default function VoiceAssistant() {
       }
     }
   };
+
+  // Render nothing on admin pages (but after all Hooks have executed)
+  if (pathname?.startsWith('/admin')) return null;
 
   return (
     <>

@@ -7,7 +7,7 @@ import { adminLogoutAction } from '@/app/actions/admin/auth';
 import {
   LayoutDashboard, ShoppingCart, Wine, Users, Star,
   Monitor, BarChart3, Settings, LogOut,
-  ChevronLeft, ChevronRight, Menu, X,
+  ChevronLeft, ChevronRight, Menu, X, Bot,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -36,6 +36,12 @@ const menuSections = [
       { title: 'จุดขายหน้าร้าน', icon: Monitor,  href: '/admin/pos',      badge: 'POS' },
       { title: 'รายงานยอดขาย',  icon: BarChart3, href: '/admin/reports',  badge: null },
       { title: 'ตั้งค่าร้านค้า', icon: Settings, href: '/admin/settings', badge: null },
+    ],
+  },
+  {
+    label: 'AI',
+    items: [
+      { title: 'AI วิเคราะห์ธุรกิจ', icon: Bot, href: '#ai-chat', badge: 'NEW' },
     ],
   },
 ];
@@ -112,16 +118,14 @@ export default function AdminSidebar({ admin }: SidebarProps) {
               {section.items.map((item) => {
                 const Icon    = item.icon;
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    title={collapsed ? item.title : undefined}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 relative group ${
-                      isActive ? 'sidebar-nav-active' : 'sidebar-nav-inactive'
-                    } ${collapsed ? 'justify-center' : ''}`}
-                  >
+                const isAction = item.href.startsWith('#');
+
+                const itemClass = `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 relative group ${
+                  isActive ? 'sidebar-nav-active' : 'sidebar-nav-inactive'
+                } ${collapsed ? 'justify-center' : ''}`;
+
+                const iconContent = (
+                  <>
                     {/* Active left bar */}
                     {isActive && (
                       <span className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-r-full"
@@ -149,9 +153,35 @@ export default function AdminSidebar({ admin }: SidebarProps) {
                         )}
                       </>
                     )}
+                  </>
+                );
+
+                return isAction ? (
+                  <button
+                    key={item.href}
+                    type="button"
+                    title={collapsed ? item.title : undefined}
+                    onClick={() => {
+                      setMobileOpen(false);
+                      document.getElementById('admin-ai-chat-btn')?.click();
+                    }}
+                    className={itemClass + ' w-full text-left cursor-pointer'}
+                  >
+                    {iconContent}
+                  </button>
+                ) : (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    title={collapsed ? item.title : undefined}
+                    className={itemClass}
+                  >
+                    {iconContent}
                   </Link>
                 );
               })}
+
             </div>
           </div>
         ))}

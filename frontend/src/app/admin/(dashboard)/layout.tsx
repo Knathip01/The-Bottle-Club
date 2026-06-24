@@ -2,6 +2,7 @@ import { requireAdmin } from '@/lib/admin-auth';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
 import AdminMobileNav from '@/components/admin/AdminMobileNav';
+import AdminAIChat from '@/components/admin/AdminAIChat';
 import '../admin-theme.css';
 
 export default async function AdminDashboardLayout({
@@ -75,6 +76,9 @@ export default async function AdminDashboardLayout({
         </div>
         <AdminMobileNav />
       </div>
+
+      {/* Admin AI Chat — floating assistant */}
+      <AdminAIChat />
     </div>
   );
 }
