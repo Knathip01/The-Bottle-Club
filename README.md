@@ -45,17 +45,17 @@
          │           │           │
          ▼           ▼           ▼
 ┌──────────────┐ ┌──────────┐ ┌──────────────────┐
-│  PostgreSQL  │ │ Express  │ │  External API     │
-│  Database   │ │ Backend  │ │  possimon.onrender │
-│             │ │  :3001   │ │  .com             │
-│  - users    │ │          │ │                   │
-│  - orders   │ │  Stripe  │ │  - /api/wines     │
-│  - order_   │ │  Webhooks│ │  - /reviews       │
-│    items    │ │  Shipping│ │  - Auth Endpoints │
-│  - products │ │  API     │ │  - Address Book   │
-│  - product_ │ └──────────┘ └──────────────────┘
-│    reviews  │
-└─────────────┘
+│  PostgreSQL  │ │ Express  │ │  Wayneven API    │
+│  Database    │ │ Backend  │ │  api.wayneven.uk │
+│              │ │  :3001   │ │                  │
+│  - users     │ │          │ │  - /api/v1/wine- │
+│  - orders    │ │  Stripe  │ │    products/     │
+│  - order_    │ │  Webhooks│ │  - /api/v1/auth/ │
+│    items     │ │  Shipping│ │  - /api/v1/orders│
+│  - products  │ │  API     │ │  - /api/v1/      │
+│  - product_  │ └──────────┘ │    payments/     │
+│    reviews   │              └──────────────────┘
+└──────────────┘
 ```
 
 ### 📄 Pages & Routes

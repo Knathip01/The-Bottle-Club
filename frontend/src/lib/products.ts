@@ -167,9 +167,8 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
 
     let response: Response;
     try {
-      const url = token
-        ? `${API_BASE_URL}/api/v1/wine-products/`
-        : `${API_BASE_URL}/api/wines/wines`;
+      // Exclusively use Wayneven Swagger API
+      const url = `${API_BASE_URL}/api/v1/wine-products/`;
 
       response = await fetch(url, {
         headers,
@@ -177,8 +176,9 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
         ...(isServer ? { next: { revalidate: 300 } } : { cache: 'no-store' }),
       });
 
+      // If /api/v1/wine-products/ is not available, try /api/v1/catalog/products
       if (!response.ok && token) {
-        response = await fetch(`${API_BASE_URL}/api/wines/wines`, {
+        response = await fetch(`${API_BASE_URL}/api/v1/catalog/products`, {
           headers,
           signal: controller.signal,
           ...(isServer ? { next: { revalidate: 300 } } : { cache: 'no-store' }),
@@ -324,7 +324,53 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
 }
 
 export async function getProductById(id: number, token?: string): Promise<Product | null> {
+  const isAuth = !!token;
   try {
+    const API_BASE_URL =
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.API_URL ||
+      'https://api.wayneven.uk';
+
+    if (token) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/wine-products/${id}`, {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token.replace(/^Bearer\s+/i, '')}`,
+          },
+          cache: 'no-store',
+        });
+
+        if (res.ok) {
+          const item = await res.json();
+          if (item && (item.id || item.product_name || item.name)) {
+            const rawProducts: Product[] = [{
+              id: Number(item.id) || Number(id),
+              name: String(item.product_name || item.name || 'Wine'),
+              price: Number(item.selling_price) || Number(item.price) || 0,
+              originalPrice: Number(item.price) || undefined,
+              stock: Number(item.stock) || 10,
+              color: String(item.color || 'red'),
+              type: String(item.categories_en || item.type || 'wine'),
+              sub_type: String(item.brands || item.wine_type || 'Classic'),
+              region: String(item.origins_en || item.region || ''),
+              image: String(item.image_url || item.image_small_url || ''),
+              images: item.image_url ? [{ id: 1, image_url: item.image_url, created_at: new Date().toISOString() }] : [],
+              description: String(item.ingredients_text || item.description || ''),
+              vintage: item.vintage ? Number(item.vintage) : undefined,
+              alcohol: String(item.alcohol_100g || item.alcohol || ''),
+              designation: String(item.brands || item.winery || ''),
+              countryCode: String(item.countries_en || item.country || 'fr').toLowerCase(),
+            }];
+            const sanitized = sanitizeProductsForAuth(rawProducts, isAuth);
+            return sanitized[0] ?? null;
+          }
+        }
+      } catch (err) {
+        console.warn(`Could not fetch wine by id ${id} from /api/v1/wine-products/:`, err);
+      }
+    }
+
     const products = await getProducts(undefined, token);
     const found = products.find((p) => p.id === Number(id));
     return found ?? null;
@@ -336,18 +382,33 @@ export async function getProductById(id: number, token?: string): Promise<Produc
 
 export async function getReviews(wineId: number): Promise<ProductReview[]> {
   try {
-    const isServer = typeof window === 'undefined';
-    const API_BASE_URL = isServer
-      ? process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk'
-      : '';
+    if (typeof window === 'undefined') {
+      try {
+        const { query } = await import('@/lib/db');
+        const res = await query(
+          `SELECT pr.id, pr.product_id, pr.user_id, pr.user_name, pr.rating, pr.comment, pr.created_at
+           FROM product_reviews pr
+           WHERE pr.product_id = $1 AND (pr.is_approved IS NULL OR pr.is_approved = true)
+           ORDER BY pr.created_at DESC`,
+          [wineId]
+        );
+        return (res.rows || []).map((r: any) => ({
+          id: r.id,
+          wine_id: r.product_id,
+          user_id: r.user_id,
+          username: r.user_name || 'Member',
+          rating: r.rating,
+          comment: r.comment,
+          images: [],
+          videos: [],
+          created_at: r.created_at?.toISOString ? r.created_at.toISOString() : String(r.created_at),
+        }));
+      } catch {
+        return [];
+      }
+    }
 
-    // On client: call our own Next.js proxy (/api/reviews) to avoid CORS.
-    // On server: call the backend directly at /reviews/wine/{wine_id}.
-    const url = isServer
-      ? `${API_BASE_URL}/reviews/wine/${wineId}`
-      : `/api/reviews?wine_id=${wineId}`;
-
-    const response = await fetch(url, { cache: 'no-store' });
+    const response = await fetch(`/api/reviews?wine_id=${wineId}`, { cache: 'no-store' });
     if (!response.ok) return [];
     const data = await response.json();
     return Array.isArray(data) ? data : data.reviews ?? data.data ?? [];
@@ -373,14 +434,7 @@ export async function createReview(
   }
 ): Promise<CreateReviewResult> {
   try {
-    // Always use the proxy on client-side to avoid CORS
-    const isServer = typeof window === 'undefined';
-    const API_BASE_URL = isServer
-      ? process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk'
-      : '';
-    const url = isServer ? `${API_BASE_URL}/reviews` : '/api/reviews';
-
-    const response = await fetch(url, {
+    const response = await fetch('/api/reviews', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

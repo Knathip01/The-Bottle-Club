@@ -23,7 +23,7 @@ function AuthSuccessContent() {
           // Fetch additional profile info if available
           let userObj = undefined;
           try {
-            const meRes = await fetch('/api/auth/me', {
+            const meRes = await fetch('/api/v1/auth/me', {
               headers: {
                 'Authorization': `Bearer ${token}`,
               },
@@ -32,7 +32,7 @@ function AuthSuccessContent() {
               userObj = await meRes.json();
             }
           } catch (meErr) {
-            console.error('Error fetching /api/auth/me:', meErr);
+            console.error('Error fetching /api/v1/auth/me:', meErr);
           }
 
           await setSessionFromToken(token, userObj);

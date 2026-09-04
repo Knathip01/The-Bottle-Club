@@ -82,10 +82,11 @@ export default function ConfirmPaymentClient({ accessToken, orderId, initialOrde
     setError(null);
 
     const formData = new FormData();
-    formData.append('slip', selectedFile);
+    formData.append('file', selectedFile);
+    formData.append('order_id', String(orderId));
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}/confirm-payment`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/slip-verify/upload`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -94,8 +95,8 @@ export default function ConfirmPaymentClient({ accessToken, orderId, initialOrde
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to upload slip');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || errorData.message || errorData.error || 'Failed to upload slip');
       }
 
       setUploadSuccess(true);

@@ -11,22 +11,13 @@ export async function syncSession() {
   if (!session || !session.user || !session.user.access_token) return null;
 
   try {
-    // Try /api/v1/auth/me first (new FastAPI), fallback to /api/users/me
-    let response = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+    // Exclusively query /api/v1/auth/me (FastAPI Wayneven Swagger endpoint)
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
       headers: {
         'Authorization': `Bearer ${session.user.access_token}`,
       },
       cache: 'no-store',
     });
-
-    if (!response.ok) {
-      response = await fetch(`${API_BASE_URL}/api/users/me`, {
-        headers: {
-          'Authorization': `Bearer ${session.user.access_token}`,
-        },
-        cache: 'no-store',
-      });
-    }
 
     if (response.ok) {
       const parsed = await response.json();
@@ -125,7 +116,7 @@ export async function register(formData: RegisterFormData) {
   }
 
   try {
-    let response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -139,23 +130,6 @@ export async function register(formData: RegisterFormData) {
         password: password
       }),
     });
-
-    if (!response.ok) {
-      response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          first_name: firstName,
-          last_name: lastName,
-          email: email,
-          phone: phone || '',
-          username: effectiveUsername,
-          password: password
-        }),
-      });
-    }
 
     let data: AuthPayload;
     const contentType = response.headers.get('content-type');
@@ -194,8 +168,8 @@ export async function login(formData: LoginFormData) {
   }
 
   try {
-    // Try /api/v1/auth/login first (Swagger/FastAPI endpoint)
-    let response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+    // Exclusively query /api/v1/auth/login (Swagger/FastAPI endpoint)
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -206,21 +180,6 @@ export async function login(formData: LoginFormData) {
         password: password
       }),
     });
-
-    // Fallback to /api/auth/login if 404
-    if (response.status === 404) {
-      response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          username: email,
-          password: password
-        }),
-      });
-    }
 
     let data: AuthPayload;
     const contentType = response.headers.get('content-type');

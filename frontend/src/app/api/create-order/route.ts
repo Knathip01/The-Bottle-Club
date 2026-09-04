@@ -90,41 +90,7 @@ export async function POST(request: Request) {
     }
 
     let session_stripe: { id?: string; url?: string | null } | null = null;
-    if (shouldCreateStripeSession && isPlaceholderKey) {
-      console.warn('Local Stripe key missing, trying backend checkout API before creating the order without a redirect URL...');
-      try {
-        const normalizedShippingFee = Number(shippingFee) || 0;
-        const checkoutItems = normalizedShippingFee > 0
-          ? [
-              ...items,
-              {
-                name: 'Shipping',
-                price: normalizedShippingFee,
-                quantity: 1,
-              },
-            ]
-          : items;
-
-        const backendRes = await fetch(`${API_BASE_URL}/api/checkout`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            items: checkoutItems,
-            successUrl: successUrl || `${request.headers.get('origin')}/account/orders?status=success`, 
-            cancelUrl: cancelUrl || `${request.headers.get('origin')}/checkout` 
-          }),
-        });
-        
-        if (!backendRes.ok) throw new Error('Backend checkout failed');
-        const backendData = await backendRes.json();
-        session_stripe = { id: backendData.id, url: backendData.url };
-      } catch (err) {
-        console.warn('Stripe checkout is unavailable; continuing with order creation only.', err);
-        session_stripe = null;
-      }
-    } else if (shouldCreateStripeSession) {
-      // Create Stripe Checkout Session locally
-      console.log('Creating Stripe Session locally...');
+    if (shouldCreateStripeSession) {
       try {
         const normalizedShippingFee = Number(shippingFee) || 0;
         const checkoutItems = normalizedShippingFee > 0
@@ -239,8 +205,6 @@ export async function POST(request: Request) {
     const requestTotalAmount = Number(body.totalAmount) || 0;
     
     try {
-      console.log('Sending order to external API:', `${API_BASE_URL}/api/orders`);
-      
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
       };
@@ -250,27 +214,19 @@ export async function POST(request: Request) {
       }
 
       const orderPayload = {
-        user_id: user.id,
-        payment_method: requestedPaymentMethod,
-        order_type: 'online',
-        shipping_method: requestedShippingMethod,
-        address_id: addressId ? parseInt(String(addressId)) : null,
-        is_full_tax_invoice: Boolean(isFullTaxInvoice ?? body.is_full_tax_invoice),
-        tax_id: taxId ?? body.tax_id,
-        tax_business_name: taxBusinessName ?? body.tax_business_name,
-        use_shipping_as_tax_address: useShippingAsTaxAddress ?? body.use_shipping_as_tax_address ?? true,
-        tax_address: taxAddress ?? body.tax_address,
-        total_amount: requestTotalAmount,
+        branch_id: 1,
+        customer_id: user?.id ? parseInt(String(user.id)) : null,
+        notes: `Payment: ${requestedPaymentMethod}, Shipping: ${requestedShippingMethod}`,
         items: items.map((item: any) => ({
-          product_id: parseInt(String(item.product_id ?? item.id), 10),
-          quantity: Number(item.quantity),
-          price: Number(item.price) || undefined,
+          product_id: parseInt(String(item.product_id ?? item.id), 10) || 1,
+          quantity: Number(item.quantity) || 1,
+          unit_price: String(Number(item.price) || 0),
         }))
       };
 
-      console.log('Order payload:', JSON.stringify(orderPayload));
+      console.log('Sending order to Wayneven API:', `${API_BASE_URL}/api/v1/orders/`);
 
-      const apiResponse = await fetch(`${API_BASE_URL}/api/orders`, {
+      const apiResponse = await fetch(`${API_BASE_URL}/api/v1/orders/`, {
         method: 'POST',
         headers,
         body: JSON.stringify(orderPayload),

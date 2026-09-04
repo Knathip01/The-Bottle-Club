@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     const token = session?.user?.access_token;
     
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
-    const targetUrl = `${API_BASE_URL}/api/orders`;
+    const targetUrl = `${API_BASE_URL}/api/v1/orders/`;
     
     console.log('--- Order Proxy Request ---');
     console.log('Target:', targetUrl);

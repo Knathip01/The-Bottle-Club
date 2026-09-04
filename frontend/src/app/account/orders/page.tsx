@@ -43,30 +43,27 @@ export default async function OrdersPage() {
   const token: string | undefined = session?.user?.access_token;
   const authHeaders: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
 
-  // ── 1. Fetch from GET /api/orders/my (user-scoped, primary source) ──────────
+  // ── 1. Fetch from GET /api/v1/orders/ (Wayneven API) ──────────
   let apiOrders: any[] = [];
   if (token) {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/orders/my`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/orders/`, {
         headers: authHeaders,
         cache: 'no-store',
       });
 
       if (res.ok) {
         const data = await res.json();
-        const list = Array.isArray(data) ? data : (data.orders ?? data.data ?? []);
+        const list = Array.isArray(data) ? data : (data.orders ?? data.items ?? data.data ?? []);
         apiOrders = list.map(normalizeApiOrder);
-        console.log(`[OrdersPage] /api/orders/my returned ${apiOrders.length} orders`);
-      } else if (res.status === 404) {
-        // Endpoint not yet deployed — fall back silently
-        console.warn('[OrdersPage] /api/orders/my not found (404), will use local DB only');
+        console.log(`[OrdersPage] /api/v1/orders/ returned ${apiOrders.length} orders`);
       } else if (res.status === 401 || res.status === 403) {
-        console.warn('[OrdersPage] /api/orders/my auth error:', res.status);
+        console.warn('[OrdersPage] /api/v1/orders/ auth error:', res.status);
       } else {
-        console.error('[OrdersPage] /api/orders/my unexpected status:', res.status);
+        console.error('[OrdersPage] /api/v1/orders/ unexpected status:', res.status);
       }
     } catch (err) {
-      console.error('[OrdersPage] Failed to fetch /api/orders/my:', err);
+      console.error('[OrdersPage] Failed to fetch /api/v1/orders/:', err);
     }
   }
 
@@ -135,19 +132,17 @@ export default async function OrdersPage() {
 
   // ── 3. Fetch user addresses for display in order details ────────────────────
   let userAddresses: any[] = [];
-  if (token) {
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/customers/addresses`, {
-        headers: authHeaders,
-        cache: 'no-store',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        userAddresses = Array.isArray(data) ? data : (data.addresses ?? data.data ?? []);
-      }
-    } catch (err) {
-      console.error('[OrdersPage] Failed to fetch addresses:', err);
+  try {
+    const userId = user.id || user.user_id;
+    if (userId) {
+      const addrRes = await query(
+        `SELECT * FROM customer_addresses WHERE user_id = $1 ORDER BY id DESC`,
+        [String(userId)]
+      ).catch(() => ({ rows: [] }));
+      userAddresses = addrRes.rows || [];
     }
+  } catch (err) {
+    console.error('[OrdersPage] Failed to fetch addresses:', err);
   }
 
   // ── 4. Merge: API orders take priority; local DB fills gaps ─────────────────

@@ -23,14 +23,14 @@ export default async function ConfirmPaymentListingPage() {
   // Fetch pending orders
   if (token) {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/orders/my`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/orders/`, {
         headers: authHeaders,
         cache: 'no-store',
       });
 
       if (res.ok) {
         const data = await res.json();
-        const list = Array.isArray(data) ? data : (data.orders ?? data.data ?? []);
+        const list = Array.isArray(data) ? data : (data.orders ?? data.items ?? data.data ?? []);
         // Filter only pending orders
         orders = list.filter((o: any) => o.status === 'pending');
       }

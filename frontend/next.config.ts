@@ -14,11 +14,6 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'possimon.onrender.com',
-        pathname: '**',
-      },
-      {
-        protocol: 'https',
         hostname: 'flagcdn.com',
         pathname: '**',
       },

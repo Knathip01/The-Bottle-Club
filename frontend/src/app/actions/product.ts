@@ -21,11 +21,11 @@ export async function uploadProductImage(productId: number, formData: FormData) 
   }
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk'
-  const url = `${API_BASE_URL}/api/products/${productId}/images`
+  const url = `${API_BASE_URL}/api/v1/catalog/products/${productId}`
 
   try {
     const response = await fetch(url, {
-      method: 'POST',
+      method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -38,8 +38,8 @@ export async function uploadProductImage(productId: number, formData: FormData) 
     }
 
     revalidatePath(`/product/${productId}`)
-
-    return await response.json()  } catch (error: any) {
+    return await response.json()
+  } catch (error: any) {
     console.error('Failed to upload image:', error)
     throw error
   }
@@ -55,7 +55,7 @@ export async function deleteProductImage(productId: number, imageId: number) {
   }
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk'
-  const url = `${API_BASE_URL}/api/images/${imageId}`
+  const url = `${API_BASE_URL}/api/v1/catalog/products/${productId}`
 
   try {
     const response = await fetch(url, {
@@ -71,7 +71,6 @@ export async function deleteProductImage(productId: number, imageId: number) {
     }
 
     revalidatePath(`/product/${productId}`)
-    
     return { success: true }
   } catch (error: any) {
     console.error('Failed to delete image:', error)

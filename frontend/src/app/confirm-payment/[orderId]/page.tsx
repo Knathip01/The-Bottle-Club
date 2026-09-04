@@ -27,14 +27,14 @@ export default async function ConfirmPaymentPage({
   let order: any = null;
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/orders/my`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/orders/`, {
       headers: authHeaders,
       cache: 'no-store',
     });
 
     if (res.ok) {
       const data = await res.json();
-      const list = Array.isArray(data) ? data : (data.orders ?? data.data ?? []);
+      const list = Array.isArray(data) ? data : (data.orders ?? data.items ?? data.data ?? []);
       // Find the specific order by id
       order = list.find((o: any) => String(o.id) === String(orderId)) ?? null;
 
@@ -60,7 +60,7 @@ export default async function ConfirmPaymentPage({
       }
     }
   } catch (err) {
-    console.error('[ConfirmPaymentPage] Failed to fetch from /api/orders/my:', err);
+    console.error('[ConfirmPaymentPage] Failed to fetch from /api/v1/orders/:', err);
   }
 
   // ── 2. Fallback: fetch from local PostgreSQL DB ─────────────────────────────
