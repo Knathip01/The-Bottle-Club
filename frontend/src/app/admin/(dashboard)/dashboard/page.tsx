@@ -7,9 +7,9 @@ import OrderStatusBadge from '@/components/admin/OrderStatusBadge';
 import { motion } from 'framer-motion';
 import {
   DollarSign, ShoppingBag, Users, AlertTriangle,
-  ArrowRight, ShieldCheck, Wine, Plus, Eye,
+  ArrowRight, Settings, Wine, Plus, Eye,
   Package, Star, BarChart3, Clock, Zap, RefreshCw,
-  TrendingUp,
+  TrendingUp, Activity, Layers,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -52,10 +52,10 @@ const container = {
 };
 
 const quickActions = [
-  { label: 'เพิ่มสินค้า', icon: Plus, href: '/admin/products/new', color: '#c41e3a' },
-  { label: 'ดูออเดอร์', icon: Eye, href: '/admin/orders', color: '#3b82f6' },
-  { label: 'รายงาน', icon: BarChart3, href: '/admin/reports', color: '#10b981' },
-  { label: 'จัดการสมาชิก', icon: Users, href: '/admin/members', color: '#a855f7' },
+  { label: 'เพิ่มสินค้า', icon: Plus, href: '/admin/products/new', color: '#c41e3a', glow: 'rgba(196,30,58,0.2)' },
+  { label: 'ดูออเดอร์', icon: Eye, href: '/admin/orders', color: '#3b82f6', glow: 'rgba(59,130,246,0.2)' },
+  { label: 'รายงาน', icon: BarChart3, href: '/admin/reports', color: '#10b981', glow: 'rgba(16,185,129,0.2)' },
+  { label: 'จัดการสมาชิก', icon: Users, href: '/admin/members', color: '#a855f7', glow: 'rgba(168,85,247,0.2)' },
 ];
 
 // Sparkline data stubs (last 7 data points trend)
@@ -69,15 +69,52 @@ const sparklines = {
 function LoadingSkeleton() {
   return (
     <div className="space-y-6 animate-pulse select-none">
-      <div className="h-28 rounded-2xl" style={{ background: 'rgba(0,0,0,0.05)' }} />
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[1,2,3,4].map(i => <div key={i} className="h-32 rounded-2xl" style={{ background: 'rgba(0,0,0,0.05)' }} />)}
+      <div className="h-28 rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)' }} />
+      <div className="flex gap-3 overflow-hidden">
+        {[1,2,3,4].map(i => <div key={i} className="h-32 rounded-2xl flex-shrink-0 w-[72%] sm:w-[44%] lg:w-full" style={{ background: 'rgba(255,255,255,0.04)' }} />)}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2 h-80 rounded-2xl" style={{ background: 'rgba(0,0,0,0.05)' }} />
-        <div className="h-80 rounded-2xl" style={{ background: 'rgba(0,0,0,0.05)' }} />
+        <div className="lg:col-span-2 h-80 rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)' }} />
+        <div className="h-80 rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)' }} />
       </div>
     </div>
+  );
+}
+
+/* ─── Mobile Order Card ─── */
+function MobileOrderCard({ order, idx }: { order: DashboardData['recentOrders'][0]; idx: number }) {
+  return (
+    <motion.div variants={fadeUp}>
+      <Link
+        href={`/admin/orders/${order.id}`}
+        className="admin-order-card-mobile block"
+      >
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center gap-2.5">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0"
+              style={{ background: `hsl(${(idx * 47) % 360}, 50%, 35%)`, boxShadow: `0 0 10px hsl(${(idx * 47) % 360}, 50%, 35%, 0.4)` }}
+            >
+              {order.customer.slice(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <p className="text-xs font-bold leading-tight" style={{ color: '#e2e8f0' }}>{order.customer}</p>
+              <p className="text-[10px] mt-0.5 font-mono" style={{ color: '#475569' }}>#{String(order.id).padStart(4, '0')}</p>
+            </div>
+          </div>
+          <OrderStatusBadge status={order.status} size="sm" />
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-black" style={{ color: '#f1f5f9' }}>{order.total}</span>
+            <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(255,255,255,0.06)', color: '#64748b', border: '1px solid rgba(255,255,255,0.08)' }}>
+              {order.paymentMethod}
+            </span>
+          </div>
+          <span className="text-[10px] font-medium" style={{ color: '#475569' }}>{order.date}</span>
+        </div>
+      </Link>
+    </motion.div>
   );
 }
 
@@ -107,13 +144,13 @@ export default function AdminDashboardPage() {
 
   if (error || !data) {
     return (
-      <div className="admin-card rounded-2xl p-10 flex flex-col items-center gap-4 text-center select-none">
+      <div className="rounded-2xl p-10 flex flex-col items-center gap-4 text-center select-none" style={{ background: 'rgba(19,25,41,0.92)', border: '1px solid rgba(255,255,255,0.07)' }}>
         <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-          <AlertTriangle className="w-8 h-8 text-red-600" />
+          <AlertTriangle className="w-8 h-8" style={{ color: '#f87171' }} />
         </div>
         <div>
-          <p className="font-bold text-stone-800 text-base">โหลดข้อมูลไม่สำเร็จ</p>
-          <p className="text-stone-500 text-sm mt-1">{error || 'ข้อมูลไม่สมบูรณ์'}</p>
+          <p className="font-bold text-base" style={{ color: '#f1f5f9' }}>โหลดข้อมูลไม่สำเร็จ</p>
+          <p className="text-sm mt-1" style={{ color: '#475569' }}>{error || 'ข้อมูลไม่สมบูรณ์'}</p>
         </div>
         <button
           onClick={() => { setError(null); setLoading(true); loadData(); }}
@@ -126,55 +163,55 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6 select-none">
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-5 sm:space-y-6 select-none">
 
       {/* ─── Welcome Banner ─── */}
       <motion.div variants={fadeUp}>
         <div
-          className="relative overflow-hidden rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+          className="admin-welcome-mobile relative overflow-hidden rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4"
           style={{
-            background: 'rgba(255,255,255,0.82)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.95)',
-            borderTop: '1px solid white',
-            boxShadow: '0 4px 24px rgba(196,30,58,0.06), 0 1px 0 white inset',
+            background: 'rgba(19, 25, 41, 0.95)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
           }}
         >
-          {/* Top crimson line */}
+          {/* Top crimson accent line */}
           <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(to right, transparent, #c41e3a 40%, #f59e0b 60%, transparent)' }} />
           {/* Corner glow */}
-          <div className="absolute top-0 right-0 w-64 h-40 pointer-events-none" style={{ background: 'radial-gradient(ellipse at top right, rgba(196,30,58,0.05), transparent 70%)' }} />
+          <div className="absolute top-0 right-0 w-64 h-40 pointer-events-none" style={{ background: 'radial-gradient(ellipse at top right, rgba(196,30,58,0.08), transparent 70%)' }} />
+          {/* Bottom left accent */}
+          <div className="absolute bottom-0 left-0 w-32 h-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at bottom left, rgba(245,158,11,0.04), transparent 70%)' }} />
 
           {/* Left info */}
-          <div className="flex items-center gap-4 relative z-10">
+          <div className="flex items-center gap-3 sm:gap-4 relative z-10">
             <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(196,30,58,0.08)', border: '1px solid rgba(196,30,58,0.2)' }}
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: 'rgba(196,30,58,0.1)', border: '1px solid rgba(196,30,58,0.25)', boxShadow: '0 0 16px rgba(196,30,58,0.15)' }}
             >
-              <ShieldCheck className="w-5 h-5 text-red-600" />
+              <Activity className="w-5 h-5" style={{ color: '#f87171' }} />
             </div>
             <div>
-              <h2 className="font-serif font-black text-stone-800 text-base leading-tight">The Bottle Club — Control Center</h2>
+              <h2 className="font-serif font-black text-sm sm:text-base leading-tight" style={{ color: '#f1f5f9' }}>Control Center</h2>
               <div className="flex items-center gap-2 mt-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[11px] text-stone-500 font-semibold">ระบบทำงานปกติ</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" style={{ boxShadow: '0 0 6px rgba(16,185,129,0.6)' }} />
+                <span className="text-[10px] sm:text-[11px] font-semibold" style={{ color: '#34d399' }}>ระบบทำงานปกติ</span>
                 {lastUpdated && (
-                  <span className="text-[10px] text-stone-400">· อัพเดต {lastUpdated.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="text-[9px] sm:text-[10px] hidden sm:inline" style={{ color: '#334155' }}>· อัพเดต {lastUpdated.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>
                 )}
               </div>
             </div>
           </div>
 
           {/* Quick actions */}
-          <div className="flex items-center gap-2 relative z-10 flex-wrap">
+          <div className="admin-quick-actions-mobile flex items-center gap-2 relative z-10 flex-wrap">
             {quickActions.map((qa) => {
               const Icon = qa.icon;
               return (
                 <Link
                   key={qa.href}
                   href={qa.href}
-                  className="quick-action-card flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-bold text-stone-600 hover:text-red-700"
+                  className="quick-action-card flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-bold transition-all duration-200"
+                  style={{ color: '#94a3b8' }}
                 >
                   <Icon className="w-3.5 h-3.5" style={{ color: qa.color }} />
                   {qa.label}
@@ -186,39 +223,41 @@ export default function AdminDashboardPage() {
       </motion.div>
 
       {/* ─── KPI Cards ─── */}
-      <motion.div variants={fadeUp} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          title="ยอดขายวันนี้"
-          value={data.metrics.todayRevenue}
-          change="+12.5%"
-          trend="up"
-          icon={DollarSign}
-          sparkline={sparklines.revenue}
-        />
-        <KPICard
-          title="ออเดอร์รอดำเนินการ"
-          value={data.metrics.pendingOrders.toString()}
-          change="+3 ออเดอร์"
-          trend="up"
-          icon={ShoppingBag}
-          sparkline={sparklines.orders}
-        />
-        <KPICard
-          title="สมาชิกใหม่เดือนนี้"
-          value={data.metrics.newMembers.toString()}
-          change="+18%"
-          trend="up"
-          icon={Users}
-          sparkline={sparklines.members}
-        />
-        <KPICard
-          title="สินค้าใกล้หมดคลัง"
-          value={data.metrics.lowStockAlerts.toString()}
-          change={data.metrics.lowStockAlerts > 0 ? 'ควรเติมสต็อก' : 'สต็อกเพียงพอ'}
-          trend={data.metrics.lowStockAlerts > 0 ? 'down' : 'neutral'}
-          icon={AlertTriangle}
-          sparkline={sparklines.stock}
-        />
+      <motion.div variants={fadeUp}>
+        <div className="admin-kpi-scroll">
+          <KPICard
+            title="ยอดขายวันนี้"
+            value={data.metrics.todayRevenue}
+            change="+12.5%"
+            trend="up"
+            icon={DollarSign}
+            sparkline={sparklines.revenue}
+          />
+          <KPICard
+            title="ออเดอร์รอดำเนินการ"
+            value={data.metrics.pendingOrders.toString()}
+            change="+3 ออเดอร์"
+            trend="up"
+            icon={ShoppingBag}
+            sparkline={sparklines.orders}
+          />
+          <KPICard
+            title="สมาชิกใหม่เดือนนี้"
+            value={data.metrics.newMembers.toString()}
+            change="+18%"
+            trend="up"
+            icon={Users}
+            sparkline={sparklines.members}
+          />
+          <KPICard
+            title="สินค้าใกล้หมดคลัง"
+            value={data.metrics.lowStockAlerts.toString()}
+            change={data.metrics.lowStockAlerts > 0 ? 'ควรเติมสต็อก' : 'สต็อกเพียงพอ'}
+            trend={data.metrics.lowStockAlerts > 0 ? 'down' : 'neutral'}
+            icon={AlertTriangle}
+            sparkline={sparklines.stock}
+          />
+        </div>
       </motion.div>
 
       {/* ─── Chart + Low Stock ─── */}
@@ -229,38 +268,46 @@ export default function AdminDashboardPage() {
 
         {/* Low Stock Panel */}
         <motion.div variants={fadeUp}>
-          <div className="admin-card rounded-2xl p-5 h-full flex flex-col">
-            <div className="absolute top-0 left-6 right-6 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(0,0,0,0.06), transparent)' }} />
+          <div
+            className="rounded-2xl p-4 sm:p-5 h-full flex flex-col relative overflow-hidden"
+            style={{
+              background: 'rgba(19, 25, 41, 0.92)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+            }}
+          >
+            {/* Top accent */}
+            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(to right, transparent, rgba(239,68,68,0.6) 50%, transparent)' }} />
 
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-black text-stone-800 font-serif">สต็อกใกล้หมด</h3>
-                <p className="text-[10px] text-stone-400 uppercase tracking-wider font-bold mt-0.5">Low Stock Alert</p>
+                <h3 className="text-sm font-black font-serif" style={{ color: '#f1f5f9' }}>สต็อกใกล้หมด</h3>
+                <p className="text-[10px] uppercase tracking-wider font-bold mt-0.5" style={{ color: '#475569' }}>Low Stock Alert</p>
               </div>
               <span
                 className="text-[9px] font-extrabold px-2 py-1 rounded-full uppercase tracking-widest"
-                style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#991b1b' }}
+                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}
               >
                 {data.lowStockProducts.length} รายการ
               </span>
             </div>
 
-            <div className="flex-1 divide-y divide-black/5">
+            <div className="flex-1" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
               {data.lowStockProducts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
-                  <Package className="w-8 h-8 text-stone-700" />
-                  <p className="text-xs text-stone-600 font-semibold">สินค้าทั้งหมดมีสต็อกเพียงพอ</p>
+                  <Package className="w-8 h-8" style={{ color: '#334155' }} />
+                  <p className="text-xs font-semibold" style={{ color: '#475569' }}>สินค้าทั้งหมดมีสต็อกเพียงพอ</p>
                 </div>
               ) : (
                 data.lowStockProducts.map((prod) => (
-                  <div key={prod.id} className="py-3 flex items-center justify-between gap-3">
+                  <div key={prod.id} className="py-3 flex items-center justify-between gap-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center" style={{ background: 'rgba(196,30,58,0.07)', border: '1px solid rgba(196,30,58,0.15)' }}>
-                        <Wine className="w-3.5 h-3.5 text-red-600" />
+                      <div className="w-7 h-7 rounded-lg shrink-0 flex items-center justify-center" style={{ background: 'rgba(196,30,58,0.1)', border: '1px solid rgba(196,30,58,0.2)' }}>
+                        <Wine className="w-3.5 h-3.5" style={{ color: '#f87171' }} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-stone-700 truncate">{prod.name}</p>
-                        <p className="text-[10px] text-stone-400 mt-0.5">฿{prod.price.toLocaleString('th-TH')}</p>
+                        <p className="text-xs font-bold truncate" style={{ color: '#cbd5e1' }}>{prod.name}</p>
+                        <p className="text-[10px] mt-0.5" style={{ color: '#475569' }}>฿{prod.price.toLocaleString('th-TH')}</p>
                       </div>
                     </div>
                     <span
@@ -287,29 +334,67 @@ export default function AdminDashboardPage() {
         </motion.div>
       </div>
 
-      {/* ─── Recent Orders Table ─── */}
+      {/* ─── Recent Orders ─── */}
       <motion.div variants={fadeUp}>
-        <div className="admin-card rounded-2xl p-6 relative overflow-hidden">
-          <div className="absolute top-0 left-8 right-8 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent)' }} />
+        <div
+          className="rounded-2xl p-4 sm:p-6 relative overflow-hidden"
+          style={{
+            background: 'rgba(19, 25, 41, 0.92)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+          }}
+        >
+          {/* Top accent */}
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(to right, transparent, rgba(59,130,246,0.5) 50%, transparent)' }} />
 
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between mb-4 sm:mb-5">
             <div>
-              <h3 className="text-sm font-black font-serif text-stone-800">คำสั่งซื้อล่าสุด</h3>
-              <p className="text-[10px] text-stone-400 uppercase tracking-wider font-bold mt-0.5">10 ออเดอร์ล่าสุด</p>
+              <h3 className="text-sm font-black font-serif" style={{ color: '#f1f5f9' }}>คำสั่งซื้อล่าสุด</h3>
+              <p className="text-[10px] uppercase tracking-wider font-bold mt-0.5" style={{ color: '#475569' }}>10 ออเดอร์ล่าสุด</p>
             </div>
             <Link
               href="/admin/orders"
-              className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl transition-all duration-200 text-red-700 hover:text-white admin-action-btn"
-              style={{ background: 'rgba(196,30,58,0.08)', border: '1px solid rgba(196,30,58,0.15)' }}
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl transition-all duration-200 admin-action-btn"
             >
               ดูทั้งหมด <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <div className="overflow-x-auto -mx-1">
+          {/* Mobile: Card layout */}
+          <div className="sm:hidden">
+            {data.recentOrders.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-12" style={{ color: '#475569' }}>
+                <ShoppingBag className="w-8 h-8" />
+                <p className="text-xs font-semibold">ยังไม่มีคำสั่งซื้อ</p>
+              </div>
+            ) : (
+              <motion.div
+                className="space-y-3"
+                variants={container}
+                initial="hidden"
+                animate="show"
+              >
+                {data.recentOrders.slice(0, 5).map((order, idx) => (
+                  <MobileOrderCard key={order.id} order={order} idx={idx} />
+                ))}
+                {data.recentOrders.length > 5 && (
+                  <Link
+                    href="/admin/orders"
+                    className="block text-center py-3 text-xs font-bold rounded-xl"
+                    style={{ background: 'rgba(196,30,58,0.06)', border: '1px solid rgba(196,30,58,0.15)', color: '#f87171' }}
+                  >
+                    ดูออเดอร์ทั้งหมด ({data.recentOrders.length}) →
+                  </Link>
+                )}
+              </motion.div>
+            )}
+          </div>
+
+          {/* Desktop: Table layout */}
+          <div className="hidden sm:block overflow-x-auto -mx-1">
             <table className="w-full text-left min-w-[640px]">
               <thead>
-                <tr className="text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ color: '#a8a29e' }}>
+                <tr className="text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ color: '#334155' }}>
                   <th className="pb-3 pl-1 pr-3">#ออเดอร์</th>
                   <th className="pb-3 pr-3">ลูกค้า</th>
                   <th className="pb-3 pr-3">ยอดชำระ</th>
@@ -324,7 +409,7 @@ export default function AdminDashboardPage() {
                 {data.recentOrders.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="py-12 text-center">
-                      <div className="flex flex-col items-center gap-2 text-stone-600">
+                      <div className="flex flex-col items-center gap-2" style={{ color: '#475569' }}>
                         <ShoppingBag className="w-8 h-8" />
                         <p className="text-xs font-semibold">ยังไม่มีคำสั่งซื้อ</p>
                       </div>
@@ -336,40 +421,39 @@ export default function AdminDashboardPage() {
                       key={order.id}
                       className="admin-table-row text-xs group/row"
                     >
-                      <td className="py-3.5 pl-1 pr-3 font-black text-stone-300">
-                        <span className="font-mono" style={{ color: '#1c1917' }}>#{String(order.id).padStart(4, '0')}</span>
+                      <td className="py-3.5 pl-1 pr-3">
+                        <span className="font-mono font-bold" style={{ color: '#64748b' }}>#{String(order.id).padStart(4, '0')}</span>
                       </td>
                       <td className="py-3.5 pr-3">
                         <div className="flex items-center gap-2">
                           <div
                             className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black text-white shrink-0"
-                            style={{ background: `hsl(${(idx * 47) % 360}, 50%, 40%)` }}
+                            style={{ background: `hsl(${(idx * 47) % 360}, 50%, 35%)`, boxShadow: `0 0 8px hsl(${(idx * 47) % 360}, 50%, 35%, 0.3)` }}
                           >
                             {order.customer.slice(0, 2).toUpperCase()}
                           </div>
-                          <span className="truncate max-w-[120px]" style={{ color: '#57534e' }}>{order.customer}</span>
+                          <span className="truncate max-w-[120px]" style={{ color: '#94a3b8' }}>{order.customer}</span>
                         </div>
                       </td>
-                      <td className="py-3.5 pr-3 font-bold" style={{ color: '#292524' }}>{order.total}</td>
+                      <td className="py-3.5 pr-3 font-bold" style={{ color: '#e2e8f0' }}>{order.total}</td>
                       <td className="py-3.5 pr-3">
-                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(0,0,0,0.04)', color: '#78716c' }}>
+                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(255,255,255,0.05)', color: '#64748b', border: '1px solid rgba(255,255,255,0.07)' }}>
                           {order.paymentMethod}
                         </span>
                       </td>
                       <td className="py-3.5 pr-3">
-                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(0,0,0,0.04)', color: '#78716c' }}>
+                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(255,255,255,0.05)', color: '#64748b', border: '1px solid rgba(255,255,255,0.07)' }}>
                           {order.type}
                         </span>
                       </td>
                       <td className="py-3.5 pr-3">
                         <OrderStatusBadge status={order.status} size="sm" />
                       </td>
-                      <td className="py-3.5 pr-3 text-stone-600 font-medium text-[10px]">{order.date}</td>
+                      <td className="py-3.5 pr-3 font-medium text-[10px]" style={{ color: '#475569' }}>{order.date}</td>
                       <td className="py-3.5 text-right">
                         <Link
                           href={`/admin/orders/${order.id}`}
                           className="admin-action-btn"
-                          style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.08)' }}
                         >
                           <Eye className="w-3 h-3" /> ดู
                         </Link>

@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'api.wayneven.uk',
+        pathname: '**',
+      },
+      {
+        protocol: 'https',
         hostname: 'possimon.onrender.com',
         pathname: '**',
       },
@@ -22,8 +27,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/:path*',
-        destination: 'https://possimon.onrender.com/api/:path*',
+        source: '/api/v1/:path*',
+        destination: 'https://api.wayneven.uk/api/v1/:path*',
       },
     ];
   },

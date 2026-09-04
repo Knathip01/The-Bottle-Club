@@ -4,24 +4,38 @@ import { login as setAuthSession, logout as clearAuthSession, getSession } from 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
 
 export async function syncSession() {
   const session = await getSession();
   if (!session || !session.user || !session.user.access_token) return null;
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+    // Try /api/v1/auth/me first (new FastAPI), fallback to /api/users/me
+    let response = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
       headers: {
         'Authorization': `Bearer ${session.user.access_token}`,
       },
+      cache: 'no-store',
     });
 
+    if (!response.ok) {
+      response = await fetch(`${API_BASE_URL}/api/users/me`, {
+        headers: {
+          'Authorization': `Bearer ${session.user.access_token}`,
+        },
+        cache: 'no-store',
+      });
+    }
+
     if (response.ok) {
-      const userData = await response.json();
+      const parsed = await response.json();
+      const userData = parsed.data || parsed;
       const updatedUser = {
         ...session.user,
         ...userData,
+        first_name: userData.first_name || userData.display_name?.split(' ')[0] || session.user.first_name,
+        last_name: userData.last_name || userData.display_name?.split(' ')[1] || session.user.last_name,
       };
       return updatedUser;
     }
@@ -111,7 +125,7 @@ export async function register(formData: RegisterFormData) {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+    let response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -125,6 +139,23 @@ export async function register(formData: RegisterFormData) {
         password: password
       }),
     });
+
+    if (!response.ok) {
+      response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          phone: phone || '',
+          username: effectiveUsername,
+          password: password
+        }),
+      });
+    }
 
     let data: AuthPayload;
     const contentType = response.headers.get('content-type');
@@ -163,7 +194,8 @@ export async function login(formData: LoginFormData) {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+    // Try /api/v1/auth/login first (Swagger/FastAPI endpoint)
+    let response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -174,6 +206,21 @@ export async function login(formData: LoginFormData) {
         password: password
       }),
     });
+
+    // Fallback to /api/auth/login if 404
+    if (response.status === 404) {
+      response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          username: email,
+          password: password
+        }),
+      });
+    }
 
     let data: AuthPayload;
     const contentType = response.headers.get('content-type');
@@ -190,16 +237,40 @@ export async function login(formData: LoginFormData) {
       return { error: getApiMessage(data, 'Invalid email or password.') };
     }
 
-    const sessionUser = normalizeAuthSession(data, email);
+    let sessionUser: any = normalizeAuthSession(data, email);
+    const token = getAuthToken(data);
+
+    // Fetch full profile info from /api/v1/auth/me if available
+    if (token) {
+      try {
+        const meRes = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (meRes.ok) {
+          const meData = await meRes.json();
+          const profile = meData.data || meData;
+          sessionUser = {
+            ...sessionUser,
+            id: profile.id || sessionUser.id,
+            email: profile.email || sessionUser.email,
+            username: profile.username || sessionUser.username,
+            first_name: profile.display_name || profile.username || sessionUser.first_name,
+            points: profile.points || sessionUser.points || 0,
+          };
+        }
+      } catch (err) {
+        console.warn('Could not fetch user profile from /api/v1/auth/me:', err);
+      }
+    }
+
     await setAuthSession(sessionUser);
     revalidatePath('/');
-    return { success: true, token: getAuthToken(data) };
+    return { success: true, token };
   } catch (error: unknown) {
     if (isRedirectError(error)) throw error;
     console.error('Login error:', error);
     return { error: 'Could not contact the server. Please try again.' };
   }
-
 }
 
 export async function setSessionFromToken(token: string, userData?: any) {

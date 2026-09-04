@@ -4,7 +4,7 @@
  * Client-side authentication utilities
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
 
 /**
  * Redirects the user to OAuth login providers

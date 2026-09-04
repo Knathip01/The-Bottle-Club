@@ -2,10 +2,11 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
-  Bot, X, Send, User, ChevronDown, Sparkles,
+  X, Send, User, ChevronDown, Sparkles,
   TrendingUp, Package, AlertTriangle, BarChart3,
   Loader2, RefreshCw, Wifi, WifiOff, Database,
 } from 'lucide-react';
+import CartoonBottleIcon from '@/components/icons/CartoonBottleIcon';
 
 /* ─── Types ─── */
 interface Message {
@@ -64,10 +65,24 @@ export default function AdminAIChat() {
   const [msgs, setMsgs]         = useState<Message[]>([]);
   const [input, setInput]       = useState('');
   const [busy, setBusy]         = useState(false);
-  const [liveData, setLiveData] = useState<boolean | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'live' | 'sample'>('connecting');
   const [dot, setDot]           = useState(true);        // pulse dot on button
   const endRef   = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Simulate connection check when chat is opened
+  useEffect(() => {
+    if (open) {
+      if (connectionStatus === 'connecting') {
+        const timer = setTimeout(() => {
+          setConnectionStatus('connected');
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      setConnectionStatus('connecting');
+    }
+  }, [open, connectionStatus]);
 
   /* hide pulse after 6s */
   useEffect(() => { const t = setTimeout(() => setDot(false), 6000); return () => clearTimeout(t); }, []);
@@ -156,7 +171,9 @@ export default function AdminAIChat() {
         return;
       }
 
-      if (data.isLiveData !== undefined) setLiveData(data.isLiveData);
+      if (data.isLiveData !== undefined) {
+        setConnectionStatus(data.isLiveData ? 'live' : 'sample');
+      }
       setMsgs(prev => [...prev, {
         id: `m${Date.now()}`, role: 'model',
         text: data.reply, ts: new Date(),
@@ -194,7 +211,7 @@ export default function AdminAIChat() {
         {open
           ? <X size={22} className="text-white" />
           : <>
-              <Bot size={24} className="text-white" />
+              <CartoonBottleIcon size={24} className="text-white" />
               {dot && <span className="absolute top-1 right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white animate-pulse" />}
             </>
         }
@@ -233,7 +250,7 @@ export default function AdminAIChat() {
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center"
                    style={{ background: 'rgba(255,255,255,0.18)' }}>
-                <Bot size={20} className="text-white" />
+                <CartoonBottleIcon size={20} className="text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -244,15 +261,23 @@ export default function AdminAIChat() {
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  {liveData === null
-                    ? <span className="w-1.5 h-1.5 bg-amber-300 rounded-full" />
-                    : liveData
-                      ? <Wifi size={10} className="text-emerald-300" />
-                      : <Database size={10} className="text-amber-300" />
-                  }
+                  {connectionStatus === 'connecting' && (
+                    <span className="w-1.5 h-1.5 bg-amber-300 rounded-full animate-pulse" />
+                  )}
+                  {connectionStatus === 'connected' && (
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                  )}
+                  {connectionStatus === 'live' && (
+                    <Wifi size={10} className="text-emerald-300" />
+                  )}
+                  {connectionStatus === 'sample' && (
+                    <Database size={10} className="text-amber-300" />
+                  )}
                   <span className="text-white/60 text-[10px]">
-                    {liveData === null ? 'กำลังเชื่อมต่อ...'
-                      : liveData ? 'ข้อมูลสด' : 'ข้อมูลตัวอย่าง'}
+                    {connectionStatus === 'connecting' ? 'กำลังเชื่อมต่อ...'
+                      : connectionStatus === 'connected' ? 'เชื่อมต่อแล้ว'
+                      : connectionStatus === 'live' ? 'ข้อมูลสด'
+                      : 'ข้อมูลตัวอย่าง'}
                   </span>
                 </div>
               </div>
@@ -301,7 +326,7 @@ export default function AdminAIChat() {
                      }>
                   {msg.role === 'user'
                     ? <User size={13} className="text-white" />
-                    : <Bot size={13} style={{ color: msg.isError ? '#ef4444' : '#c41e3a' }} />
+                    : <CartoonBottleIcon size={13} style={{ color: msg.isError ? '#ef4444' : '#c41e3a' }} />
                   }
                 </div>
 

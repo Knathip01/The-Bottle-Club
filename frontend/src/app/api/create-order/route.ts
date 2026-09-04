@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       useShippingAsTaxAddress,
       taxAddress,
     } = body;
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
     const requestedPaymentMethod = body.payment_method || paymentMethod || 'credit_card';
     const requestedShippingMethod = body.shipping_method || shippingMethod || 'standard';
     const shouldCreateStripeSession = requestedPaymentMethod === 'credit_card' && !isPlaceholderKey;

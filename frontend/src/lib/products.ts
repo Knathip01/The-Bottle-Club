@@ -46,15 +46,91 @@ function extractWineArray(rawData: unknown): unknown[] {
   return [];
 }
 
-/**
- * Fetch wines/products from API (server-side or via /api/products proxy for client)
- */
+function filterProducts(products: Product[], query?: string): Product[] {
+  if (!query || query.trim() === '') return products;
+  const lowerQuery = query.toLowerCase();
+  return products.filter(
+    (p) =>
+      p.name?.toLowerCase().includes(lowerQuery) ||
+      p.type?.toLowerCase().includes(lowerQuery) ||
+      p.sub_type?.toLowerCase().includes(lowerQuery) ||
+      p.region?.toLowerCase().includes(lowerQuery)
+  );
+}
+
+export const FALLBACK_PRODUCTS: Product[] = [
+  {
+    id: 1,
+    name: 'Château Margaux Premier Grand Cru Classé',
+    price: 24500,
+    originalPrice: 28000,
+    color: 'Red',
+    stock: 12,
+    type: 'Red Wine',
+    sub_type: 'Grand Cru',
+    countryCode: 'fr',
+    region: 'Bordeaux, France',
+    image: '/images/wine_red.png',
+    description: 'ไวน์แดงคลาสสิกระดับพรีเมียมจากบอร์โดซ์ กลิ่นหอมซับซ้อนของบลูเบอร์รี ดอกไวโอเล็ต และซิการ์บ็อกซ์ แทนนินนุ่มละมุนติดลึกยาวนาน',
+    vintage: 2015,
+    alcohol: '13.5%'
+  },
+  {
+    id: 2,
+    name: 'Dom Pérignon Vintage Champagne',
+    price: 13900,
+    originalPrice: 15500,
+    color: 'White',
+    stock: 8,
+    type: 'Sparkling',
+    sub_type: 'Vintage',
+    countryCode: 'fr',
+    region: 'Champagne, France',
+    image: '/images/wine_sparkling.png',
+    description: 'แชมเปญสปาร์กลิ้งระดับตำนาน ฟองละเอียดนุ่มละมุน กลิ่นหอมของผลไม้สีขาว อัลมอนด์คั่ว และขนมปังบริออช สดชื่นประทับใจ',
+    vintage: 2012,
+    alcohol: '12.5%'
+  },
+  {
+    id: 3,
+    name: 'Cloudy Bay Sauvignon Blanc',
+    price: 2190,
+    originalPrice: 2490,
+    color: 'White',
+    stock: 25,
+    type: 'White Wine',
+    sub_type: 'Sauvignon Blanc',
+    countryCode: 'nz',
+    region: 'Marlborough, New Zealand',
+    image: '/images/wine_white.png',
+    description: 'ไวน์ขาวชื่อดังจากนิวซีแลนด์ กลิ่นหอมสดชื่นของแพชชันฟรุต เสาวรส กะเพรา และเลมอน แอซิดิตี้ดีเยี่ยม ดื่มง่ายในทุกโอกาส',
+    vintage: 2022,
+    alcohol: '13.0%'
+  },
+  {
+    id: 4,
+    name: 'Whispering Angel Rosé Côtes de Provence',
+    price: 1850,
+    originalPrice: 2100,
+    color: 'Rose',
+    stock: 18,
+    type: 'Rose Wine',
+    sub_type: 'Provence Rosé',
+    countryCode: 'fr',
+    region: 'Provence, France',
+    image: '/images/wine_rose.png',
+    description: 'ไวน์โรเซ่ยอดนิยมระดับโลก รสสัมผัสสดชื่น กลิ่นหอมของสตรอว์เบอร์รี พีช และส้มแมนดาริน เหมาะดื่มสังสรรค์ชิลๆ',
+    vintage: 2023,
+    alcohol: '13.0%'
+  }
+];
+
 export async function getProducts(query?: string, token?: string): Promise<Product[]> {
   try {
     const API_BASE_URL =
       process.env.NEXT_PUBLIC_API_URL ||
       process.env.API_URL ||
-      'https://possimon.onrender.com';
+      'https://api.wayneven.uk';
 
     const url = `${API_BASE_URL}/api/wines/wines`;
 
@@ -67,27 +143,36 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
     }
 
     const isServer = typeof window === 'undefined';
-    const response = await fetch(url, {
-      headers,
-      ...(isServer ? { next: { revalidate: 300 } } : { cache: 'no-store' }),
-    });
+
+    // Set a strict 3.5-second timeout so requests don't hang if host is down/unreachable
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        headers,
+        signal: controller.signal,
+        ...(isServer ? { next: { revalidate: 300 } } : { cache: 'no-store' }),
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
-      console.error(`API response error: ${response.status} ${response.statusText}`);
-      return [];
+      console.warn(`API response status: ${response.status}. Using fallback products.`);
+      return filterProducts(FALLBACK_PRODUCTS, query);
     }
 
     const responseText = await response.text();
     if (!responseText) {
-      console.error('API returned empty body');
-      return [];
+      return filterProducts(FALLBACK_PRODUCTS, query);
     }
     const rawData = JSON.parse(responseText);
     const wineList = extractWineArray(rawData);
 
     if (wineList.length === 0) {
-      console.error('API returned no wine list:', rawData);
-      return [];
+      return filterProducts(FALLBACK_PRODUCTS, query);
     }
 
     // Country code mapping
@@ -99,10 +184,11 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
       Australia: 'au',
       Chile: 'cl',
       Argentina: 'ar',
-      'South Africa': 'za',
       Germany: 'de',
+      NewZealand: 'nz',
       Portugal: 'pt',
-      'New Zealand': 'nz',
+      SouthAfrica: 'za',
+      Austria: 'at',
       Thailand: 'th'
     };
 
@@ -193,24 +279,10 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
       };
     });
 
-    // Search filtering
-    if (query && query.trim() !== '') {
-      const lowerQuery = query.toLowerCase();
-
-      products = products.filter(
-        (p) =>
-          p.name?.toLowerCase().includes(lowerQuery) ||
-          p.type?.toLowerCase().includes(lowerQuery) ||
-          p.sub_type?.toLowerCase().includes(lowerQuery) ||
-          p.region?.toLowerCase().includes(lowerQuery)
-      );
-    }
-
-    return products;
-  } catch (error) {
-    console.error('Failed to fetch products:', error);
-
-    return [];
+    return filterProducts(products, query);
+  } catch (error: any) {
+    console.warn('API fetch unavailable or timed out. Falling back to default products.', error?.message || error);
+    return filterProducts(FALLBACK_PRODUCTS, query);
   }
 }
 
@@ -229,7 +301,7 @@ export async function getReviews(wineId: number): Promise<ProductReview[]> {
   try {
     const isServer = typeof window === 'undefined';
     const API_BASE_URL = isServer
-      ? process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com'
+      ? process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk'
       : '';
 
     // On client: call our own Next.js proxy (/api/reviews) to avoid CORS.
@@ -267,7 +339,7 @@ export async function createReview(
     // Always use the proxy on client-side to avoid CORS
     const isServer = typeof window === 'undefined';
     const API_BASE_URL = isServer
-      ? process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com'
+      ? process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk'
       : '';
     const url = isServer ? `${API_BASE_URL}/reviews` : '/api/reviews';
 

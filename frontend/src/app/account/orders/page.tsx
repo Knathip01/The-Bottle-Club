@@ -6,7 +6,7 @@ import AccountSidebar from '@/components/account/AccountSidebar';
 import { query } from '@/lib/db';
 import OrdersContent from '@/components/account/OrdersContent';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
 
 /** Normalize an order from the remote API to match the shape OrdersContent expects. */
 function normalizeApiOrder(order: any): any {
@@ -75,25 +75,38 @@ export default async function OrdersPage() {
   try {
     const userId = user.id || user.user_id;
     if (userId) {
-      const result = await query(
-        'SELECT * FROM orders WHERE user_id::text = $1::text ORDER BY created_at DESC',
-        [String(userId)]
+      // Wrap in a timeout so a hung/terminated DB connection doesn't freeze rendering
+      const dbTimeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('DB query timeout after 6s')), 6000)
       );
 
+      const result = await Promise.race([
+        query(
+          'SELECT * FROM orders WHERE user_id::text = $1::text ORDER BY created_at DESC',
+          [String(userId)]
+        ),
+        dbTimeout,
+      ]);
+
       if (result.rows.length > 0) {
-        const orderIds = result.rows.map((o) => o.id);
+        const orderIds = result.rows.map((o: any) => o.id);
 
         // Fetch items with LEFT JOIN so orders show even if products table is sparse
-        const itemsResult = await query(
-          `SELECT oi.id, oi.order_id, oi.product_id, oi.quantity, oi.price,
-                  COALESCE(oi.name, p.name, 'Product #' || oi.product_id::text) AS name
-           FROM order_items oi
-           LEFT JOIN products p ON p.id = oi.product_id
-           WHERE oi.order_id = ANY($1)`,
-          [orderIds]
-        );
+        const itemsResult = await Promise.race([
+          query(
+            `SELECT oi.id, oi.order_id, oi.product_id, oi.quantity, oi.price,
+                    COALESCE(oi.name, p.name, 'Product #' || oi.product_id::text) AS name
+             FROM order_items oi
+             LEFT JOIN products p ON p.id = oi.product_id
+             WHERE oi.order_id = ANY($1)`,
+            [orderIds]
+          ),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('DB items query timeout after 6s')), 6000)
+          ),
+        ]);
 
-        localOrders = result.rows.map((order) => ({
+        localOrders = result.rows.map((order: any) => ({
           ...order,
           total_price: Number(order.total_amount ?? 0),
           total_amount: Number(order.total_amount ?? 0),
@@ -104,17 +117,20 @@ export default async function OrdersPage() {
             ? order.created_at.toISOString()
             : (order.created_at || new Date().toISOString()),
           items: itemsResult.rows
-            .filter((item) => item.order_id === order.id)
-            .map((item) => ({
+            .filter((item: any) => item.order_id === order.id)
+            .map((item: any) => ({
               ...item,
               price: Number(item.price ?? 0),
               quantity: Number(item.quantity ?? 0),
             })),
         }));
+
+        console.log(`[OrdersPage] Local DB returned ${localOrders.length} orders`);
       }
     }
-  } catch (error) {
-    console.error('[OrdersPage] Failed to fetch from local DB:', error);
+  } catch (error: any) {
+    // DB connection issue — gracefully fall back to API orders only
+    console.warn('[OrdersPage] Local DB unavailable, using API orders only:', error?.message ?? error);
   }
 
   // ── 3. Fetch user addresses for display in order details ────────────────────

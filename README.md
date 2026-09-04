@@ -119,7 +119,7 @@ RootLayout
 User Login/Register
        │
        ▼
-External API (possimon.onrender.com)
+External API (api.wayneven.uk)
        │  JWT Token
        ▼
 Next.js Server Action (login())
@@ -345,7 +345,7 @@ npm install
 ```env
 DATABASE_URL=your_postgresql_connection_string
 JWT_SECRET=your_jwt_secret
-NEXT_PUBLIC_API_URL=https://possimon.onrender.com
+NEXT_PUBLIC_API_URL=https://api.wayneven.uk
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
 STRIPE_SECRET_KEY=your_stripe_secret_key
 # Optional: external shipping carrier API (falls back to built-in routes)

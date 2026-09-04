@@ -20,7 +20,7 @@ export async function uploadProductImage(productId: number, formData: FormData) 
     throw new Error('You must be logged in to upload images')
   }
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com'
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk'
   const url = `${API_BASE_URL}/api/products/${productId}/images`
 
   try {
@@ -54,7 +54,7 @@ export async function deleteProductImage(productId: number, imageId: number) {
     throw new Error('You must be logged in to delete images')
   }
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com'
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk'
   const url = `${API_BASE_URL}/api/images/${imageId}`
 
   try {

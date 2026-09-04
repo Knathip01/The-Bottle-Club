@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
+  process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
 
 /** Decode JWT payload server-side to extract user_id */
 function decodeJwtUserId(authHeader: string): string | null {

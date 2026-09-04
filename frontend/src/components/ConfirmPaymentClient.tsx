@@ -24,7 +24,7 @@ interface ConfirmPaymentClientProps {
   initialOrder: any;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
 
 export default function ConfirmPaymentClient({ accessToken, orderId, initialOrder }: ConfirmPaymentClientProps) {
   const router = useRouter();
@@ -129,6 +129,44 @@ export default function ConfirmPaymentClient({ accessToken, orderId, initialOrde
             <ArrowLeft size={14} />
             {t('common.back_to_orders') || 'Back to Orders'}
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ───────── ORDER NOT FOUND STATE ───────── */
+  if (!order) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-6 min-h-[60vh]">
+        <div className="max-w-sm w-full text-center space-y-6">
+          <div className="mx-auto h-20 w-20 rounded-3xl bg-gradient-to-br from-stone-50 to-stone-100 flex items-center justify-center shadow-inner">
+            <Receipt size={32} className="text-stone-300" />
+          </div>
+          <div>
+            <h2 className="text-lg font-black text-stone-800 mb-2">
+              {language === 'th' ? 'ไม่พบข้อมูลออเดอร์' : 'Order Not Found'}
+            </h2>
+            <p className="text-sm text-stone-400">
+              {language === 'th'
+                ? `ไม่พบออเดอร์ #${orderId} หรือระบบไม่สามารถดึงข้อมูลได้ในขณะนี้`
+                : `Order #${orderId} could not be found or loaded at this time.`}
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => router.push('/account/orders')}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-stone-900 px-8 py-3.5 text-[10px] font-bold uppercase tracking-[0.2em] text-white shadow-lg hover:bg-[#a11a1a] active:scale-95 transition-all"
+            >
+              <ArrowLeft size={14} />
+              {language === 'th' ? 'กลับหน้าคำสั่งซื้อ' : 'Back to Orders'}
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-stone-200 bg-white px-8 py-3.5 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-600 hover:bg-stone-50 active:scale-95 transition-all"
+            >
+              {language === 'th' ? 'ลองใหม่อีกครั้ง' : 'Try Again'}
+            </button>
+          </div>
         </div>
       </div>
     );

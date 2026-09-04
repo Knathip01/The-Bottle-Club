@@ -5,7 +5,7 @@ import Footer from '@/components/Footer';
 import ConfirmPaymentClient from '@/components/ConfirmPaymentClient';
 import { query } from '@/lib/db';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
 
 export default async function ConfirmPaymentPage({
   params,
@@ -66,22 +66,28 @@ export default async function ConfirmPaymentPage({
   // ── 2. Fallback: fetch from local PostgreSQL DB ─────────────────────────────
   if (!order) {
     try {
-      const result = await query(
-        'SELECT * FROM orders WHERE id = $1 AND user_id::text = $2::text LIMIT 1',
-        [Number(orderId), String(user.id)]
-      );
+      const result = await Promise.race([
+        query(
+          'SELECT * FROM orders WHERE id = $1 AND user_id::text = $2::text LIMIT 1',
+          [Number(orderId), String(user.id)]
+        ),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('DB timeout after 6000ms')), 6000)),
+      ]) as Awaited<ReturnType<typeof query>>;
 
       if (result.rows.length > 0) {
         const row = result.rows[0];
 
-        const itemsResult = await query(
-          `SELECT oi.id, oi.order_id, oi.product_id, oi.quantity, oi.price,
-                  COALESCE(oi.name, p.name, 'Product #' || oi.product_id::text) AS name
-           FROM order_items oi
-           LEFT JOIN products p ON p.id = oi.product_id
-           WHERE oi.order_id = $1`,
-          [row.id]
-        );
+        const itemsResult = await Promise.race([
+          query(
+            `SELECT oi.id, oi.order_id, oi.product_id, oi.quantity, oi.price,
+                    COALESCE(oi.name, p.name, 'Product #' || oi.product_id::text) AS name
+             FROM order_items oi
+             LEFT JOIN products p ON p.id = oi.product_id
+             WHERE oi.order_id = $1`,
+            [row.id]
+          ),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('DB timeout after 6000ms')), 6000)),
+        ]) as Awaited<ReturnType<typeof query>>;
 
         order = {
           ...row,
@@ -100,8 +106,10 @@ export default async function ConfirmPaymentPage({
           })),
         };
       }
-    } catch (err) {
-      console.error('[ConfirmPaymentPage] Failed to fetch from local DB:', err);
+    } catch (err: any) {
+      // DB unavailable — page still renders using initialOrder=null
+      // ConfirmPaymentClient handles the empty state gracefully
+      console.warn('[ConfirmPaymentPage] Local DB unavailable, rendering without order data:', err?.message ?? err);
     }
   }
 

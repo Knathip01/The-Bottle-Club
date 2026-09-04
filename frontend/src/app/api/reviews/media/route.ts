@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
+  process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
 
 /** POST /api/reviews/media → proxies multipart upload to backend /reviews/media */
 export async function POST(req: NextRequest) {

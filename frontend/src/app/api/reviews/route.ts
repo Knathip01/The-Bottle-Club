@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'https://possimon.onrender.com';
+  process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
 
 /** GET /api/reviews?wine_id=123 → proxies to backend /reviews/wine/123 */
 export async function GET(req: NextRequest) {

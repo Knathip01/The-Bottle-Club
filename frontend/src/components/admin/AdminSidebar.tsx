@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { adminLogoutAction } from '@/app/actions/admin/auth';
 import {
   LayoutDashboard, ShoppingCart, Wine, Users, Star,
   Monitor, BarChart3, Settings, LogOut,
-  ChevronLeft, ChevronRight, Menu, X, Bot,
+  ChevronLeft, ChevronRight, Menu, X, CreditCard,
 } from 'lucide-react';
+import CartoonBottleIcon from '@/components/icons/CartoonBottleIcon';
 
 interface SidebarProps {
   admin: { name: string | null; email: string; role: string };
@@ -24,10 +26,11 @@ const menuSections = [
   {
     label: 'COMMERCE',
     items: [
-      { title: 'ออเดอร์ทั้งหมด', icon: ShoppingCart, href: '/admin/orders',  badge: null },
-      { title: 'จัดการสินค้า',   icon: Wine,          href: '/admin/products', badge: null },
-      { title: 'จัดการสมาชิก',  icon: Users,         href: '/admin/members',  badge: null },
-      { title: 'รีวิวสินค้า',    icon: Star,          href: '/admin/reviews',  badge: null },
+      { title: 'ออเดอร์ทั้งหมด',      icon: ShoppingCart, href: '/admin/orders',   badge: null },
+      { title: 'ตรวจสอบการชำระเงิน', icon: CreditCard,   href: '/admin/payments', badge: null },
+      { title: 'จัดการสินค้า',         icon: Wine,         href: '/admin/products', badge: null },
+      { title: 'จัดการสมาชิก',         icon: Users,        href: '/admin/members',  badge: null },
+      { title: 'รีวิวสินค้า',           icon: Star,         href: '/admin/reviews',  badge: null },
     ],
   },
   {
@@ -41,7 +44,7 @@ const menuSections = [
   {
     label: 'AI',
     items: [
-      { title: 'AI วิเคราะห์ธุรกิจ', icon: Bot, href: '#ai-chat', badge: 'NEW' },
+      { title: 'AI วิเคราะห์ธุรกิจ', icon: CartoonBottleIcon, href: '#ai-chat', badge: null },
     ],
   },
 ];
@@ -51,10 +54,48 @@ function getInitials(name: string | null, email: string) {
   return email.slice(0, 2).toUpperCase();
 }
 
+// Stagger animation variants for menu items
+const menuContainerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.04, delayChildren: 0.1 },
+  },
+};
+
+const menuItemVariants = {
+  hidden: { opacity: 0, x: -16 },
+  show: { opacity: 1, x: 0, transition: { type: 'spring' as const, stiffness: 300, damping: 24 } },
+};
+
 export default function AdminSidebar({ admin }: SidebarProps) {
   const pathname   = usePathname();
   const [collapsed, setCollapsed]   = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close drawer on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Close drawer on Escape key
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && mobileOpen) setMobileOpen(false);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [mobileOpen]);
+
+  // Prevent body scroll when drawer is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileOpen]);
 
   const handleLogout = async () => {
     if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
@@ -62,23 +103,26 @@ export default function AdminSidebar({ admin }: SidebarProps) {
     }
   };
 
-  const SidebarContent = () => (
-    <div
-      className="flex flex-col h-full overflow-hidden select-none"
-      style={{
-        background: 'rgba(255,255,255,0.82)',
-        backdropFilter: 'blur(28px) saturate(1.8)',
-        WebkitBackdropFilter: 'blur(28px) saturate(1.8)',
-        borderRight: '1px solid rgba(255,255,255,0.95)',
-        boxShadow: '4px 0 32px rgba(0,0,0,0.06), 1px 0 0 rgba(0,0,0,0.04)',
-      }}
-    >
+  // Swipe-to-close handler
+  const touchStartX = React.useRef(0);
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  }, []);
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (diff > 60) {
+      setMobileOpen(false);
+    }
+  }, []);
+
+  const NavContent = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <div className="flex flex-col h-full overflow-hidden select-none">
       {/* Top accent line */}
       <div className="h-[2px] w-full shrink-0" style={{ background: 'linear-gradient(to right, transparent, #c41e3a 40%, #f59e0b 60%, transparent)' }} />
 
       {/* Brand */}
-      <div className={`flex items-center gap-3 px-5 py-4 border-b shrink-0 ${collapsed ? 'justify-center px-3' : ''}`}
-        style={{ borderColor: 'rgba(0,0,0,0.06)' }}>
+      <div className={`flex items-center gap-3 px-5 py-4 border-b shrink-0 ${collapsed && !isMobile ? 'justify-center px-3' : ''}`}
+        style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
         <div className="relative shrink-0">
           <div className="absolute -inset-1 rounded-xl opacity-50"
             style={{ background: 'linear-gradient(135deg, rgba(196,30,58,0.35), rgba(245,158,11,0.2))' }} />
@@ -88,14 +132,14 @@ export default function AdminSidebar({ admin }: SidebarProps) {
           <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full animate-neon-flicker"
             style={{ border: '2px solid white' }} />
         </div>
-        {!collapsed && (
+        {(!collapsed || isMobile) && (
           <div className="min-w-0 flex-1">
-            <p className="font-serif font-black text-stone-800 text-sm tracking-tight leading-none truncate">THE BOTTLE CLUB</p>
+            <p className="font-serif font-black text-sm tracking-tight leading-none truncate" style={{ color: '#f1f5f9' }}>THE BOTTLE CLUB</p>
             <div className="flex items-center gap-1.5 mt-1.5">
               <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
                 admin?.role === 'superadmin'
-                  ? 'text-amber-700 bg-amber-50 border border-amber-200'
-                  : 'text-red-700 bg-red-50 border border-red-200'
+                  ? 'text-amber-300 bg-amber-950/60 border border-amber-700/40'
+                  : 'text-red-300 bg-red-950/60 border border-red-700/40'
               }`}>
                 {admin?.role === 'superadmin' ? '⚡ Super Admin' : '● Staff'}
               </span>
@@ -105,12 +149,17 @@ export default function AdminSidebar({ admin }: SidebarProps) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto no-scrollbar space-y-4">
+      <motion.nav
+        className="flex-1 px-3 py-4 overflow-y-auto no-scrollbar space-y-4"
+        variants={isMobile ? menuContainerVariants : undefined}
+        initial={isMobile ? 'hidden' : undefined}
+        animate={isMobile ? 'show' : undefined}
+      >
         {menuSections.map((section) => (
           <div key={section.label}>
-            {!collapsed && (
+            {(!collapsed || isMobile) && (
               <p className="text-[9px] font-extrabold uppercase tracking-[0.18em] px-3 mb-1.5"
-                style={{ color: '#a8a29e' }}>
+                style={{ color: '#334155' }}>
                 {section.label}
               </p>
             )}
@@ -122,14 +171,18 @@ export default function AdminSidebar({ admin }: SidebarProps) {
 
                 const itemClass = `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 relative group ${
                   isActive ? 'sidebar-nav-active' : 'sidebar-nav-inactive'
-                } ${collapsed ? 'justify-center' : ''}`;
+                } ${collapsed && !isMobile ? 'justify-center' : ''}`;
 
                 const iconContent = (
                   <>
                     {/* Active left bar */}
                     {isActive && (
-                      <span className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-r-full"
-                        style={{ background: 'linear-gradient(to bottom, #f87171, #c41e3a)' }} />
+                      <motion.span
+                        className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-r-full"
+                        style={{ background: 'linear-gradient(to bottom, #f87171, #c41e3a)' }}
+                        layoutId={isMobile ? 'mobile-active-bar' : 'desktop-active-bar'}
+                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                      />
                     )}
 
                     {/* Icon */}
@@ -140,7 +193,7 @@ export default function AdminSidebar({ admin }: SidebarProps) {
                       <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-red-600' : 'text-stone-400 group-hover:text-stone-600'}`} />
                     </div>
 
-                    {!collapsed && (
+                    {(!collapsed || isMobile) && (
                       <>
                         <span className={`flex-1 truncate ${isActive ? 'text-red-700' : 'text-stone-600 group-hover:text-stone-800'}`}>
                           {item.title}
@@ -156,11 +209,10 @@ export default function AdminSidebar({ admin }: SidebarProps) {
                   </>
                 );
 
-                return isAction ? (
+                const navElement = isAction ? (
                   <button
-                    key={item.href}
                     type="button"
-                    title={collapsed ? item.title : undefined}
+                    title={collapsed && !isMobile ? item.title : undefined}
                     onClick={() => {
                       setMobileOpen(false);
                       document.getElementById('admin-ai-chat-btn')?.click();
@@ -171,44 +223,60 @@ export default function AdminSidebar({ admin }: SidebarProps) {
                   </button>
                 ) : (
                   <Link
-                    key={item.href}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
-                    title={collapsed ? item.title : undefined}
+                    title={collapsed && !isMobile ? item.title : undefined}
                     className={itemClass}
                   >
                     {iconContent}
                   </Link>
+                );
+
+                return isMobile ? (
+                  <motion.div key={item.href} variants={menuItemVariants}>
+                    {navElement}
+                  </motion.div>
+                ) : (
+                  <React.Fragment key={item.href}>
+                    {navElement}
+                  </React.Fragment>
                 );
               })}
 
             </div>
           </div>
         ))}
-      </nav>
+      </motion.nav>
 
       {/* Divider */}
-      <div className="mx-4 mb-3 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(0,0,0,0.07) 30%, rgba(0,0,0,0.07) 70%, transparent)' }} />
+      <div className="mx-4 mb-3 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.07) 30%, rgba(255,255,255,0.07) 70%, transparent)' }} />
 
       {/* Footer */}
-      <div className={`px-3 pb-4 shrink-0 ${collapsed ? 'flex justify-center' : ''}`}>
-        {collapsed ? (
+      <div className={`px-3 pb-4 shrink-0 ${collapsed && !isMobile ? 'flex justify-center' : ''}`}>
+        {collapsed && !isMobile ? (
           <button onClick={handleLogout} title="ออกจากระบบ"
-            className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200 cursor-pointer">
+            className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 cursor-pointer"
+            style={{ color: '#475569' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#f87171'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(196,30,58,0.1)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#475569'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
             <LogOut className="w-4 h-4" />
           </button>
         ) : (
-          <div className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-black/3 transition-colors">
+          <div className="flex items-center gap-3 p-2.5 rounded-xl transition-colors"
+            style={{ background: 'rgba(255,255,255,0.03)' }}>
             <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[11px] font-black text-white"
-              style={{ background: 'linear-gradient(135deg, #c41e3a, #7f1d1d)' }}>
+              style={{ background: 'linear-gradient(135deg, #c41e3a, #7f1d1d)', boxShadow: '0 0 12px rgba(196,30,58,0.3)' }}>
               {getInitials(admin?.name, admin?.email)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-stone-700 truncate leading-none">{admin?.name || 'Admin'}</p>
-              <p className="text-[10px] text-stone-400 truncate mt-0.5">{admin?.email}</p>
+              <p className="text-xs font-bold truncate leading-none" style={{ color: '#e2e8f0' }}>{admin?.name || 'Admin'}</p>
+              <p className="text-[10px] truncate mt-0.5" style={{ color: '#475569' }}>{admin?.email}</p>
             </div>
             <button onClick={handleLogout} title="ออกจากระบบ"
-              className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200 cursor-pointer shrink-0">
+              className="p-1.5 rounded-lg transition-all duration-200 cursor-pointer shrink-0"
+              style={{ color: '#475569' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#f87171'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(196,30,58,0.1)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#475569'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
               <LogOut className="w-4 h-4" />
             </button>
           </div>
@@ -219,28 +287,77 @@ export default function AdminSidebar({ admin }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile trigger */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <button onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2.5 rounded-xl cursor-pointer transition-all duration-200"
-          style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(0,0,0,0.1)', backdropFilter: 'blur(12px)', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
-          {mobileOpen ? <X className="w-5 h-5 text-stone-700" /> : <Menu className="w-5 h-5 text-stone-700" />}
-        </button>
+      {/* Mobile trigger — floating hamburger */}
+      <div className="lg:hidden fixed top-3 left-3 z-50">
+        <motion.button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="p-2.5 rounded-2xl cursor-pointer"
+          style={{
+            background: 'rgba(11, 15, 26, 0.95)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(16px) saturate(1.8)',
+            WebkitBackdropFilter: 'blur(16px) saturate(1.8)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.4), 0 0 16px rgba(196,30,58,0.05)',
+          }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+        >
+          <AnimatePresence mode="wait">
+            {mobileOpen ? (
+              <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}>
+                <X className="w-5 h-5" style={{ color: '#94a3b8' }} />
+              </motion.div>
+            ) : (
+              <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.2 }}>
+                <Menu className="w-5 h-5" style={{ color: '#94a3b8' }} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.button>
       </div>
 
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-      )}
+      {/* Mobile overlay with heavy blur */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            className="lg:hidden admin-drawer-overlay-2027"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => setMobileOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Mobile drawer */}
-      <div className={`lg:hidden fixed inset-y-0 left-0 w-[270px] z-50 transform transition-transform duration-300 ease-out ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <SidebarContent />
-      </div>
+      {/* Mobile drawer with spring animation */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            className="lg:hidden admin-drawer-2027"
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            <NavContent isMobile={true} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Desktop sidebar */}
-      <div className={`hidden lg:block shrink-0 h-screen sticky top-0 z-30 transition-all duration-300 ease-out ${collapsed ? 'w-[68px]' : 'w-[256px]'}`}>
-        <SidebarContent />
+      <div className={`hidden lg:block shrink-0 h-screen sticky top-0 z-30 transition-all duration-300 ease-out ${collapsed ? 'w-[68px]' : 'w-[256px]'}`}
+        style={{
+          background: 'rgba(11, 15, 26, 0.97)',
+          backdropFilter: 'blur(28px) saturate(1.8)',
+          WebkitBackdropFilter: 'blur(28px) saturate(1.8)',
+          borderRight: '1px solid rgba(255,255,255,0.07)',
+          boxShadow: '4px 0 40px rgba(0,0,0,0.6), 1px 0 0 rgba(255,255,255,0.04)',
+        }}
+      >
+        <NavContent isMobile={false} />
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="absolute bottom-[90px] right-[-13px] flex items-center justify-center rounded-full text-stone-500 hover:text-stone-700 transition-all duration-200 shadow-md cursor-pointer z-40"
