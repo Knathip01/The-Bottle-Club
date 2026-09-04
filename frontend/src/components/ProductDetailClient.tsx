@@ -56,7 +56,26 @@ export default function ProductDetailClient({
       } else if (product.image && product.image !== '/images/bottle-silhouette.svg') {
         setActiveImage(product.image);
       } else {
-        setActiveImage(`/images/wine_${product.color || 'red'}.png`);
+        const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+        if (token) {
+          fetch(`/api/v1/wine-products/${product.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+              const item = data?.data || data;
+              if (item?.image_url) {
+                setActiveImage(item.image_url);
+              } else {
+                setActiveImage(`/images/wine_${product.color || 'red'}.png`);
+              }
+            })
+            .catch(() => {
+              setActiveImage(`/images/wine_${product.color || 'red'}.png`);
+            });
+        } else {
+          setActiveImage(`/images/wine_${product.color || 'red'}.png`);
+        }
       }
     } else {
       setActiveImage('/images/bottle-silhouette.svg');

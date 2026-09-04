@@ -17,6 +17,16 @@ const nextConfig: NextConfig = {
         hostname: 'flagcdn.com',
         pathname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.openfoodfacts.org',
+        pathname: '**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.openfoodfacts.org',
+        pathname: '**',
+      },
     ],
   },
   async rewrites() {
