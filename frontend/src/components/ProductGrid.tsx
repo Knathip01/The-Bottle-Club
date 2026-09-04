@@ -389,46 +389,38 @@ export default function ProductGrid({
                     </div>
                   </Link>
 
-                  {/* NOT LOGIN: Show product details and link to view product */}
+                  {/* NOT LOGIN: Show Member Access message as requested */}
                   {!effectiveLoggedIn && (
                     <div className="flex flex-1 flex-col p-5 sm:p-6">
-                      <div className="mb-2">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
-                          {product.sub_type || t('products.classic')}
-                        </span>
-                        <Link href={`/product/${product.id}`} className="block group/title mt-1">
-                          <h3 className="min-h-12 text-base font-extrabold leading-tight text-stone-900 group-hover/title:text-primary transition-colors line-clamp-2">
-                            {product.name}
-                          </h3>
-                        </Link>
-                      </div>
+                      <div className="mb-4 text-center">
+                        <p className="mb-1 text-sm font-black uppercase tracking-wider text-stone-700">
+                          MEMBER ACCESS —
+                        </p>
 
-                      <div className="mt-auto space-y-3 pt-2">
-                        <div className="flex items-center justify-between border-t border-stone-100 pt-3">
-                          <div className="flex flex-col">
-                            <span className="text-[10px] font-bold uppercase tracking-tighter text-stone-400">
-                              {t('products.price_label')}
-                            </span>
-                            <strong className="text-lg font-bold text-stone-900">
-                              {formatPrice(product.price)}
-                            </strong>
-                          </div>
-
+                        <div className="text-sm font-black uppercase tracking-wider text-stone-700">
+                          PLEASE{' '}
                           <Link
-                            href={`/product/${product.id}`}
-                            className="rounded-full bg-stone-950 px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-white transition-all hover:bg-primary"
+                            href="/register"
+                            className="cursor-pointer text-blue-600 underline hover:text-blue-700"
                           >
-                            {t('products.select')}
+                            REGISTER
                           </Link>
-                        </div>
-
-                        <div className="text-center text-[10px] text-stone-500 bg-stone-50 rounded-xl py-1.5 px-2 border border-stone-100">
-                          <span>รูปภาพขวดจริงสำหรับสมาชิก · </span>
-                          <Link href="/login" className="font-bold text-primary underline">
-                            เข้าสู่ระบบ
+                          {' '} / {' '}
+                          <Link
+                            href="/login"
+                            className="cursor-pointer text-blue-600 underline hover:text-blue-700"
+                          >
+                            LOG-IN
                           </Link>
+                          {' '}TO CONTINUE
                         </div>
                       </div>
+
+                      <Link href={`/product/${product.id}`} className="block group/title mt-auto text-center">
+                        <h3 className="text-center text-sm font-bold leading-tight text-stone-700 line-clamp-2 group-hover/title:text-primary transition-colors">
+                          {product.name}
+                        </h3>
+                      </Link>
                     </div>
                   )}
 
