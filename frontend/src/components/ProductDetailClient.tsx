@@ -873,11 +873,7 @@ export default function ProductDetailClient({
                 {relatedProducts.map((relatedProduct) => (
                   <Link
                     key={relatedProduct.id}
-                    href={
-                      effectiveLoggedIn
-                        ? `/product/${relatedProduct.id}`
-                        : '/login'
-                    }
+                    href={`/product/${relatedProduct.id}`}
                     className="group flex w-64 flex-shrink-0 flex-col overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-2xl"
                   >
 

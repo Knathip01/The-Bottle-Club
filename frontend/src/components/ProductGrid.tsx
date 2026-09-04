@@ -354,13 +354,11 @@ export default function ProductGrid({
                 {/* CARD */}
                 <div className="group flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-stone-200/80 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-2xl">
 
-                  {/* IMAGE CLICK */}
-                  <Link href={effectiveLoggedIn ? `/product/${product.id}` : '/login'}>
-
+                  {/* IMAGE CLICK - Always navigates to product details */}
+                  <Link href={`/product/${product.id}`}>
                     <div
                       className={`relative flex aspect-[5/4] cursor-pointer items-center justify-center overflow-hidden bg-gradient-to-br p-6 sm:aspect-[4/5] ${palette.panel}`}
                     >
-
                       {!effectiveLoggedIn && (
                         <span className="absolute left-4 top-4 z-20 rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-stone-700">
                           NEW ARRIVAL
@@ -391,78 +389,66 @@ export default function ProductGrid({
                     </div>
                   </Link>
 
-                  {/* NOT LOGIN */}
+                  {/* NOT LOGIN: Show product details and link to view product */}
                   {!effectiveLoggedIn && (
                     <div className="flex flex-1 flex-col p-5 sm:p-6">
-
-                      <div className="mb-4 text-center">
-
-                        <p className="mb-1 text-sm font-black uppercase tracking-wider text-stone-700">
-                          MEMBER ACCESS —
-                        </p>
-
-                        <div className="text-sm font-black uppercase tracking-wider text-stone-700">
-
-                          PLEASE{' '}
-
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-
-                              router.push('/register');
-                            }}
-                            className="cursor-pointer text-blue-600 underline hover:text-blue-700"
-                          >
-                            REGISTER
-                          </button>
-
-                          {' '}TO CONTINUE /{' '}
-
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-
-                              router.push('/login');
-                            }}
-                            className="cursor-pointer text-blue-600 underline hover:text-blue-700"
-                          >
-                            LOG-IN
-                          </button>
-
-                          {' '}TO CONTINUE
-                        </div>
-                      </div>
-
-                      <h3 className="text-center text-sm font-bold leading-tight text-stone-700 line-clamp-2">
-                        {product.name}
-                      </h3>
-                    </div>
-                  )}
-
-                  {/* LOGIN */}
-                  {effectiveLoggedIn && (
-                    <div className="flex flex-1 flex-col p-5 sm:p-6">
-
-                      <div className="mb-3">
-
+                      <div className="mb-2">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
                           {product.sub_type || t('products.classic')}
                         </span>
+                        <Link href={`/product/${product.id}`} className="block group/title mt-1">
+                          <h3 className="min-h-12 text-base font-extrabold leading-tight text-stone-900 group-hover/title:text-primary transition-colors line-clamp-2">
+                            {product.name}
+                          </h3>
+                        </Link>
+                      </div>
 
-                        <h3 className="min-h-14 text-lg font-extrabold leading-tight text-stone-950 line-clamp-2">
-                          {product.name}
-                        </h3>
+                      <div className="mt-auto space-y-3 pt-2">
+                        <div className="flex items-center justify-between border-t border-stone-100 pt-3">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-bold uppercase tracking-tighter text-stone-400">
+                              {t('products.price_label')}
+                            </span>
+                            <strong className="text-lg font-bold text-stone-900">
+                              {formatPrice(product.price)}
+                            </strong>
+                          </div>
+
+                          <Link
+                            href={`/product/${product.id}`}
+                            className="rounded-full bg-stone-950 px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-white transition-all hover:bg-primary"
+                          >
+                            {t('products.select')}
+                          </Link>
+                        </div>
+
+                        <div className="text-center text-[10px] text-stone-500 bg-stone-50 rounded-xl py-1.5 px-2 border border-stone-100">
+                          <span>รูปภาพขวดจริงสำหรับสมาชิก · </span>
+                          <Link href="/login" className="font-bold text-primary underline">
+                            เข้าสู่ระบบ
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* LOGIN: Full member card */}
+                  {effectiveLoggedIn && (
+                    <div className="flex flex-1 flex-col p-5 sm:p-6">
+                      <div className="mb-3">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
+                          {product.sub_type || t('products.classic')}
+                        </span>
+                        <Link href={`/product/${product.id}`} className="block group/title mt-1">
+                          <h3 className="min-h-14 text-lg font-extrabold leading-tight text-stone-950 group-hover/title:text-primary transition-colors line-clamp-2">
+                            {product.name}
+                          </h3>
+                        </Link>
                       </div>
 
                       <div className="mt-auto space-y-4">
                         <div className="flex items-center justify-between border-t border-stone-100 pt-4">
-
                           <div className="flex flex-col">
-
                             <span className="text-[10px] font-bold uppercase tracking-tighter text-stone-400">
                               {t('products.price_label')}
                             </span>
@@ -484,7 +470,6 @@ export default function ProductGrid({
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-
                               handleCheckout(product);
                             }}
                             disabled={checkoutProductId === product.id}

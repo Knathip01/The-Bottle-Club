@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { addCartItem } from '@/lib/cart';
 import type { Product } from '@/lib/products';
 import { ShoppingCart, Star, Lock } from 'lucide-react';
@@ -81,9 +82,9 @@ export default function SearchProductList({ products, isLoggedIn = false }: Sear
             key={product.id}
             className="group flex flex-col gap-8 overflow-hidden rounded-3xl border border-stone-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md md:flex-row"
           >
-            <div
+            <Link
+              href={`/product/${product.id}`}
               className="relative flex h-64 w-full flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-2xl bg-stone-50 p-4 md:w-48"
-              onClick={() => handleSelectProduct(product)}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-transparent to-stone-200/30" />
 
@@ -100,7 +101,7 @@ export default function SearchProductList({ products, isLoggedIn = false }: Sear
                   className="h-48 w-auto object-contain drop-shadow-lg"
                 />
               </div>
-            </div>
+            </Link>
 
             <div className="flex flex-1 flex-col justify-center">
               <div className="mb-2">
@@ -108,12 +109,11 @@ export default function SearchProductList({ products, isLoggedIn = false }: Sear
                   {product.type || t('search.wine_type')} - {product.sub_type || t('products.classic')}
                 </span>
               </div>
-              <h2
-                className="mb-1 cursor-pointer font-serif text-2xl font-bold leading-tight text-stone-900 transition-colors group-hover:text-[#a11a1a]"
-                onClick={() => handleSelectProduct(product)}
-              >
-                {product.name}
-              </h2>
+              <Link href={`/product/${product.id}`}>
+                <h2 className="mb-1 cursor-pointer font-serif text-2xl font-bold leading-tight text-stone-900 transition-colors hover:text-[#a11a1a]">
+                  {product.name}
+                </h2>
+              </Link>
               <div className="mb-4 flex items-center gap-2">
                 <div className="relative flex h-3.5 w-5 shrink-0 overflow-hidden rounded-sm border border-stone-200 bg-stone-100">
                   <img

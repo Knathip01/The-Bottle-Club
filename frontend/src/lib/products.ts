@@ -122,6 +122,102 @@ export const FALLBACK_PRODUCTS: Product[] = [
     description: 'ไวน์โรเซ่ยอดนิยมระดับโลก รสสัมผัสสดชื่น กลิ่นหอมของสตรอว์เบอร์รี พีช และส้มแมนดาริน เหมาะดื่มสังสรรค์ชิลๆ',
     vintage: 2023,
     alcohol: '13.0%'
+  },
+  {
+    id: 5,
+    name: 'Penfolds Grange Shiraz 2018',
+    price: 32000,
+    originalPrice: 35000,
+    color: 'Red',
+    stock: 6,
+    type: 'Red Wine',
+    sub_type: 'Shiraz',
+    countryCode: 'au',
+    region: 'South Australia',
+    image: '/images/wine_red.png',
+    description: 'ไวน์แดงระดับไอคอนของออสเตรเลีย รสชาติทรงพลัง กลิ่นหอมของแบล็กเบอร์รี เครื่องเทศ และโอ๊กสไตล์เข้มข้น แทนนินแน่นยาวนาน',
+    vintage: 2018,
+    alcohol: '14.5%'
+  },
+  {
+    id: 6,
+    name: "Château d'Yquem Premier Cru Supérieur",
+    price: 18500,
+    originalPrice: 21000,
+    color: 'White',
+    stock: 5,
+    type: 'Dessert Wine',
+    sub_type: 'Sauternes',
+    countryCode: 'fr',
+    region: 'Sauternes, Bordeaux, France',
+    image: '/images/wine_rose.png',
+    description: 'ไวน์หวานระดับโลกที่มีชื่อเสียงที่สุด กลิ่นหอมของแอปริคอตแห้ง น้ำผึ้ง วานิลลา และดอกส้ม หวานฉ่ำลงตัวพร้อมความสดชื่น',
+    vintage: 2016,
+    alcohol: '14.0%'
+  },
+  {
+    id: 7,
+    name: 'Royal Tokaji 5 Puttonyos Aszú',
+    price: 3800,
+    originalPrice: 4200,
+    color: 'White',
+    stock: 10,
+    type: 'Dessert Wine',
+    sub_type: 'Tokaji',
+    countryCode: 'hu',
+    region: 'Tokaj, Hungary',
+    image: '/images/wine_rose.png',
+    description: 'ไวน์หวานชั้นเลิศจากฮังการี ผลิตจากองุ่นบ่มโบทรีติส รสหวานกลมกล่อม มีชีวิตชีวาด้วยแอซิดิตี้สูง กลิ่นพีชสุกและขิงอบ',
+    vintage: 2017,
+    alcohol: '11.5%'
+  },
+  {
+    id: 8,
+    name: "Taylor's 20 Year Old Tawny Port",
+    price: 4600,
+    originalPrice: 5200,
+    color: 'Red',
+    stock: 14,
+    type: 'Fortified Wine',
+    sub_type: 'Tawny Port',
+    countryCode: 'pt',
+    region: 'Douro Valley, Portugal',
+    image: '/images/wine_red.png',
+    description: 'ไวน์พอร์ตเสริมแอลกอฮอล์บ่มถังโอ๊กกว่า 20 ปี กลิ่นถั่วคั่ว แยมแบล็กเคอร์แรนท์ มะเดื่อ และบัตเตอร์สก็อตช์ นุ่มนวลละมุนลิ้น',
+    vintage: 2003,
+    alcohol: '20.0%'
+  },
+  {
+    id: 9,
+    name: 'Lustau San Emilio Pedro Ximénez Sherry',
+    price: 2600,
+    originalPrice: 2950,
+    color: 'Red',
+    stock: 12,
+    type: 'Fortified Wine',
+    sub_type: 'Sherry',
+    countryCode: 'es',
+    region: 'Jerez, Spain',
+    image: '/images/wine_red.png',
+    description: 'เชอร์รี่สีน้ำตาลเข้มข้น รสหวานล้ำลึก กลิ่นลูกเกด ลูกพรุน อินทผลัม และกาแฟคั่ว เหมาะดื่มคู่ของหวานหรือราดบนไอศกรีม',
+    vintage: 2019,
+    alcohol: '17.0%'
+  },
+  {
+    id: 10,
+    name: 'Moët & Chandon Impérial Brut',
+    price: 3200,
+    originalPrice: 3600,
+    color: 'White',
+    stock: 30,
+    type: 'Sparkling',
+    sub_type: 'Brut Champagne',
+    countryCode: 'fr',
+    region: 'Champagne, France',
+    image: '/images/wine_sparkling.png',
+    description: 'แชมเปญอันเป็นเอกลักษณ์ระดับสากล รสชาติสดชื่นและมีชีวิตชีวา โดดเด่นด้วยกลิ่นผลไม้สด ดอกไม้ขาว และขนมปังสดใหม่',
+    vintage: 2021,
+    alcohol: '12.0%'
   }
 ];
 
@@ -333,13 +429,23 @@ export async function getProductById(id: number, token?: string): Promise<Produc
 
     if (token) {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/v1/wine-products/${id}`, {
+        let res = await fetch(`${API_BASE_URL}/api/v1/wine-products/${id}`, {
           headers: {
             Accept: 'application/json',
             Authorization: `Bearer ${token.replace(/^Bearer\s+/i, '')}`,
           },
           cache: 'no-store',
         });
+
+        if (!res.ok) {
+          res = await fetch(`${API_BASE_URL}/api/v1/catalog/products/${id}`, {
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${token.replace(/^Bearer\s+/i, '')}`,
+            },
+            cache: 'no-store',
+          });
+        }
 
         if (res.ok) {
           const item = await res.json();
@@ -367,13 +473,49 @@ export async function getProductById(id: number, token?: string): Promise<Produc
           }
         }
       } catch (err) {
-        console.warn(`Could not fetch wine by id ${id} from /api/v1/wine-products/:`, err);
+        console.warn(`Could not fetch wine by id ${id} from Wayneven API:`, err);
       }
     }
 
+    // Check catalog products
     const products = await getProducts(undefined, token);
     const found = products.find((p) => p.id === Number(id));
-    return found ?? null;
+    if (found) return found;
+
+    // Direct match in FALLBACK_PRODUCTS
+    const fallbackFound = FALLBACK_PRODUCTS.find((p) => p.id === Number(id));
+    if (fallbackFound) {
+      return sanitizeProductsForAuth([fallbackFound], isAuth)[0] ?? null;
+    }
+
+    // Check local database if running server-side
+    if (typeof window === 'undefined') {
+      try {
+        const { query } = await import('@/lib/db');
+        const dbRes = await query('SELECT * FROM products WHERE id = $1 LIMIT 1', [Number(id)]);
+        if (dbRes.rows && dbRes.rows.length > 0) {
+          const r = dbRes.rows[0];
+          const dbProduct: Product = {
+            id: Number(r.id),
+            name: String(r.name),
+            price: Number(r.price) || 0,
+            stock: Number(r.stock) || 0,
+            color: 'red',
+            type: 'Wine',
+            sub_type: 'Classic',
+            region: 'Selected Vineyard',
+            countryCode: 'fr',
+            description: 'ไวน์ชั้นเลิศคัดสรรพิเศษสำหรับสมาชิก The Bottle Club',
+            image: '/images/wine_red.png',
+          };
+          return sanitizeProductsForAuth([dbProduct], isAuth)[0] ?? null;
+        }
+      } catch {
+        // non-fatal
+      }
+    }
+
+    return null;
   } catch (error) {
     console.error('Failed to fetch product by id:', error);
     return null;
