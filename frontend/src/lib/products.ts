@@ -125,14 +125,31 @@ export const FALLBACK_PRODUCTS: Product[] = [
   }
 ];
 
+export function sanitizeProductsForAuth(products: Product[], isAuth: boolean): Product[] {
+  return products.map((p) => {
+    let img = p.image;
+    if (!isAuth) {
+      img = '/images/bottle-silhouette.svg';
+    } else {
+      if (!img || img === '/images/bottle-silhouette.svg') {
+        img = `/images/wine_${p.color || 'red'}.png`;
+      }
+    }
+    return {
+      ...p,
+      image: img,
+      images: isAuth ? (p.images ?? []) : [],
+    };
+  });
+}
+
 export async function getProducts(query?: string, token?: string): Promise<Product[]> {
+  const isAuth = !!token;
   try {
     const API_BASE_URL =
       process.env.NEXT_PUBLIC_API_URL ||
       process.env.API_URL ||
       'https://api.wayneven.uk';
-
-    const url = `${API_BASE_URL}/api/wines/wines`;
 
     const headers: HeadersInit = {
       Accept: 'application/json',
@@ -150,29 +167,41 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
 
     let response: Response;
     try {
+      const url = token
+        ? `${API_BASE_URL}/api/v1/wine-products/`
+        : `${API_BASE_URL}/api/wines/wines`;
+
       response = await fetch(url, {
         headers,
         signal: controller.signal,
         ...(isServer ? { next: { revalidate: 300 } } : { cache: 'no-store' }),
       });
+
+      if (!response.ok && token) {
+        response = await fetch(`${API_BASE_URL}/api/wines/wines`, {
+          headers,
+          signal: controller.signal,
+          ...(isServer ? { next: { revalidate: 300 } } : { cache: 'no-store' }),
+        });
+      }
     } finally {
       clearTimeout(timeoutId);
     }
 
     if (!response.ok) {
       console.warn(`API response status: ${response.status}. Using fallback products.`);
-      return filterProducts(FALLBACK_PRODUCTS, query);
+      return sanitizeProductsForAuth(filterProducts(FALLBACK_PRODUCTS, query), isAuth);
     }
 
     const responseText = await response.text();
     if (!responseText) {
-      return filterProducts(FALLBACK_PRODUCTS, query);
+      return sanitizeProductsForAuth(filterProducts(FALLBACK_PRODUCTS, query), isAuth);
     }
     const rawData = JSON.parse(responseText);
     const wineList = extractWineArray(rawData);
 
     if (wineList.length === 0) {
-      return filterProducts(FALLBACK_PRODUCTS, query);
+      return sanitizeProductsForAuth(filterProducts(FALLBACK_PRODUCTS, query), isAuth);
     }
 
     // Country code mapping
@@ -198,13 +227,13 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
       if (typeof val === 'string') return val;
       if (typeof val === 'object') {
         // If it's an object, try to find a name or title property
-        return val.name || val.title || '';
+        return val.name || val.title || val.product_name || '';
       }
       return String(val);
     };
 
     let products: Product[] = wineList.map((item: any) => {
-      const wineType = ensureString(item.wine_type);
+      const wineType = ensureString(item.wine_type || item.categories_en);
       let color = 'red';
 
       const lowerType = wineType.toLowerCase();
@@ -225,7 +254,7 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
       }
 
       // Handle multiple images
-      const images: ProductImage[] = (item.images || [])
+      let images: ProductImage[] = (item.images || [])
         .filter((img: any) => img?.image_url)
         .map((img: any) => {
           const path = String(img.image_url);
@@ -238,6 +267,14 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
             created_at: img.created_at,
           };
         });
+
+      if (images.length === 0 && item.image_url) {
+        const path = String(item.image_url);
+        const image_url = path.startsWith('http')
+          ? path
+          : `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+        images = [{ id: 1, image_url, created_at: new Date().toISOString() }];
+      }
 
       // If no token is provided, we show a silhouette placeholder
       // Otherwise, use the first image if available, else fallback to color-based default
@@ -257,32 +294,32 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
 
       return {
         id: Number(item.id) || 0,
-        name: ensureString(item.name) || 'Unknown Wine',
+        name: ensureString(item.name || item.product_name) || 'Unknown Wine',
         price: sellingPrice,
         originalPrice: originalPrice > sellingPrice ? originalPrice : undefined,
         stock: Number(item.stock) || 0,
         color,
-        type: ensureString(item.type) || 'wine',
-        sub_type: ensureString(item.wine_type) || 'Classic',
-        region: ensureString(item.region),
+        type: ensureString(item.type || item.categories_en) || 'wine',
+        sub_type: ensureString(item.wine_type || item.sub_type) || 'Classic',
+        region: ensureString(item.region || item.origins_en),
         image,
         images,
-        description: ensureString(item.description),
+        description: ensureString(item.description || item.ingredients_text),
         vintage: item.vintage ? Number(item.vintage) : undefined,
-        alcohol: ensureString(item.alcohol),
-        designation: ensureString(item.designation || item.winery),
+        alcohol: ensureString(item.alcohol || item.alcohol_100g),
+        designation: ensureString(item.designation || item.winery || item.brands),
         countryCode:
-          countryMap[ensureString(item.country)] ||
-          ensureString(item.country).toLowerCase() ||
+          countryMap[ensureString(item.country || item.countries_en)] ||
+          ensureString(item.country || item.countries_en).toLowerCase() ||
           ensureString(item.country_code).toLowerCase() ||
           'fr'
       };
     });
 
-    return filterProducts(products, query);
+    return sanitizeProductsForAuth(filterProducts(products, query), isAuth);
   } catch (error: any) {
     console.warn('API fetch unavailable or timed out. Falling back to default products.', error?.message || error);
-    return filterProducts(FALLBACK_PRODUCTS, query);
+    return sanitizeProductsForAuth(filterProducts(FALLBACK_PRODUCTS, query), isAuth);
   }
 }
 

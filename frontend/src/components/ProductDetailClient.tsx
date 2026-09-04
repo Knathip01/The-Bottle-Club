@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Star, Send, Camera, X, CheckCircle2, AlertCircle, Play } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Send, Camera, X, CheckCircle2, AlertCircle, Play, Lock } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { addCartItem } from '@/lib/cart';
 import { getReviews, createReview, type Product, type ProductReview } from '@/lib/products';
@@ -27,22 +27,41 @@ function formatPrice(price: number) {
 export default function ProductDetailClient({
   product,
   relatedProducts = [],
-  isLoggedIn = true,
+  isLoggedIn = false,
 }: Props) {
   const { t } = useLanguage();
   const router = useRouter();
 
+  const [effectiveLoggedIn, setEffectiveLoggedIn] = useState(isLoggedIn);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hasToken = !!localStorage.getItem('access_token');
+      setEffectiveLoggedIn(isLoggedIn || hasToken);
+    }
+  }, [isLoggedIn]);
+
   const [activeImage, setActiveImage] = useState(
     isLoggedIn
-      ? product.image || `/images/bottle-silhouette.svg`
+      ? (product.image && product.image !== '/images/bottle-silhouette.svg'
+          ? product.image
+          : `/images/wine_${product.color || 'red'}.png`)
       : '/images/bottle-silhouette.svg'
   );
 
   useEffect(() => {
-    if (isLoggedIn && product.image) {
-      setActiveImage(product.image);
+    if (effectiveLoggedIn) {
+      if (product.images && product.images.length > 0) {
+        setActiveImage(product.images[0].image_url);
+      } else if (product.image && product.image !== '/images/bottle-silhouette.svg') {
+        setActiveImage(product.image);
+      } else {
+        setActiveImage(`/images/wine_${product.color || 'red'}.png`);
+      }
+    } else {
+      setActiveImage('/images/bottle-silhouette.svg');
     }
-  }, [isLoggedIn, product.image]);
+  }, [effectiveLoggedIn, product]);
 
   const [reviews, setReviews] = useState<ProductReview[]>([]);
   const [rating, setRating] = useState(5);
@@ -119,7 +138,7 @@ export default function ProductDetailClient({
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLoggedIn) {
+    if (!effectiveLoggedIn) {
       router.push('/login');
       return;
     }
@@ -237,18 +256,29 @@ export default function ProductDetailClient({
     <div className="grid grid-cols-1 gap-12 md:grid-cols-2 items-start">
       {/* Product Image Section */}
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-center p-12 bg-stone-50 rounded-3xl min-h-[500px]">
+        <div className="relative flex items-center justify-center p-12 bg-stone-50 rounded-3xl min-h-[500px]">
           <Image
-            src={activeImage}
+            src={effectiveLoggedIn ? activeImage : '/images/bottle-silhouette.svg'}
             alt={product.name}
             width={300}
             height={600}
             className="h-[450px] w-auto object-contain drop-shadow-lg transition-all duration-300"
           />
+          {!effectiveLoggedIn && (
+            <div className="absolute inset-x-0 bottom-6 flex justify-center">
+              <Link
+                href="/login"
+                className="rounded-full bg-stone-900/90 hover:bg-stone-950 backdrop-blur-md px-5 py-2.5 text-xs font-bold text-white shadow-xl flex items-center gap-2 transition-transform hover:scale-105"
+              >
+                <Lock size={14} className="text-amber-400" />
+                <span>Member Access — Log in to view</span>
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Thumbnail Gallery */}
-        {isLoggedIn && hasMultipleImages && (
+        {effectiveLoggedIn && hasMultipleImages && (
           <div className="flex gap-3 overflow-x-auto pb-2 px-1">
             {product.images?.map((img) => (
               <button
@@ -285,7 +315,7 @@ export default function ProductDetailClient({
         <div className="mt-4 border-t border-stone-100 pt-6">
 
           {/* Login/Register Notice */}
-          {!isLoggedIn && (
+          {!effectiveLoggedIn && (
             <div className="mb-8 rounded-3xl border border-stone-100 bg-stone-50 p-6 text-center">
               <p className="mb-2 text-sm font-black uppercase tracking-wider text-stone-700">
                 MEMBER ACCESS —
@@ -537,7 +567,7 @@ export default function ProductDetailClient({
             )}
 
             {/* ─── Review Form ─── */}
-            {isLoggedIn ? (
+            {effectiveLoggedIn ? (
               <form onSubmit={handleReviewSubmit} className="mb-10 rounded-3xl overflow-hidden" style={{background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(250,250,249,0.95) 100%)', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)'}}>
 
                 {/* Form top accent */}
@@ -844,7 +874,7 @@ export default function ProductDetailClient({
                   <Link
                     key={relatedProduct.id}
                     href={
-                      isLoggedIn
+                      effectiveLoggedIn
                         ? `/product/${relatedProduct.id}`
                         : '/login'
                     }
@@ -855,7 +885,7 @@ export default function ProductDetailClient({
 
                       <Image
                         src={
-                          isLoggedIn
+                          effectiveLoggedIn
                             ? relatedProduct.image ||
                               `/images/wine_${relatedProduct.color || 'red'}.png`
                             : '/images/bottle-silhouette.svg'
@@ -881,7 +911,7 @@ export default function ProductDetailClient({
                             ฿{relatedProduct.price.toLocaleString()}
                           </p>
 
-                          {isLoggedIn ? (
+                          {effectiveLoggedIn ? (
                             <button
                               onClick={(e) => {
                                 e.preventDefault();
@@ -900,7 +930,7 @@ export default function ProductDetailClient({
                           )}
                         </div>
 
-                        {!isLoggedIn && (
+                        {!effectiveLoggedIn && (
                           <div className="border-t border-stone-100 pt-2 text-center">
 
                             <div className="text-[9px] font-black uppercase tracking-wider text-stone-700">

@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { addCartItem } from '@/lib/cart';
 import type { Product } from '@/lib/products';
-import { ShoppingCart, Star } from 'lucide-react';
+import { ShoppingCart, Star, Lock } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface SearchProductListProps {
@@ -11,9 +11,17 @@ interface SearchProductListProps {
   isLoggedIn?: boolean;
 }
 
-export default function SearchProductList({ products, isLoggedIn = true }: SearchProductListProps) {
+export default function SearchProductList({ products, isLoggedIn = false }: SearchProductListProps) {
   const { t } = useLanguage();
   const [loadingId, setLoadingId] = useState<number | null>(null);
+  const [effectiveLoggedIn, setEffectiveLoggedIn] = useState(isLoggedIn);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hasToken = !!localStorage.getItem('access_token');
+      setEffectiveLoggedIn(isLoggedIn || hasToken);
+    }
+  }, [isLoggedIn]);
 
   const getMockRating = (id: number) => {
     const rating = (3.5 + (id % 15) / 10).toFixed(1);
@@ -34,7 +42,7 @@ export default function SearchProductList({ products, isLoggedIn = true }: Searc
   };
 
   const handleSelectProduct = (product: Product) => {
-    if (!isLoggedIn) {
+    if (!effectiveLoggedIn) {
       window.location.href = '/login';
       return;
     }
@@ -81,7 +89,13 @@ export default function SearchProductList({ products, isLoggedIn = true }: Searc
 
               <div className="relative transition-transform duration-500 group-hover:scale-110">
                 <img
-                  src={product.image || `/images/wine_${wineColor}.png`}
+                  src={
+                    effectiveLoggedIn
+                      ? (product.image && product.image !== '/images/bottle-silhouette.svg'
+                          ? product.image
+                          : `/images/wine_${wineColor}.png`)
+                      : '/images/bottle-silhouette.svg'
+                  }
                   alt={product.name}
                   className="h-48 w-auto object-contain drop-shadow-lg"
                 />
@@ -143,16 +157,25 @@ export default function SearchProductList({ products, isLoggedIn = true }: Searc
                   </span>
                 </div>
                 <button
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#008967] py-4 text-lg font-bold text-white shadow-lg transition-colors active:scale-95 hover:bg-[#007054] disabled:opacity-70"
+                  className={`flex w-full items-center justify-center gap-2 rounded-xl py-4 text-lg font-bold text-white shadow-lg transition-colors active:scale-95 disabled:opacity-70 ${
+                    effectiveLoggedIn
+                      ? 'bg-[#008967] hover:bg-[#007054]'
+                      : 'bg-stone-900 hover:bg-stone-800'
+                  }`}
                   onClick={() => handleSelectProduct(product)}
                   disabled={loadingId === product.id}
                 >
                   {loadingId === product.id ? (
                     <span className="animate-pulse">{t('search.loading')}</span>
-                  ) : (
+                  ) : effectiveLoggedIn ? (
                     <>
                       <ShoppingCart size={18} />
                       {formatPrice(product.price)}
+                    </>
+                  ) : (
+                    <>
+                      <Lock size={18} />
+                      <span>{t('auth.login') || 'Log In'}</span>
                     </>
                   )}
                 </button>

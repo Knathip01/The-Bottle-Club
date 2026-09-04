@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getProducts } from '@/lib/products';
+import { getSession } from '@/lib/auth-utils';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const products = await getProducts();
+    const session = await getSession();
+    const token = session?.user?.access_token;
+    const products = await getProducts(undefined, token);
     return NextResponse.json(products, {
       headers: {
         'Cache-Control': 'no-store, max-age=0',

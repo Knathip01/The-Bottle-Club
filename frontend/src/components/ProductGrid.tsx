@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ComponentType } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -32,9 +32,17 @@ type FilterId =
 
 export default function ProductGrid({
   products,
-  isLoggedIn = true,
+  isLoggedIn = false,
 }: ProductGridProps) {
   const router = useRouter();
+  const [effectiveLoggedIn, setEffectiveLoggedIn] = useState(isLoggedIn);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hasToken = !!localStorage.getItem('access_token');
+      setEffectiveLoggedIn(isLoggedIn || hasToken);
+    }
+  }, [isLoggedIn]);
 
   const [filter, setFilter] = useState<FilterId>('all');
 
@@ -347,13 +355,13 @@ export default function ProductGrid({
                 <div className="group flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-stone-200/80 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-2xl">
 
                   {/* IMAGE CLICK */}
-                  <Link href={`/product/${product.id}`}>
+                  <Link href={effectiveLoggedIn ? `/product/${product.id}` : '/login'}>
 
                     <div
                       className={`relative flex aspect-[5/4] cursor-pointer items-center justify-center overflow-hidden bg-gradient-to-br p-6 sm:aspect-[4/5] ${palette.panel}`}
                     >
 
-                      {!isLoggedIn && (
+                      {!effectiveLoggedIn && (
                         <span className="absolute left-4 top-4 z-20 rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-stone-700">
                           NEW ARRIVAL
                         </span>
@@ -368,8 +376,11 @@ export default function ProductGrid({
                       <div className="relative transition-transform duration-500 group-hover:scale-105">
                         <Image
                           src={
-                            product.image ||
-                            `/images/wine_${product.color || 'red'}.png`
+                            effectiveLoggedIn
+                              ? (product.image && product.image !== '/images/bottle-silhouette.svg'
+                                  ? product.image
+                                  : `/images/wine_${product.color || 'red'}.png`)
+                              : '/images/bottle-silhouette.svg'
                           }
                           alt={product.name}
                           width={150}
@@ -381,7 +392,7 @@ export default function ProductGrid({
                   </Link>
 
                   {/* NOT LOGIN */}
-                  {!isLoggedIn && (
+                  {!effectiveLoggedIn && (
                     <div className="flex flex-1 flex-col p-5 sm:p-6">
 
                       <div className="mb-4 text-center">
@@ -433,7 +444,7 @@ export default function ProductGrid({
                   )}
 
                   {/* LOGIN */}
-                  {isLoggedIn && (
+                  {effectiveLoggedIn && (
                     <div className="flex flex-1 flex-col p-5 sm:p-6">
 
                       <div className="mb-3">
