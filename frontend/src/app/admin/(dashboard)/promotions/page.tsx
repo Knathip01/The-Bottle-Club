@@ -118,6 +118,7 @@ export default function AdminPromotionsPage() {
       ctaText: formCtaText.trim() || 'ดูสินค้าโปรโมชั่น',
       isFeatured: formIsFeatured,
       isActive: formIsActive,
+      sortOrder: 1,
     };
 
     try {

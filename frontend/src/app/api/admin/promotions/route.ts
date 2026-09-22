@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getInMemPromotions, setInMemPromotions, PromotionItem, DEFAULT_PROMOTIONS } from '@/lib/promotions';
+import { getInMemPromotions, setInMemPromotions, PromotionItem, DEFAULT_PROMOTIONS } from '@/lib/promotions.server';
 
 export const dynamic = 'force-dynamic';
 

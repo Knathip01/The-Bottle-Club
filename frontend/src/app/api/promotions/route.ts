@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getPromotions } from '@/lib/promotions';
+import { getPromotions } from '@/lib/promotions.server';
 
 export const dynamic = 'force-dynamic';
 

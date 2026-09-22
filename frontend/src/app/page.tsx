@@ -5,8 +5,13 @@ import ProductGridSection from '@/components/ProductGridSection';
 import ProductGridSkeleton from '@/components/ProductGridSkeleton';
 import PromotionSection from '@/components/PromotionSection';
 import Footer from '@/components/Footer';
+import { getPromotions } from '@/lib/promotions.server';
 
-export default function Home() {
+export const dynamic = 'force-dynamic';
+
+export default async function Home() {
+  const promotions = await getPromotions();
+
   return (
     <main className="min-h-screen flex flex-col">
       <MainHeader />
@@ -15,7 +20,7 @@ export default function Home() {
         <Suspense fallback={<ProductGridSkeleton />}>
           <ProductGridSection />
         </Suspense>
-        <PromotionSection />
+        <PromotionSection promotions={promotions} />
       </div>
       <Footer />
     </main>

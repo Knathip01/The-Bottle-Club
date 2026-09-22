@@ -23,6 +23,12 @@ export default function PromotionSection({
   const [activePromos, setActivePromos] = useState<PromotionItem[]>(promotions);
 
   useEffect(() => {
+    if (promotions && promotions.length > 0) {
+      setActivePromos(promotions);
+    }
+  }, [promotions]);
+
+  useEffect(() => {
     async function loadPromotions() {
       try {
         const res = await fetch('/api/promotions', { cache: 'no-store' });
@@ -41,6 +47,8 @@ export default function PromotionSection({
 
   const featuredPromo = activePromos.find((p) => p.isFeatured) || activePromos[0];
   const subPromos = activePromos.filter((p) => p.id !== featuredPromo?.id);
+
+  const featuredImg = featuredPromo?.imageUrl || (featuredPromo as any)?.image_url || '/images/wine_banner.png';
 
   return (
     <section className="bg-stone-100/80 py-16 md:py-24 border-t border-stone-200/80" id="promotions">
@@ -69,14 +77,17 @@ export default function PromotionSection({
               
               {/* Background Image */}
               <div className="absolute inset-0 z-0">
-                <Image
-                  src={featuredPromo.imageUrl}
-                  alt={featuredPromo.title}
-                  fill
-                  priority
-                  sizes="(max-width: 1200px) 100vw, 1200px"
-                  className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
-                />
+                {featuredImg && (
+                  <Image
+                    src={featuredImg}
+                    alt={featuredPromo.title || 'Promotion'}
+                    fill
+                    priority
+                    unoptimized={typeof featuredImg === 'string' && (featuredImg.startsWith('data:') || featuredImg.startsWith('http'))}
+                    sizes="(max-width: 1200px) 100vw, 1200px"
+                    className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
+                )}
                 
                 {/* Gradient Overlays for optimal text contrast */}
                 <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/70 to-stone-950/30 md:bg-gradient-to-r md:from-stone-950/95 md:via-stone-950/75 md:to-stone-950/20" />
@@ -150,20 +161,25 @@ export default function PromotionSection({
         {/* SECONDARY PROMOTIONS GRID (3 CARDS) */}
         {subPromos.length > 0 && (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {subPromos.map((promo) => (
+            {subPromos.map((promo) => {
+              const cardImg = promo.imageUrl || (promo as any)?.image_url || '/images/wine_banner.png';
+              return (
               <div
                 key={promo.id}
                 className="group flex flex-col overflow-hidden rounded-[1.75rem] border border-stone-200/90 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
                 {/* Promo Card Image */}
-                <Link href={promo.linkUrl} className="relative block aspect-[16/10] overflow-hidden bg-stone-900">
-                  <Image
-                    src={promo.imageUrl}
-                    alt={promo.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
+                <Link href={promo.linkUrl || '/#products'} className="relative block aspect-[16/10] overflow-hidden bg-stone-900">
+                  {cardImg && (
+                    <Image
+                      src={cardImg}
+                      alt={promo.title || 'Promotion'}
+                      fill
+                      unoptimized={typeof cardImg === 'string' && (cardImg.startsWith('data:') || cardImg.startsWith('http'))}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
                   {/* Top Badges on Image */}
@@ -187,6 +203,7 @@ export default function PromotionSection({
                     </div>
                   )}
                 </Link>
+
 
                 {/* Promo Card Body */}
                 <div className="flex flex-1 flex-col p-5 sm:p-6">
@@ -221,7 +238,8 @@ export default function PromotionSection({
                   </div>
                 </div>
               </div>
-            ))}
+            );
+          })}
           </div>
         )}
 
