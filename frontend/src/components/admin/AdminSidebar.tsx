@@ -29,6 +29,7 @@ const menuSections = [
       { title: 'ออเดอร์ทั้งหมด',      icon: ShoppingCart, href: '/admin/orders',   badge: null },
       { title: 'ตรวจสอบการชำระเงิน', icon: CreditCard,   href: '/admin/payments', badge: null },
       { title: 'จัดการสินค้า',         icon: Wine,         href: '/admin/products', badge: null },
+      { title: 'จัดการโปรโมชั่น',       icon: Tag,          href: '/admin/promotions', badge: null },
       { title: 'จัดการสมาชิก',         icon: Users,        href: '/admin/members',  badge: null },
       { title: 'รีวิวสินค้า',           icon: Star,         href: '/admin/reviews',  badge: null },
     ],

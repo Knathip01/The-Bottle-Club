@@ -3,6 +3,7 @@ import MainHeader from '@/components/MainHeader';
 import Hero from '@/components/Hero';
 import ProductGridSection from '@/components/ProductGridSection';
 import ProductGridSkeleton from '@/components/ProductGridSkeleton';
+import PromotionSection from '@/components/PromotionSection';
 import Footer from '@/components/Footer';
 
 export default function Home() {
@@ -14,6 +15,7 @@ export default function Home() {
         <Suspense fallback={<ProductGridSkeleton />}>
           <ProductGridSection />
         </Suspense>
+        <PromotionSection />
       </div>
       <Footer />
     </main>
