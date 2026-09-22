@@ -27,6 +27,11 @@ const nextConfig: NextConfig = {
         hostname: '*.openfoodfacts.org',
         pathname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '**',
+      },
     ],
   },
   async rewrites() {
