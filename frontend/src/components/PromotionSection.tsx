@@ -1,79 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Sparkles, ArrowRight, Clock, Tag, ChevronRight, Wine, Gift } from 'lucide-react';
+import { PromotionItem, DEFAULT_PROMOTIONS } from '@/lib/promotions';
 
-export interface PromotionItem {
-  id: string;
-  title: string;
-  subtitle?: string;
-  description: string;
-  imageUrl: string;
-  badge: string;
-  discountTag?: string;
-  validUntil?: string;
-  linkUrl: string;
-  ctaText: string;
-  isFeatured?: boolean;
-}
-
-/**
- * กำหนดข้อมูลรูปภาพและรายละเอียดโปรโมชั่น (สามารถแก้ไขหรือใส่รูปภาพโปรโมทเพิ่มเติมได้ที่นี่)
- * Easily configure or add your promotional images and campaigns here
- */
-export const DEFAULT_PROMOTIONS: PromotionItem[] = [
-  {
-    id: 'grand-cru-2026',
-    title: 'GRAND CRU & VINTAGE SELECTION',
-    subtitle: 'คอลเลกชันไวน์วินเทจระดับพรีเมียม',
-    description: 'สิทธิพิเศษสำหรับสมาชิก The Bottle Club รับส่วนลดสูงสุด 30% สำหรับไวน์คอลเลกชัน Grand Cru คัดสรรพิเศษ พร้อมบริการจัดส่งควบคุมอุณหภูมิฟรี',
-    imageUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=1600&auto=format&fit=crop',
-    badge: 'FEATURED PROMOTION',
-    discountTag: 'UP TO 30% OFF',
-    validUntil: 'จำกัดเวลาสิทธิพิเศษ',
-    linkUrl: '/#products',
-    ctaText: 'ดูสินค้าโปรโมชั่น',
-    isFeatured: true,
-  },
-  {
-    id: 'welcome-privilege',
-    title: 'Welcome Member Bonus',
-    subtitle: 'สิทธิพิเศษต้อนรับสมาชิกใหม่',
-    description: 'สมัครสมาชิกวันนี้ รับโค้ดส่วนลด 500 บาท ทันทีเมื่อมียอดสั่งซื้อไวน์ครั้งแรกตั้งแต่ 2,500 บาทขึ้นไป',
-    imageUrl: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=800&auto=format&fit=crop',
-    badge: 'NEW MEMBER',
-    discountTag: 'ลดทันที 500฿',
-    validUntil: 'สำหรับสมาชิกใหม่',
-    linkUrl: '/register',
-    ctaText: 'สมัครรับสิทธิ์',
-  },
-  {
-    id: 'sommelier-pairings',
-    title: 'Sommelier Curated Sets',
-    subtitle: 'ชุดเซ็ตไวน์จับคู่อาหารค่ำ',
-    description: 'แพ็กเกจไวน์นำเข้าจับคู่จานโปรด คัดสรรโดยซอมเมอลิเยร์มืออาชีพ ให้คุณเพลิดเพลินกับมื้อค่ำสุดหรูที่บ้าน',
-    imageUrl: 'https://images.unsplash.com/photo-1528823872057-9c018a7a7553?q=80&w=800&auto=format&fit=crop',
-    badge: 'CURATED BUNDLE',
-    discountTag: 'BUY 2 GET 10%',
-    validUntil: 'มีจำนวนจำกัด',
-    linkUrl: '/#products',
-    ctaText: 'เลือกดูเซ็ตไวน์',
-  },
-  {
-    id: 'cold-chain-express',
-    title: 'Cold-Chain Express Delivery',
-    subtitle: 'จัดส่งด่วนแบบควบคุมอุณหภูมิ',
-    description: 'รักษามาตรฐานและรสชาติไวน์ทุกขวดด้วยรถห้องเย็นพิเศษ จัดส่งฟรีทั่วกรุงเทพฯ และปริมณฑลเมื่อช้อปครบ 3,000 บาท',
-    imageUrl: 'https://images.unsplash.com/photo-1558001373-7b93ee48ffa0?q=80&w=800&auto=format&fit=crop',
-    badge: 'COMPLIMENTARY',
-    discountTag: 'FREE SHIPPING',
-    validUntil: 'ทุกวันไม่มีวันหยุด',
-    linkUrl: '/#products',
-    ctaText: 'สั่งซื้อเลย',
-  },
-];
+export type { PromotionItem };
+export { DEFAULT_PROMOTIONS };
 
 interface PromotionSectionProps {
   promotions?: PromotionItem[];
@@ -86,8 +20,27 @@ export default function PromotionSection({
   title = 'โปรโมชั่นพิเศษและดีลคัดสรร',
   subtitle = 'ค้นพบข้อเสนอสุดเอ็กซ์คลูซีฟสำหรับสมาชิก The Bottle Club ไวน์และเครื่องดื่มนำเข้าราคาพิเศษพร้อมบริการระดับพรีเมียม',
 }: PromotionSectionProps) {
-  const featuredPromo = promotions.find((p) => p.isFeatured) || promotions[0];
-  const subPromos = promotions.filter((p) => p.id !== featuredPromo?.id);
+  const [activePromos, setActivePromos] = useState<PromotionItem[]>(promotions);
+
+  useEffect(() => {
+    async function loadPromotions() {
+      try {
+        const res = await fetch('/api/promotions', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+            setActivePromos(data.data);
+          }
+        }
+      } catch {
+        // Keep initial/fallback promotions
+      }
+    }
+    loadPromotions();
+  }, []);
+
+  const featuredPromo = activePromos.find((p) => p.isFeatured) || activePromos[0];
+  const subPromos = activePromos.filter((p) => p.id !== featuredPromo?.id);
 
   return (
     <section className="bg-stone-100/80 py-16 md:py-24 border-t border-stone-200/80" id="promotions">
