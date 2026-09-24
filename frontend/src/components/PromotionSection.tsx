@@ -77,25 +77,38 @@ function BannerMediaViewer({
 
   return (
     <div
-      className="group/img relative aspect-[16/10] w-full overflow-hidden bg-stone-950 cursor-pointer select-none"
+      className="group/img relative aspect-[4/5] w-full overflow-hidden bg-stone-950 cursor-pointer select-none"
       onClick={() => onOpenLightbox(safeImages, activeImgIdx, title)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Ambient background blur so any ratio fills naturally without harsh borders */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <Image
+          src={currentImg}
+          alt=""
+          fill
+          unoptimized={isCustomUrl}
+          aria-hidden="true"
+          className="object-cover object-center blur-xl opacity-35 scale-110"
+        />
+      </div>
+
+      {/* Main Full Image (Uncropped, Full Display) */}
       <Image
         src={currentImg}
         alt={title || 'Promotion'}
         fill
         unoptimized={isCustomUrl}
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        className="object-cover object-center transition-transform duration-500 group-hover/img:scale-105"
+        className="object-contain object-center transition-transform duration-500 group-hover/img:scale-105 z-10"
       />
 
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-transparent to-stone-950/20 pointer-events-none" />
+      {/* Subtle gentle hover overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-stone-950/40 via-transparent to-stone-950/10 pointer-events-none z-10 opacity-50 group-hover/img:opacity-70 transition-opacity" />
 
       {/* Top Badges (Left) */}
-      <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 flex flex-wrap items-center gap-2 z-10">
+      <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 flex flex-wrap items-center gap-2 z-20">
         {badge && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-[#a11a1a] px-3 py-1 text-[11px] font-black uppercase tracking-wider text-white shadow-md">
             <Sparkles className="h-3 w-3" />
@@ -236,14 +249,15 @@ function PromotionLightbox({
           </button>
         </div>
 
-        {/* Main Large Image */}
-        <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] max-h-[70vh] rounded-2xl overflow-hidden bg-black shadow-2xl border border-white/10">
+        {/* Main Large Image (Expands to full height up to 82vh) */}
+        <div className="relative w-full h-[72vh] sm:h-[80vh] max-h-[85vh] rounded-2xl overflow-hidden bg-black/90 shadow-2xl border border-white/10 flex items-center justify-center">
           <Image
             src={currentImg}
             alt={title}
             fill
             unoptimized={isCustomUrl}
             className="object-contain object-center"
+            priority
           />
 
           {images.length > 1 && (
@@ -277,7 +291,7 @@ function PromotionLightbox({
                 key={i}
                 type="button"
                 onClick={() => setIdx(i)}
-                className={`relative w-16 h-12 rounded-lg overflow-hidden border-2 transition cursor-pointer shrink-0 ${
+                className={`relative w-12 h-15 sm:w-14 sm:h-18 rounded-lg overflow-hidden border-2 transition cursor-pointer shrink-0 ${
                   idx === i ? 'border-amber-400 scale-105' : 'border-white/20 opacity-60 hover:opacity-100'
                 }`}
               >
