@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Sparkles, ArrowRight, Clock, Tag, ChevronRight, Wine, Gift } from 'lucide-react';
-import { PromotionItem, DEFAULT_PROMOTIONS } from '@/lib/promotions';
+import { ChevronLeft, ChevronRight, Clock, ArrowRight, Sparkles, Megaphone } from 'lucide-react';
+import { PromotionItem, DEFAULT_PROMOTIONS } from '@/lib/promotions.types';
 
 export type { PromotionItem };
 export { DEFAULT_PROMOTIONS };
@@ -17,17 +17,22 @@ interface PromotionSectionProps {
 
 export default function PromotionSection({
   promotions = DEFAULT_PROMOTIONS,
-  title = 'โปรโมชั่นพิเศษและดีลคัดสรร',
-  subtitle = 'ค้นพบข้อเสนอสุดเอ็กซ์คลูซีฟสำหรับสมาชิก The Bottle Club ไวน์และเครื่องดื่มนำเข้าราคาพิเศษพร้อมบริการระดับพรีเมียม',
+  title = 'ข่าวสารและโปรโมชั่นพิเศษ',
+  subtitle = 'อัปเดตข้อมูลข่าวสาร สิทธิพิเศษ และกิจกรรมล่าสุดจาก The Bottle Club',
 }: PromotionSectionProps) {
   const [activePromos, setActivePromos] = useState<PromotionItem[]>(promotions);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
 
+  // Sync props
   useEffect(() => {
     if (promotions && promotions.length > 0) {
       setActivePromos(promotions);
     }
   }, [promotions]);
 
+  // Client-side fetch
   useEffect(() => {
     async function loadPromotions() {
       try {
@@ -39,210 +44,230 @@ export default function PromotionSection({
           }
         }
       } catch {
-        // Keep initial/fallback promotions
+        // Keep initial
       }
     }
     loadPromotions();
   }, []);
 
-  const featuredPromo = activePromos.find((p) => p.isFeatured) || activePromos[0];
-  const subPromos = activePromos.filter((p) => p.id !== featuredPromo?.id);
+  const promoList = activePromos.filter((p) => p.isActive !== false);
+  const count = promoList.length;
 
-  const featuredImg = featuredPromo?.imageUrl || (featuredPromo as any)?.image_url || '/images/wine_banner.png';
+  const nextSlide = useCallback(() => {
+    if (count <= 1) return;
+    setCurrentIndex((prev) => (prev + 1) % count);
+  }, [count]);
+
+  const prevSlide = useCallback(() => {
+    if (count <= 1) return;
+    setCurrentIndex((prev) => (prev - 1 + count) % count);
+  }, [count]);
+
+  // Auto-slide effect every 4 seconds
+  useEffect(() => {
+    if (count <= 1 || isPaused) return;
+    const timer = setInterval(() => {
+      nextSlide();
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [count, isPaused, nextSlide]);
+
+  if (count === 0) return null;
+
+  // Touch handlers for mobile swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) nextSlide();
+      else prevSlide();
+    }
+    touchStartX.current = null;
+  };
 
   return (
-    <section className="bg-stone-100/80 py-16 md:py-24 border-t border-stone-200/80" id="promotions">
+    <section className="py-12 sm:py-16 bg-stone-100/70 border-t border-stone-200/80" id="promotions">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* SECTION HEADER */}
-        <div className="mb-10 md:mb-14 text-center">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-red-900/15 bg-red-950/5 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.25em] text-[#a11a1a] shadow-sm">
-            <Sparkles className="h-3.5 w-3.5 text-[#a11a1a]" />
-            <span>EXCLUSIVE OFFERS & PROMOTIONS</span>
+        {/* Section Header */}
+        <div className="mb-8 text-center">
+          <div className="mb-2.5 inline-flex items-center gap-2 rounded-full border border-red-900/15 bg-red-950/5 px-4 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-[#a11a1a]">
+            <Megaphone className="h-3.5 w-3.5 text-[#a11a1a]" />
+            <span>NEWS & ANNOUNCEMENTS</span>
           </div>
-
-          <h2 className="text-3xl font-black tracking-normal text-stone-950 md:text-5xl">
+          <h2 className="text-2xl sm:text-3xl font-black text-stone-950">
             {title}
           </h2>
-
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-stone-600 md:text-base">
-            {subtitle}
-          </p>
+          {subtitle && (
+            <p className="mx-auto mt-1 max-w-xl text-xs sm:text-sm text-stone-600">
+              {subtitle}
+            </p>
+          )}
         </div>
 
-        {/* MAIN FEATURED PROMOTION BANNER */}
-        {featuredPromo && (
-          <div className="mb-8 md:mb-10">
-            <div className="group relative min-h-[380px] sm:min-h-[420px] md:min-h-[460px] overflow-hidden rounded-[2rem] border border-stone-900/10 bg-stone-950 shadow-2xl transition-all duration-500">
-              
-              {/* Background Image */}
-              <div className="absolute inset-0 z-0">
-                {featuredImg && (
-                  <Image
-                    src={featuredImg}
-                    alt={featuredPromo.title || 'Promotion'}
-                    fill
-                    priority
-                    unoptimized={typeof featuredImg === 'string' && (featuredImg.startsWith('data:') || featuredImg.startsWith('http'))}
-                    sizes="(max-width: 1200px) 100vw, 1200px"
-                    className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
-                  />
-                )}
-                
-                {/* Gradient Overlays for optimal text contrast */}
-                <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/70 to-stone-950/30 md:bg-gradient-to-r md:from-stone-950/95 md:via-stone-950/75 md:to-stone-950/20" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(161,26,26,0.25),transparent_60%)]" />
-              </div>
-
-              {/* Banner Content */}
-              <div className="relative z-10 flex h-full min-h-[380px] sm:min-h-[420px] md:min-h-[460px] flex-col justify-end p-6 sm:p-10 md:p-14 lg:max-w-3xl">
-                
-                {/* Badges */}
-                <div className="mb-4 flex flex-wrap items-center gap-2.5">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white backdrop-blur-md">
-                    <Tag className="h-3 w-3" />
-                    {featuredPromo.badge}
-                  </span>
-
-                  {featuredPromo.discountTag && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#a11a1a] px-3.5 py-1 text-[11px] font-black uppercase tracking-wider text-white shadow-lg shadow-red-950/50">
-                      <Gift className="h-3 w-3" />
-                      {featuredPromo.discountTag}
-                    </span>
-                  )}
-
-                  {featuredPromo.validUntil && (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-300">
-                      <Clock className="h-3 w-3 text-stone-400" />
-                      {featuredPromo.validUntil}
-                    </span>
-                  )}
-                </div>
-
-                {/* Headline */}
-                <h3 className="text-2xl font-black leading-tight text-white drop-shadow-md sm:text-4xl lg:text-5xl">
-                  {featuredPromo.title}
-                </h3>
-
-                {featuredPromo.subtitle && (
-                  <p className="mt-2 text-sm font-bold uppercase tracking-widest text-amber-200/90 sm:text-base">
-                    {featuredPromo.subtitle}
-                  </p>
-                )}
-
-                {/* Description */}
-                <p className="mt-3 max-w-xl text-sm leading-relaxed text-stone-200 sm:text-base">
-                  {featuredPromo.description}
-                </p>
-
-                {/* Actions */}
-                <div className="mt-6 flex flex-wrap items-center gap-3.5">
-                  <Link
-                    href={featuredPromo.linkUrl}
-                    className="inline-flex items-center gap-2.5 rounded-full bg-white px-7 py-3.5 text-xs sm:text-sm font-extrabold uppercase tracking-wider text-stone-950 shadow-xl transition-all duration-300 hover:bg-stone-100 hover:shadow-2xl hover:-translate-y-0.5 active:scale-95"
-                  >
-                    <span>{featuredPromo.ctaText}</span>
-                    <ArrowRight className="h-4 w-4 text-[#a11a1a]" strokeWidth={2.8} />
-                  </Link>
-
-                  <Link
-                    href="/#products"
-                    className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3.5 text-xs sm:text-sm font-extrabold uppercase tracking-wider text-white backdrop-blur-md transition hover:bg-white/20 hover:-translate-y-0.5 active:scale-95"
-                  >
-                    <span>เลือกดูไวน์ทั้งหมด</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* SECONDARY PROMOTIONS GRID (3 CARDS) */}
-        {subPromos.length > 0 && (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {subPromos.map((promo) => {
-              const cardImg = promo.imageUrl || (promo as any)?.image_url || '/images/wine_banner.png';
-              return (
-              <div
-                key={promo.id}
-                className="group flex flex-col overflow-hidden rounded-[1.75rem] border border-stone-200/90 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-              >
-                {/* Promo Card Image */}
-                <Link href={promo.linkUrl || '/#products'} className="relative block aspect-[16/10] overflow-hidden bg-stone-900">
-                  {cardImg && (
-                    <Image
-                      src={cardImg}
-                      alt={promo.title || 'Promotion'}
-                      fill
-                      unoptimized={typeof cardImg === 'string' && (cardImg.startsWith('data:') || cardImg.startsWith('http'))}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                  {/* Top Badges on Image */}
-                  <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between gap-2">
-                    <span className="rounded-full bg-stone-900/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
-                      {promo.badge}
-                    </span>
-
-                    {promo.discountTag && (
-                      <span className="rounded-full bg-[#a11a1a] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-md">
-                        {promo.discountTag}
-                      </span>
+        {/* Vertical Rectangle Slider Container (สี่เหลี่ยมแนวตั้ง + สไลด์อัตโนมัติ) */}
+        <div className="relative mx-auto max-w-[380px] sm:max-w-[420px]">
+          
+          {/* Main Card Frame (Aspect 3:4 or 4:5 Vertical Rectangle) */}
+          <div
+            className="group relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden rounded-[2rem] border border-stone-800/20 bg-stone-950 shadow-2xl transition-all duration-300 hover:shadow-red-950/20"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            {/* Sliding Track */}
+            <div
+              className="flex h-full w-full transition-transform duration-700 ease-out"
+              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+            >
+              {promoList.map((item, idx) => {
+                const img = item.imageUrl || (item as any)?.image_url || '/images/wine_banner.png';
+                return (
+                  <div key={item.id || idx} className="relative h-full w-full shrink-0 overflow-hidden">
+                    {/* Background Image */}
+                    {img && (
+                      <Image
+                        src={img}
+                        alt={item.title || 'Promotion'}
+                        fill
+                        priority={idx === 0}
+                        unoptimized={typeof img === 'string' && (img.startsWith('data:') || img.startsWith('http'))}
+                        sizes="(max-width: 768px) 100vw, 420px"
+                        className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                      />
                     )}
-                  </div>
 
-                  {/* Validity on bottom of image */}
-                  {promo.validUntil && (
-                    <div className="absolute bottom-3 left-3.5 flex items-center gap-1.5 text-[11px] font-medium text-stone-300">
-                      <Clock className="h-3 w-3 text-stone-400" />
-                      <span>{promo.validUntil}</span>
+                    {/* Gradient Dark Overlays */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/65 to-stone-950/20" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(161,26,26,0.3),transparent_70%)]" />
+
+                    {/* Content inside Vertical Card */}
+                    <div className="relative z-10 flex h-full flex-col justify-between p-6 sm:p-7">
+                      
+                      {/* Top Bar: Badge & Counter */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#a11a1a] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-md">
+                          <Sparkles className="h-3 w-3" />
+                          <span>{item.badge || 'PROMOTION'}</span>
+                        </span>
+
+                        <div className="rounded-full bg-black/60 px-3 py-1 text-[11px] font-bold text-white/90 backdrop-blur-md border border-white/10">
+                          <span>{idx + 1}</span>
+                          <span className="text-white/40 mx-1">/</span>
+                          <span className="text-white/60">{count}</span>
+                        </div>
+                      </div>
+
+                      {/* Bottom Info: Title, Subtitle, Description, CTA */}
+                      <div>
+                        {/* Discount Tag & Date */}
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          {item.discountTag && (
+                            <span className="rounded-full bg-amber-400 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-stone-950">
+                              {item.discountTag}
+                            </span>
+                          )}
+
+                          {item.validUntil && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-stone-300">
+                              <Clock className="h-3 w-3 text-stone-400" />
+                              <span>{item.validUntil}</span>
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Title (Clickable link to detail page) */}
+                        <Link href={`/promotions/${item.id}`} className="group/title block">
+                          <h3 className="text-xl sm:text-2xl font-black text-white drop-shadow-md line-clamp-2 group-hover/title:text-amber-300 transition-colors">
+                            {item.title}
+                          </h3>
+                        </Link>
+
+                        {/* Subtitle */}
+                        {item.subtitle && (
+                          <p className="mt-1 text-xs sm:text-sm font-bold text-amber-200/90 line-clamp-1">
+                            {item.subtitle}
+                          </p>
+                        )}
+
+                        {/* Description */}
+                        <p className="mt-2 text-xs sm:text-sm leading-relaxed text-stone-200 line-clamp-3">
+                          {item.description}
+                        </p>
+
+                        {/* Action Link Button to dedicated promotion detail page */}
+                        <div className="mt-5">
+                          <Link
+                            href={`/promotions/${item.id}`}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-xs sm:text-sm font-extrabold uppercase tracking-wider text-stone-950 shadow-xl transition-all duration-300 hover:bg-stone-100 hover:shadow-2xl active:scale-95"
+                          >
+                            <span>{item.ctaText || 'ดูรายละเอียด'}</span>
+                            <ArrowRight className="h-4 w-4 text-[#a11a1a]" strokeWidth={2.8} />
+                          </Link>
+                        </div>
+                      </div>
+
                     </div>
-                  )}
-                </Link>
-
-
-                {/* Promo Card Body */}
-                <div className="flex flex-1 flex-col p-5 sm:p-6">
-                  {promo.subtitle && (
-                    <span className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#a11a1a]">
-                      {promo.subtitle}
-                    </span>
-                  )}
-
-                  <Link href={promo.linkUrl} className="group/title block">
-                    <h4 className="text-lg font-extrabold text-stone-950 transition-colors group-hover/title:text-[#a11a1a] line-clamp-1">
-                      {promo.title}
-                    </h4>
-                  </Link>
-
-                  <p className="mt-2 text-xs sm:text-sm leading-relaxed text-stone-600 line-clamp-2">
-                    {promo.description}
-                  </p>
-
-                  <div className="mt-auto pt-4 flex items-center justify-between border-t border-stone-100">
-                    <Link
-                      href={promo.linkUrl}
-                      className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#a11a1a] transition-all hover:text-red-800 hover:gap-2.5"
-                    >
-                      <span>{promo.ctaText}</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
-
-                    <div className="flex items-center text-stone-300">
-                      <Wine className="h-4 w-4 text-stone-400/80" />
-                    </div>
                   </div>
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+
+            {/* Prev / Next Arrows (Show on Hover) */}
+            {count > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    prevSlide();
+                  }}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white/80 backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 hover:text-white"
+                  aria-label="Previous slide"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    nextSlide();
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white/80 backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 hover:text-white"
+                  aria-label="Next slide"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </>
+            )}
           </div>
-        )}
 
+          {/* Dots Pagination Indicators */}
+          {count > 1 && (
+            <div className="mt-4 flex items-center justify-center gap-2">
+              {promoList.map((_, dotIdx) => (
+                <button
+                  key={dotIdx}
+                  type="button"
+                  onClick={() => setCurrentIndex(dotIdx)}
+                  className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                    currentIndex === dotIdx
+                      ? 'w-7 bg-[#a11a1a]'
+                      : 'w-2 bg-stone-300 hover:bg-stone-400'
+                  }`}
+                  aria-label={`Go to slide ${dotIdx + 1}`}
+                />
+              ))}
+            </div>
+          )}
+
+        </div>
       </div>
     </section>
   );

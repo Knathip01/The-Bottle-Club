@@ -7,7 +7,7 @@ import {
   ExternalLink, Sparkles, Image as ImageIcon, Eye, EyeOff,
   Clock, Gift, ArrowRight, Loader2, RefreshCw
 } from 'lucide-react';
-import type { PromotionItem } from '@/lib/promotions';
+import type { PromotionItem } from '@/lib/promotions.types';
 
 const PRESET_IMAGES = [
   { label: 'Wine Cellar (แบนเนอร์ห้องเก็บไวน์)', url: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=1600&auto=format&fit=crop' },
