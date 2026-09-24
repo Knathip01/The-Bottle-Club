@@ -17,38 +17,6 @@
     "created_at": "2026-09-24T08:59:39.857Z"
   },
   {
-    "id": "grand-cru-2026",
-    "title": "GRAND CRU & VINTAGE SELECTION",
-    "subtitle": "สัมผัสรสชาติไวน์ชั้นเลิศระดับพรีเมียมจากแคว้นบอร์โดซ์และเบอร์กันดี",
-    "description": "รับส่วนลดพิเศษสูงสุด 30% สำหรับไวน์กรองด์ครูคัดสรรพิเศษ เมื่อสั่งซื้อ 2 ขวดขึ้นไป พร้อมบริการจัดส่งควบคุมอุณหภูมิฟรีถึงหน้าบ้านคุณ",
-    "image_url": "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=1200&auto=format&fit=crop",
-    "badge": "FEATURED",
-    "discount_tag": "UP TO 30% OFF",
-    "valid_until": "ถึงสิ้นเดือนนี้",
-    "link_url": "/#products",
-    "cta_text": "ดูคอลเลกชันพิเศษ",
-    "is_featured": true,
-    "is_active": true,
-    "sort_order": 1,
-    "created_at": "2026-09-01T00:00:00Z"
-  },
-  {
-    "id": "member-privilege-2026",
-    "title": "EXCLUSIVE MEMBER PRIVILEGE",
-    "subtitle": "สิทธิพิเศษเหนือระดับสำหรับสมาชิก The Bottle Club",
-    "description": "สมัครสมาชิกวันนี้ รับส่วนลดทันที 500 บาท สำหรับบิลแรก พร้อมรับสิทธิ์สะสมแต้มคูณสองตลอดทั้งเดือน",
-    "image_url": "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=800&auto=format&fit=crop",
-    "badge": "NEW MEMBER",
-    "discount_tag": "ลดทันที 500฿",
-    "valid_until": "สิทธิ์มีจำนวนจำกัด",
-    "link_url": "/admin/bottleclub/members",
-    "cta_text": "สมัครสมาชิกรับสิทธิ์",
-    "is_featured": false,
-    "is_active": true,
-    "sort_order": 2,
-    "created_at": "2026-09-02T00:00:00Z"
-  },
-  {
     "id": "chef-sommelier-pairing",
     "title": "CHEF & SOMMELIER PAIRING",
     "subtitle": "จับคู่รสชาติอาหารและไวน์อย่างลงตัว",
