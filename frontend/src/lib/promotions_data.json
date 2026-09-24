@@ -1,5 +1,28 @@
 [
   {
+    "id": "hero-featured-banner",
+    "title": "คัดสรรไวน์ ระดับพรีเมียม เพื่อคุณโดยเฉพาะ",
+    "subtitle": "ไวน์นำเข้าคุณภาพเยี่ยมจากทั่วโลก จัดส่งถึงบ้านคุณภายใน 24 ชั่วโมง",
+    "description": "ไวน์นำเข้าคุณภาพเยี่ยมจากทั่วโลก จัดส่งถึงบ้านคุณภายใน 24 ชั่วโมง คัดสรรโดย Sommelier ผู้เชี่ยวชาญ พร้อมบริการจัดส่งด่วน",
+    "image_url": "/images/wine_banner.png",
+    "images": [
+      "/images/wine_banner.png",
+      "/images/wine_hero.png"
+    ],
+    "hero_image_url": "/images/wine_hero.png",
+    "badge": "ยินดีต้อนรับสู่ THE BOTTLE CLUB",
+    "discount_tag": "PREMIUM SELECTION",
+    "valid_until": "บริการจัดส่ง 24 ชม.",
+    "link_url": "/#products",
+    "cta_text": "ดูไวน์ทั้งหมด",
+    "secondary_cta_text": "เรียนรู้เพิ่มเติม",
+    "secondary_link_url": "/#wine-categories",
+    "is_featured": true,
+    "is_active": true,
+    "sort_order": 0,
+    "created_at": "2026-09-24T15:32:47.185Z"
+  },
+  {
     "id": "promo-424859",
     "title": "It's Matchday!",
     "subtitle": "",

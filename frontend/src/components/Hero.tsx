@@ -1,20 +1,62 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { ArrowRight, Clock3, ShieldCheck, Sparkles } from 'lucide-react';
+import { PromotionItem } from '@/lib/promotions.types';
 
-export default function Hero() {
+interface HeroProps {
+  heroPromo?: PromotionItem | null;
+}
+
+export default function Hero({ heroPromo: initialHeroPromo }: HeroProps = {}) {
   const { language, t } = useLanguage();
+  const [promo, setPromo] = useState<PromotionItem | null>(initialHeroPromo ?? null);
+
+  useEffect(() => {
+    if (initialHeroPromo !== undefined) {
+      setPromo(initialHeroPromo);
+    }
+  }, [initialHeroPromo]);
+
+  // Live client-side fetch from /api/promotions to keep synced with admin updates
+  useEffect(() => {
+    async function loadPromotions() {
+      try {
+        const res = await fetch('/api/promotions', { cache: 'no-store' });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            const featured = json.data.find((p: PromotionItem) => p.isFeatured && p.isActive !== false);
+            if (featured) {
+              setPromo(featured);
+            }
+          }
+        }
+      } catch {
+        // Keep current promo
+      }
+    }
+    loadPromotions();
+  }, []);
 
   const copy = {
-    welcome: t('hero.welcome'),
-    title: t('hero.title'),
-    subtitle: t('hero.subtitle'),
-    primary: t('hero.cta_all'),
-    secondary: t('hero.cta_more'),
+    welcome: promo?.badge || t('hero.welcome'),
+    title: promo?.title || t('hero.title'),
+    subtitle: promo?.subtitle || promo?.description || t('hero.subtitle'),
+    primary: promo?.ctaText || t('hero.cta_all'),
+    primaryLink: promo?.linkUrl || '#products',
+    secondary: promo?.secondaryCtaText || t('hero.cta_more'),
+    secondaryLink: promo?.secondaryLinkUrl || '#wine-categories',
   };
+
+  const bgImage = promo?.imageUrl || (promo?.images && promo.images.length > 0 ? promo.images[0] : null) || '/images/wine_banner.png';
+  const isCustomBg = typeof bgImage === 'string' && (bgImage.startsWith('data:') || bgImage.startsWith('http'));
+
+  const floatingImage = promo?.heroImageUrl || (promo?.images && promo.images.length > 1 ? promo.images[1] : null) || '/images/wine_hero.png';
+  const isCustomFloating = typeof floatingImage === 'string' && (floatingImage.startsWith('data:') || floatingImage.startsWith('http'));
 
   const serviceBadges = [
     { label: t('hero.service.delivery'), icon: Clock3 },
@@ -25,14 +67,22 @@ export default function Hero() {
   return (
     <section className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden bg-stone-950 text-white sm:min-h-[760px]">
       <div className="absolute inset-0 z-0">
-        <Image
-          src="/images/wine_banner.png"
-          alt="The Bottle Club wine selection"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-[58%_center]"
-        />
+        {isCustomBg ? (
+          <img
+            src={bgImage}
+            alt={copy.title}
+            className="h-full w-full object-cover object-[58%_center]"
+          />
+        ) : (
+          <Image
+            src={bgImage}
+            alt="The Bottle Club wine selection"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-[58%_center]"
+          />
+        )}
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,9,.62),rgba(12,10,9,.38)_42%,rgba(12,10,9,.86))]" />
         <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-stone-50 to-transparent" />
       </div>
@@ -44,7 +94,7 @@ export default function Hero() {
             {copy.welcome}
           </div>
 
-          <h1 className="max-w-[12ch] text-5xl font-black leading-[0.95] tracking-normal text-white drop-shadow-2xl sm:text-7xl lg:text-8xl">
+          <h1 className="max-w-[14ch] text-5xl font-black leading-[0.95] tracking-normal text-white drop-shadow-2xl sm:text-7xl lg:text-8xl">
             {copy.title}
           </h1>
 
@@ -54,18 +104,20 @@ export default function Hero() {
 
           <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap">
             <Link
-              href="#products"
+              href={copy.primaryLink}
               className="inline-flex min-h-14 items-center justify-center gap-3 rounded-full bg-white px-6 py-4 text-sm font-extrabold text-stone-950 shadow-2xl shadow-black/20 transition hover:-translate-y-0.5 hover:bg-stone-100 active:scale-[0.98]"
             >
               {copy.primary}
               <ArrowRight className="h-4 w-4" strokeWidth={2.8} />
             </Link>
-            <Link
-              href="#wine-categories"
-              className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 py-4 text-sm font-extrabold text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/18 active:scale-[0.98]"
-            >
-              {copy.secondary}
-            </Link>
+            {copy.secondary && (
+              <Link
+                href={copy.secondaryLink}
+                className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 py-4 text-sm font-extrabold text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/18 active:scale-[0.98]"
+              >
+                {copy.secondary}
+              </Link>
+            )}
           </div>
         </div>
 
@@ -110,13 +162,21 @@ export default function Hero() {
 
         <div className="pointer-events-none absolute bottom-4 right-4 hidden w-[min(34vw,360px)] lg:block">
           <div className="relative aspect-[3/4]">
-            <Image
-              src="/images/wine_hero.png"
-              alt=""
-              fill
-              sizes="360px"
-              className="object-contain drop-shadow-[0_32px_55px_rgba(0,0,0,.55)]"
-            />
+            {isCustomFloating ? (
+              <img
+                src={floatingImage}
+                alt=""
+                className="h-full w-full object-contain drop-shadow-[0_32px_55px_rgba(0,0,0,.55)]"
+              />
+            ) : (
+              <Image
+                src={floatingImage}
+                alt=""
+                fill
+                sizes="360px"
+                className="object-contain drop-shadow-[0_32px_55px_rgba(0,0,0,.55)]"
+              />
+            )}
           </div>
         </div>
       </div>

@@ -12,6 +12,9 @@ export interface PromotionItem {
   validUntil?: string;
   linkUrl: string;
   ctaText: string;
+  secondaryCtaText?: string;
+  secondaryLinkUrl?: string;
+  heroImageUrl?: string;
   isFeatured: boolean;
   isActive: boolean;
   sortOrder?: number;
@@ -32,6 +35,9 @@ export function normalizePromotion(item: any): PromotionItem {
       validUntil: '',
       linkUrl: '/#products',
       ctaText: 'ดูสินค้าโปรโมชั่น',
+      secondaryCtaText: 'เรียนรู้เพิ่มเติม',
+      secondaryLinkUrl: '/#wine-categories',
+      heroImageUrl: '/images/wine_hero.png',
       isFeatured: true,
       isActive: true,
       sortOrder: 1,
@@ -53,6 +59,10 @@ export function normalizePromotion(item: any): PromotionItem {
     images = [imageUrl];
   }
 
+  const heroImageUrl = item.heroImageUrl || item.hero_image_url || (images.length > 1 ? images[1] : undefined);
+  const secondaryCtaText = item.secondaryCtaText || item.secondary_cta_text || '';
+  const secondaryLinkUrl = item.secondaryLinkUrl || item.secondary_link_url || '';
+
   return {
     id: String(item.id || `promo-${Date.now()}`),
     title: String(item.title || ''),
@@ -60,11 +70,14 @@ export function normalizePromotion(item: any): PromotionItem {
     description: String(item.description || ''),
     imageUrl: images[0] || imageUrl,
     images,
+    heroImageUrl,
     badge: String(item.badge || 'PROMOTION'),
     discountTag: item.discountTag || item.discount_tag || '',
     validUntil: item.validUntil || item.valid_until || '',
     linkUrl: item.linkUrl || item.link_url || '/#products',
     ctaText: item.ctaText || item.cta_text || 'ดูสินค้าโปรโมชั่น',
+    secondaryCtaText,
+    secondaryLinkUrl,
     isFeatured: Boolean(item.isFeatured ?? item.is_featured),
     isActive: item.isActive !== undefined ? Boolean(item.isActive) : (item.is_active !== undefined ? Boolean(item.is_active) : true),
     sortOrder: Number(item.sortOrder || item.sort_order || 0),

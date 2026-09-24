@@ -11,12 +11,13 @@ export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const promotions = await getPromotions();
+  const featuredPromo = promotions.find((p) => p.isFeatured && p.isActive !== false) || promotions.find((p) => p.isFeatured) || null;
 
   return (
     <main className="min-h-screen flex flex-col">
       <MainHeader />
       <div className="flex-1">
-        <Hero />
+        <Hero heroPromo={featuredPromo} />
         <Suspense fallback={<ProductGridSkeleton />}>
           <ProductGridSection />
         </Suspense>

@@ -364,7 +364,8 @@ export default function PromotionSection({
     loadPromotions();
   }, []);
 
-  const promoList = activePromos.filter((p) => p.isActive !== false);
+  const nonFeatured = activePromos.filter((p) => p.isActive !== false && !p.isFeatured);
+  const promoList = nonFeatured.length > 0 ? nonFeatured : activePromos.filter((p) => p.isActive !== false);
   const count = promoList.length;
 
   // Triple the list for an infinite, seamless continuous carousel sliding to the left
