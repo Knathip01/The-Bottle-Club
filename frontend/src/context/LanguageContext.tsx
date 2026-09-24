@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useSyncExternalStore } fro
 import { getAiString } from '@/lib/ai-translations';
 import { getAccountString } from '@/lib/account-translations';
 import { getCheckoutString } from '@/lib/checkout-translations';
+import { getPromotionString } from '@/lib/promotion-translations';
 
 export type Language = 'th' | 'en' | 'fr' | 'zh' | 'ja' | 'es' | 'de' | 'ko' | 'it' | 'ru' | 'pt' | 'vi' | 'ar' | 'hi' | 'id' | 'tr' | 'nl' | 'pl' | 'sv' | 'da' | 'no' | 'fi' | 'ms' | 'he' | 'el';
 
@@ -2943,6 +2944,12 @@ export function LanguageProvider({
         return checkoutStr;
       }
     }
+    if (key.startsWith('promotions.')) {
+      const promoStr = getPromotionString(serverLang, key);
+      if (promoStr !== null) {
+        return promoStr;
+      }
+    }
     const langData = (translations[serverLang] || translations['en']) as Record<string, string>;
     return langData[key] || (translations['en'] as Record<string, string>)[key] || key;
   };
@@ -2961,6 +2968,12 @@ export function LanguageProvider({
       const checkoutStr = getCheckoutString(language, key);
       if (checkoutStr !== null) {
         return checkoutStr;
+      }
+    }
+    if (key.startsWith('promotions.')) {
+      const promoStr = getPromotionString(language, key);
+      if (promoStr !== null) {
+        return promoStr;
       }
     }
     const langData = (translations[language] || translations['en']) as Record<string, string>;

@@ -14,6 +14,7 @@ import {
   Maximize2,
   X,
 } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 import { PromotionItem, DEFAULT_PROMOTIONS } from '@/lib/promotions.types';
 
 export type { PromotionItem };
@@ -43,6 +44,7 @@ function BannerMediaViewer({
 }) {
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const touchStart = useRef<number | null>(null);
+  const { t } = useLanguage();
 
   const safeImages = images && images.length > 0 ? images : ['/images/wine_banner.png'];
   const currentImg = safeImages[activeImgIdx] || safeImages[0];
@@ -126,7 +128,7 @@ function BannerMediaViewer({
       {safeImages.length > 1 && (
         <div className="absolute top-3.5 right-3.5 z-20 flex items-center gap-1.5 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-black text-white/95 backdrop-blur-md border border-white/15 shadow">
           <Images className="h-3 w-3 text-amber-300" />
-          <span>{activeImgIdx + 1} / {safeImages.length} รูป</span>
+          <span>{activeImgIdx + 1} / {safeImages.length} {t('promotions.photos_count')}</span>
         </div>
       )}
 
@@ -137,7 +139,7 @@ function BannerMediaViewer({
             type="button"
             onClick={prevImg}
             className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md border border-white/20 opacity-0 group-hover/img:opacity-100 transition-opacity hover:bg-black/90 active:scale-95 cursor-pointer shadow-md"
-            aria-label="Previous photo"
+            aria-label={t('promotions.prev_photo')}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -146,7 +148,7 @@ function BannerMediaViewer({
             type="button"
             onClick={nextImg}
             className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md border border-white/20 opacity-0 group-hover/img:opacity-100 transition-opacity hover:bg-black/90 active:scale-95 cursor-pointer shadow-md"
-            aria-label="Next photo"
+            aria-label={t('promotions.next_photo')}
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -182,10 +184,10 @@ function BannerMediaViewer({
       )}
 
       {/* Hover Zoom hint */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover/img:opacity-100 transition-opacity">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover/img:opacity-100 transition-opacity z-20">
         <div className="flex items-center gap-1.5 rounded-full bg-black/65 px-3 py-1.5 text-[11px] font-bold text-white backdrop-blur-md border border-white/20 shadow-lg">
           <Maximize2 className="h-3.5 w-3.5 text-amber-300" />
-          <span>คลิกดูรูปขยาย</span>
+          <span>{t('promotions.zoom_hint')}</span>
         </div>
       </div>
     </div>
@@ -207,6 +209,7 @@ function PromotionLightbox({
   onClose: () => void;
 }) {
   const [idx, setIdx] = useState(initialIndex);
+  const { t } = useLanguage();
 
   useEffect(() => {
     setIdx(initialIndex);
@@ -243,7 +246,7 @@ function PromotionLightbox({
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
-            aria-label="Close modal"
+            aria-label={t('promotions.close_lightbox')}
           >
             <X className="h-5 w-5" />
           </button>
@@ -266,7 +269,7 @@ function PromotionLightbox({
                 type="button"
                 onClick={prev}
                 className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/90 transition shadow-lg cursor-pointer"
-                aria-label="Previous photo"
+                aria-label={t('promotions.prev_photo')}
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
@@ -275,7 +278,7 @@ function PromotionLightbox({
                 type="button"
                 onClick={next}
                 className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/90 transition shadow-lg cursor-pointer"
-                aria-label="Next photo"
+                aria-label={t('promotions.next_photo')}
               >
                 <ChevronRight className="h-6 w-6" />
               </button>
@@ -314,9 +317,13 @@ function PromotionLightbox({
 // ── Main PromotionSection Component ──
 export default function PromotionSection({
   promotions = DEFAULT_PROMOTIONS,
-  title = 'ข่าวสารและโปรโมชั่นพิเศษ',
-  subtitle = 'อัปเดตข้อมูลข่าวสาร สิทธิพิเศษ และโปรโมชั่นลดราคาล่าสุดจาก The Bottle Club',
+  title,
+  subtitle,
 }: PromotionSectionProps) {
+  const { t } = useLanguage();
+  const sectionBadge = t('promotions.badge');
+  const sectionTitle = title || t('promotions.title');
+  const sectionSubtitle = subtitle !== undefined ? subtitle : t('promotions.subtitle');
   const [activePromos, setActivePromos] = useState<PromotionItem[]>(promotions);
 
   // Lightbox Modal state
@@ -453,14 +460,14 @@ export default function PromotionSection({
           <div>
             <div className="mb-2.5 inline-flex items-center gap-2 rounded-full border border-red-900/15 bg-red-950/5 px-4 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-[#a11a1a]">
               <Megaphone className="h-3.5 w-3.5 text-[#a11a1a]" />
-              <span>NEWS & SPECIAL PROMOTIONS</span>
+              <span>{sectionBadge}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-stone-950">
-              {title}
+              {sectionTitle}
             </h2>
-            {subtitle && (
+            {sectionSubtitle && (
               <p className="mt-1.5 max-w-2xl text-xs sm:text-sm text-stone-600">
-                {subtitle}
+                {sectionSubtitle}
               </p>
             )}
           </div>
@@ -472,7 +479,7 @@ export default function PromotionSection({
                 type="button"
                 onClick={prevSlide}
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-stone-300 bg-white text-stone-700 shadow-sm transition-all hover:bg-stone-50 hover:border-stone-400 active:scale-95 cursor-pointer"
-                aria-label="Previous promotion banner"
+                aria-label={t('promotions.prev')}
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
@@ -481,7 +488,7 @@ export default function PromotionSection({
                 type="button"
                 onClick={nextSlide}
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-stone-300 bg-white text-stone-700 shadow-sm transition-all hover:bg-stone-50 hover:border-stone-400 active:scale-95 cursor-pointer"
-                aria-label="Next promotion banner"
+                aria-label={t('promotions.next')}
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
@@ -534,7 +541,7 @@ export default function PromotionSection({
                       {item.discountTag && (
                         <div className="mb-2 flex items-center gap-1.5 text-xs font-black text-[#a11a1a]">
                           <Tag className="h-3.5 w-3.5 text-[#a11a1a]" />
-                          <span>โปรโมชั่นพิเศษ: {item.discountTag}</span>
+                          <span>{t('promotions.special_offer')} {item.discountTag}</span>
                         </div>
                       )}
 
@@ -563,7 +570,7 @@ export default function PromotionSection({
                     <div className="mt-6 pt-4 border-t border-stone-100 flex items-center justify-between text-xs text-stone-500">
                       <div className="inline-flex items-center gap-1.5 text-stone-700 font-semibold">
                         <Wine className="h-3.5 w-3.5 text-[#a11a1a]" />
-                        <span>The Bottle Club Exclusive</span>
+                        <span>{t('promotions.exclusive')}</span>
                       </div>
 
                       {item.validUntil && (
