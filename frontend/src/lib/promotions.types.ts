@@ -6,6 +6,7 @@ export interface PromotionItem {
   subtitle?: string;
   description: string;
   imageUrl: string;
+  images?: string[];
   badge: string;
   discountTag?: string;
   validUntil?: string;
@@ -25,6 +26,7 @@ export function normalizePromotion(item: any): PromotionItem {
       subtitle: '',
       description: 'Exclusive Wine & Spirits',
       imageUrl: '/images/wine_banner.png',
+      images: ['/images/wine_banner.png'],
       badge: 'PROMOTION',
       discountTag: '',
       validUntil: '',
@@ -36,12 +38,28 @@ export function normalizePromotion(item: any): PromotionItem {
     };
   }
   const imageUrl = item.imageUrl || item.image_url || '';
+  let images: string[] = [];
+  if (Array.isArray(item.images) && item.images.length > 0) {
+    images = item.images.map((img: any) => String(img)).filter(Boolean);
+    if (imageUrl && !images.includes(imageUrl)) {
+      images.unshift(imageUrl);
+    }
+  } else if (Array.isArray(item.image_urls) && item.image_urls.length > 0) {
+    images = item.image_urls.map((img: any) => String(img)).filter(Boolean);
+    if (imageUrl && !images.includes(imageUrl)) {
+      images.unshift(imageUrl);
+    }
+  } else if (imageUrl) {
+    images = [imageUrl];
+  }
+
   return {
     id: String(item.id || `promo-${Date.now()}`),
     title: String(item.title || ''),
     subtitle: item.subtitle ? String(item.subtitle) : '',
     description: String(item.description || ''),
-    imageUrl,
+    imageUrl: images[0] || imageUrl,
+    images,
     badge: String(item.badge || 'PROMOTION'),
     discountTag: item.discountTag || item.discount_tag || '',
     validUntil: item.validUntil || item.valid_until || '',
