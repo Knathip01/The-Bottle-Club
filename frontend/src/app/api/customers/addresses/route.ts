@@ -35,9 +35,32 @@ async function ensureTable() {
   }
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
+
 export async function GET() {
   const session = await getSession();
   const userId = session?.user?.id ? String(session.user.id) : null;
+  const token = session?.user?.access_token;
+
+  if (userId && token) {
+    try {
+      const apiRes = await fetch(`${API_BASE_URL}/api/v1/customer-addresses/customer/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        cache: 'no-store'
+      });
+      if (apiRes.ok) {
+        const data = await apiRes.json();
+        const addressList = Array.isArray(data) ? data : (data?.data || data?.addresses || []);
+        if (addressList && addressList.length > 0) {
+          return NextResponse.json(addressList);
+        }
+      }
+    } catch (apiErr) {
+      console.warn('[AddressRoute] Central API fetch error:', apiErr);
+    }
+  }
 
   try {
     await ensureTable();
@@ -94,6 +117,32 @@ export async function POST(request: Request) {
     is_default_shipping: Boolean(body.is_default_shipping ?? true),
     is_default_billing: Boolean(body.is_default_billing ?? true),
   };
+
+  const token = session?.user?.access_token;
+  if (userId && token) {
+    try {
+      await fetch(`${API_BASE_URL}/api/v1/customer-addresses/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          customer_id: Number(userId),
+          recipient_name: `${addressData.first_name} ${addressData.last_name}`.trim() || 'Customer',
+          phone: addressData.phone || null,
+          address_line: addressData.address_line,
+          subdistrict: addressData.subdistrict || null,
+          district: addressData.district || null,
+          province: addressData.province || null,
+          postal_code: addressData.postal_code || null,
+          is_default: addressData.is_default_shipping
+        })
+      });
+    } catch (apiErr) {
+      console.warn('[AddressRoute] Central API address creation error:', apiErr);
+    }
+  }
 
   try {
     await ensureTable();

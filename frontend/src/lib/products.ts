@@ -21,6 +21,27 @@ export type Product = {
   vintage?: number;
   alcohol?: string;
   designation?: string;
+  brand?: string;
+  quantity?: string;
+};
+
+export type WineProductQueryParams = {
+  search?: string;
+  category?: string;
+  countries?: string;
+  brands?: string;
+  page?: number;
+  per_page?: number;
+  sort?: string;
+  token?: string;
+};
+
+export type PaginatedProductsResult = {
+  products: Product[];
+  total: number;
+  page: number;
+  per_page: number;
+  pages: number;
 };
 
 export type ProductReview = {
@@ -55,11 +76,15 @@ function extractWineArray(rawData: unknown): unknown[] {
 
 let cachedApiToken: string | null = null;
 let tokenExpiresAt = 0;
+let inFlightTokenPromise: Promise<string | null> | null = null;
 
 export async function getWaynevenApiToken(): Promise<string | null> {
   const now = Date.now();
   if (cachedApiToken && now < tokenExpiresAt - 60000) {
     return cachedApiToken;
+  }
+  if (inFlightTokenPromise) {
+    return inFlightTokenPromise;
   }
 
   const API_BASE_URL =
@@ -70,36 +95,41 @@ export async function getWaynevenApiToken(): Promise<string | null> {
   const username = process.env.API_ADMIN_USER || 'admin';
   const password = process.env.API_ADMIN_PASSWORD || 'admin123';
 
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({ username, password }),
-      cache: 'no-store',
-    });
+  inFlightTokenPromise = (async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+        cache: 'no-store',
+      });
 
-    if (!res.ok) {
-      console.warn(`[Wayneven Auth] Login status: ${res.status}`);
-      return cachedApiToken;
+      if (!res.ok) {
+        console.warn(`[Wayneven Auth] Login status: ${res.status}`);
+        return cachedApiToken;
+      }
+
+      const data = await res.json();
+      const token = data?.data?.access_token || data?.access_token;
+      const expiresIn = Number(data?.data?.expires_in || data?.expires_in || 900);
+
+      if (token) {
+        cachedApiToken = token;
+        tokenExpiresAt = Date.now() + expiresIn * 1000;
+        return token;
+      }
+    } catch (error) {
+      console.error('[Wayneven Auth] Failed to fetch token:', error);
+    } finally {
+      inFlightTokenPromise = null;
     }
+    return cachedApiToken;
+  })();
 
-    const data = await res.json();
-    const token = data?.data?.access_token || data?.access_token;
-    const expiresIn = Number(data?.data?.expires_in || data?.expires_in || 900);
-
-    if (token) {
-      cachedApiToken = token;
-      tokenExpiresAt = now + expiresIn * 1000;
-      return token;
-    }
-  } catch (error) {
-    console.error('[Wayneven Auth] Failed to fetch token:', error);
-  }
-
-  return cachedApiToken;
+  return inFlightTokenPromise;
 }
 
 function filterProducts(products: Product[], query?: string): Product[] {
@@ -295,207 +325,286 @@ export function sanitizeProductsForAuth(products: Product[], isAuth: boolean): P
   });
 }
 
-export async function getProducts(query?: string, token?: string): Promise<Product[]> {
-  const isAuth = !!token;
-  try {
-    const API_BASE_URL =
-      process.env.NEXT_PUBLIC_API_URL ||
-      process.env.API_URL ||
-      'https://api.wayneven.uk';
-
-    const effectiveToken = token || (await getWaynevenApiToken());
-
-    const headers: HeadersInit = {
-      Accept: 'application/json',
-    };
-
-    if (effectiveToken) {
-      headers['Authorization'] = `Bearer ${effectiveToken.replace(/^Bearer\s+/i, '')}`;
+export function mapWineItemToProduct(
+  item: any,
+  isAuth: boolean = false,
+  apiBaseUrl: string = 'https://api.wayneven.uk'
+): Product {
+  const ensureString = (val: any): string => {
+    if (!val) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') {
+      return val.name || val.title || val.product_name || '';
     }
+    return String(val);
+  };
 
-    const isServer = typeof window === 'undefined';
+  const rawName = ensureString(item.product_name || item.name) || 'Fine Wine';
+  const wineType = ensureString(item.categories_en || item.wine_type || item.type || rawName);
+  let color = 'red';
 
+  const lowerType = wineType.toLowerCase();
+  const lowerName = rawName.toLowerCase();
+
+  if (
+    lowerType.includes('white') ||
+    lowerType.includes('blanc') ||
+    lowerType.includes('chardonnay') ||
+    lowerType.includes('sauvignon') ||
+    lowerType.includes('riesling') ||
+    lowerType.includes('pinot grigio') ||
+    lowerType.includes('chenin') ||
+    lowerName.includes('blanc') ||
+    lowerName.includes('white')
+  ) {
+    color = 'white';
+  } else if (
+    lowerType.includes('rose') ||
+    lowerType.includes('rosé') ||
+    lowerType.includes('pink') ||
+    lowerName.includes('rose') ||
+    lowerName.includes('rosé')
+  ) {
+    color = 'rose';
+  } else if (
+    lowerType.includes('sparkling') ||
+    lowerType.includes('champagne') ||
+    lowerType.includes('prosecco') ||
+    lowerType.includes('cava') ||
+    lowerType.includes('brut') ||
+    lowerName.includes('champagne') ||
+    lowerName.includes('brut')
+  ) {
+    color = 'sparkling';
+  } else {
+    color = 'red';
+  }
+
+  // Handle multiple images from API
+  let images: ProductImage[] = [];
+  if (Array.isArray(item.images) && item.images.length > 0) {
+    images = item.images
+      .filter((img: any) => img?.image_url)
+      .map((img: any, idx: number) => {
+        const path = String(img.image_url);
+        const image_url = path.startsWith('http')
+          ? path
+          : `${apiBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+        return {
+          id: img.id || idx + 1,
+          image_url,
+          created_at: img.created_at || new Date().toISOString(),
+        };
+      });
+  }
+
+  if (images.length === 0 && item.image_url) {
+    const path = String(item.image_url);
+    const image_url = path.startsWith('http')
+      ? path
+      : `${apiBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+    images.push({ id: 1, image_url, created_at: item.created_at || new Date().toISOString() });
+  }
+
+  if (item.image_small_url && item.image_small_url !== item.image_url) {
+    const path = String(item.image_small_url);
+    const image_url = path.startsWith('http')
+      ? path
+      : `${apiBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+    images.push({ id: 2, image_url, created_at: item.created_at || new Date().toISOString() });
+  }
+
+  const defaultWineImg = `/images/wine_${color === 'sparkling' ? 'sparkling' : color}.png`;
+  const primaryImageUrl = images.length > 0 ? images[0].image_url : defaultWineImg;
+
+  const itemId = Number(item.id) || 1;
+  const basePrice = Number(item.selling_price) || Number(item.price) || (890 + ((itemId * 73) % 2900));
+  const originalPrice =
+    Number(item.price && item.selling_price && Number(item.price) > Number(item.selling_price) ? item.price : 0) ||
+    (basePrice > 1500 ? Math.round(basePrice * 1.15) : undefined);
+  const stock = item.stock !== undefined && item.stock !== null ? Number(item.stock) : (10 + (itemId % 40));
+
+  const subType = ensureString(item.brands || item.wine_type || item.sub_type) || 'Classic';
+  const region = ensureString(item.origins_en || item.region || (item.countries_en ? `${item.countries_en}` : ''));
+  const rawCountry = ensureString(item.countries_en || item.country || 'France');
+
+  const countryMap: Record<string, string> = {
+    US: 'us',
+    UnitedStates: 'us',
+    'United States': 'us',
+    France: 'fr',
+    Italy: 'it',
+    Spain: 'es',
+    Australia: 'au',
+    Chile: 'cl',
+    Argentina: 'ar',
+    Germany: 'de',
+    NewZealand: 'nz',
+    'New Zealand': 'nz',
+    Portugal: 'pt',
+    SouthAfrica: 'za',
+    'South Africa': 'za',
+    Austria: 'at',
+    Thailand: 'th',
+  };
+
+  const countryCode = countryMap[rawCountry] || rawCountry.toLowerCase().slice(0, 2) || 'fr';
+
+  let alcohol = ensureString(item.alcohol_100g || item.alcohol);
+  if (alcohol) {
+    const alcNum = parseFloat(alcohol);
+    if (!isNaN(alcNum)) {
+      alcohol = alcNum > 25 ? `${(11 + (itemId % 4)).toFixed(1)}%` : `${alcNum.toFixed(1)}%`;
+    }
+  } else {
+    alcohol = '12.5%';
+  }
+
+  let displayType = 'Wine';
+  if (lowerType.includes('champagne')) displayType = 'Champagne';
+  else if (lowerType.includes('sparkling')) displayType = 'Sparkling Wine';
+  else if (color === 'red') displayType = 'Red Wine';
+  else if (color === 'white') displayType = 'White Wine';
+  else if (color === 'rose') displayType = 'Rosé Wine';
+
+  return {
+    id: itemId,
+    name: rawName,
+    price: basePrice,
+    originalPrice,
+    stock,
+    color,
+    type: displayType,
+    sub_type: subType,
+    region: region || 'Selected Vineyard',
+    image: primaryImageUrl,
+    images: images.length > 0 ? images : [{ id: 1, image_url: primaryImageUrl, created_at: new Date().toISOString() }],
+    description:
+      ensureString(item.ingredients_text || item.description) ||
+      `ไวน์ชั้นเลิศคัดสรรพิเศษสำหรับสมาชิก The Bottle Club แบรนด์ ${subType}`,
+    vintage: item.vintage ? Number(item.vintage) : (2018 + (itemId % 6)),
+    alcohol,
+    designation: ensureString(item.brands || item.winery || item.designation) || subType,
+    countryCode,
+    brand: ensureString(item.brands) || undefined,
+    quantity: ensureString(item.quantity) || '75 cl',
+  };
+}
+
+export async function getWineProducts(params: WineProductQueryParams = {}): Promise<PaginatedProductsResult> {
+  const {
+    search,
+    category,
+    countries,
+    brands,
+    page = 1,
+    per_page = 24,
+    sort,
+    token,
+  } = params;
+
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.API_URL ||
+    'https://api.wayneven.uk';
+
+  const queryParams = new URLSearchParams();
+  queryParams.set('page', String(page));
+  queryParams.set('per_page', String(per_page));
+
+  if (search && search.trim()) {
+    queryParams.set('search', search.trim());
+  }
+  if (category && category !== 'all') {
+    queryParams.set('category', category.trim());
+  }
+  if (countries && countries !== 'all') {
+    queryParams.set('countries', countries.trim());
+  }
+  if (brands && brands !== 'all') {
+    queryParams.set('brands', brands.trim());
+  }
+
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token.replace(/^Bearer\s+/i, '')}`;
+    headers['X-Branch-Id'] = '1';
+  }
+
+  const isServer = typeof window === 'undefined';
+  const url = `${API_BASE_URL}/api/v1/wine-products/?${queryParams.toString()}`;
+
+  try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     let response: Response;
     try {
-      // Exclusively use Wayneven Swagger API
-      const searchParam = query && query.trim() ? `&search=${encodeURIComponent(query.trim())}` : '';
-      const url = `${API_BASE_URL}/api/v1/wine-products/?per_page=50${searchParam}`;
-
       response = await fetch(url, {
         headers,
         signal: controller.signal,
-        ...(isServer ? { next: { revalidate: 120 } } : { cache: 'no-store' }),
+        ...(isServer ? { next: { revalidate: 60 } } : { cache: 'no-store' }),
       });
-
-      // If /api/v1/wine-products/ is not available, try /api/v1/catalog/products
-      if (!response.ok && effectiveToken) {
-        response = await fetch(`${API_BASE_URL}/api/v1/catalog/products`, {
-          headers,
-          signal: controller.signal,
-          ...(isServer ? { next: { revalidate: 120 } } : { cache: 'no-store' }),
-        });
-      }
     } finally {
       clearTimeout(timeoutId);
     }
 
-    if (!response.ok) {
-      console.warn(`API response status: ${response.status}. Using fallback products.`);
-      return sanitizeProductsForAuth(filterProducts(FALLBACK_PRODUCTS, query), isAuth);
-    }
+    if (response.ok) {
+      const json = await response.json();
+      const dataObj = json?.data || {};
+      const rawItems = Array.isArray(dataObj.items)
+        ? dataObj.items
+        : (Array.isArray(json?.data) ? json.data : []);
+      const total = Number(dataObj.total ?? json?.meta?.total ?? rawItems.length);
+      const currentPage = Number(dataObj.page ?? json?.meta?.page ?? page);
+      const currentPerPage = Number(dataObj.per_page ?? json?.meta?.per_page ?? per_page);
+      const totalPages = Number(dataObj.pages ?? Math.ceil(total / (currentPerPage || 1)) ?? 1);
 
-    const responseText = await response.text();
-    if (!responseText) {
-      return sanitizeProductsForAuth(filterProducts(FALLBACK_PRODUCTS, query), isAuth);
-    }
-    const rawData = JSON.parse(responseText);
-    const wineList = extractWineArray(rawData);
+      let products: Product[] = rawItems.map((item: any) => mapWineItemToProduct(item, !!token, API_BASE_URL));
 
-    if (wineList.length === 0) {
-      return sanitizeProductsForAuth(filterProducts(FALLBACK_PRODUCTS, query), isAuth);
-    }
-
-    // Country code mapping
-    const countryMap: Record<string, string> = {
-      US: 'us',
-      UnitedStates: 'us',
-      France: 'fr',
-      Italy: 'it',
-      Spain: 'es',
-      Australia: 'au',
-      Chile: 'cl',
-      Argentina: 'ar',
-      Germany: 'de',
-      NewZealand: 'nz',
-      Portugal: 'pt',
-      SouthAfrica: 'za',
-      Austria: 'at',
-      Thailand: 'th'
-    };
-
-    // Helper to ensure we always get a string from potentially complex API fields
-    const ensureString = (val: any): string => {
-      if (!val) return '';
-      if (typeof val === 'string') return val;
-      if (typeof val === 'object') {
-        return val.name || val.title || val.product_name || '';
-      }
-      return String(val);
-    };
-
-    let products: Product[] = wineList.map((item: any) => {
-      const rawName = ensureString(item.product_name || item.name) || 'Fine Wine';
-      const wineType = ensureString(item.categories_en || item.wine_type || item.type || rawName);
-      let color = 'red';
-
-      const lowerType = wineType.toLowerCase();
-
-      if (
-        lowerType.includes('white') ||
-        lowerType.includes('blanc') ||
-        lowerType.includes('chardonnay') ||
-        lowerType.includes('sauvignon blanc') ||
-        lowerType.includes('riesling')
-      ) {
-        color = 'white';
-      } else if (
-        lowerType.includes('rose') ||
-        lowerType.includes('rosé') ||
-        lowerType.includes('pink')
-      ) {
-        color = 'rose';
-      } else {
-        color = 'red';
-      }
-
-      // Handle multiple images from API
-      let images: ProductImage[] = [];
-      if (Array.isArray(item.images) && item.images.length > 0) {
-        images = item.images
-          .filter((img: any) => img?.image_url)
-          .map((img: any) => {
-            const path = String(img.image_url);
-            const image_url = path.startsWith('http')
-              ? path
-              : `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-            return {
-              id: img.id || 1,
-              image_url,
-              created_at: img.created_at || new Date().toISOString(),
-            };
-          });
-      }
-
-      if (images.length === 0 && item.image_url) {
-        const path = String(item.image_url);
-        const image_url = path.startsWith('http')
-          ? path
-          : `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-        images.push({ id: 1, image_url, created_at: item.created_at || new Date().toISOString() });
-      }
-
-      if (images.length > 0 && item.image_small_url && item.image_small_url !== item.image_url) {
-        const path = String(item.image_small_url);
-        const image_url = path.startsWith('http')
-          ? path
-          : `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-        images.push({ id: 2, image_url, created_at: item.created_at || new Date().toISOString() });
-      }
-
-      const defaultWineImg = `/images/wine_${color}.png`;
-      const primaryImageUrl = images.length > 0 ? images[0].image_url : defaultWineImg;
-
-      // Unauthenticated guests only get silhouette; authenticated users get real wine image
-      const image = isAuth ? primaryImageUrl : '/images/bottle-silhouette.svg';
-
-      const itemId = Number(item.id) || 1;
-      const basePrice = Number(item.selling_price) || Number(item.price) || (890 + ((itemId * 73) % 2900));
-      const originalPrice = Number(item.price && item.selling_price && Number(item.price) > Number(item.selling_price) ? item.price : 0) || (basePrice > 1500 ? Math.round(basePrice * 1.15) : undefined);
-      const stock = item.stock !== undefined && item.stock !== null ? Number(item.stock) : (10 + (itemId % 40));
-
-      const subType = ensureString(item.brands || item.wine_type || item.sub_type) || 'Classic';
-      const region = ensureString(item.origins_en || item.region || (item.countries_en ? `${item.countries_en}` : ''));
-      const rawCountry = ensureString(item.countries_en || item.country || 'France');
-      const countryCode = countryMap[rawCountry] || rawCountry.toLowerCase().slice(0, 2) || 'fr';
-
-      let alcohol = ensureString(item.alcohol_100g || item.alcohol);
-      if (alcohol) {
-        const alcNum = parseFloat(alcohol);
-        if (!isNaN(alcNum)) {
-          alcohol = alcNum > 30 ? `${(11 + (itemId % 4)).toFixed(1)}%` : `${alcNum.toFixed(1)}%`;
-        }
-      } else {
-        alcohol = '12.5%';
+      if (sort === 'price-asc') {
+        products.sort((a: Product, b: Product) => a.price - b.price);
+      } else if (sort === 'price-desc') {
+        products.sort((a: Product, b: Product) => b.price - a.price);
+      } else if (sort === 'name') {
+        products.sort((a: Product, b: Product) => a.name.localeCompare(b.name));
       }
 
       return {
-        id: itemId,
-        name: rawName,
-        price: basePrice,
-        originalPrice,
-        stock,
-        color,
-        type: ensureString(item.categories_en || item.type) || 'Wine',
-        sub_type: subType,
-        region: region || 'Selected Vineyard',
-        image,
-        images: isAuth ? images : [],
-        description: ensureString(item.ingredients_text || item.description) || `ไวน์ชั้นเลิศคัดสรรพิเศษสำหรับสมาชิก The Bottle Club แบรนด์ ${subType}`,
-        vintage: item.vintage ? Number(item.vintage) : (2018 + (itemId % 6)),
-        alcohol,
-        designation: ensureString(item.brands || item.winery || item.designation) || subType,
-        countryCode,
+        products,
+        total,
+        page: currentPage,
+        per_page: currentPerPage,
+        pages: totalPages,
       };
-    });
-
-    return sanitizeProductsForAuth(filterProducts(products, query), isAuth);
-  } catch (error: any) {
-    console.warn('API fetch unavailable or timed out. Falling back to default products.', error?.message || error);
-    return sanitizeProductsForAuth(filterProducts(FALLBACK_PRODUCTS, query), isAuth);
+    }
+  } catch (error) {
+    console.warn('[getWineProducts] API fetch failed or timed out:', error);
   }
+
+  // Fallback to FALLBACK_PRODUCTS if API fails
+  let filtered = filterProducts(FALLBACK_PRODUCTS, search);
+  if (category && category !== 'all') {
+    filtered = filtered.filter((p) => p.type?.toLowerCase().includes(category.toLowerCase()));
+  }
+  return {
+    products: sanitizeProductsForAuth(filtered, !!token),
+    total: filtered.length,
+    page: 1,
+    per_page,
+    pages: 1,
+  };
+}
+
+export async function getProducts(query?: string, token?: string): Promise<Product[]> {
+  const result = await getWineProducts({
+    search: query,
+    per_page: 50,
+    token,
+  });
+  return result.products;
 }
 
 export async function getProductById(id: number, token?: string): Promise<Product | null> {
@@ -506,133 +615,59 @@ export async function getProductById(id: number, token?: string): Promise<Produc
       process.env.API_URL ||
       'https://api.wayneven.uk';
 
-    const effectiveToken = token || (await getWaynevenApiToken());
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token.replace(/^Bearer\s+/i, '')}`;
+      headers['X-Branch-Id'] = '1';
+    }
 
-    if (effectiveToken) {
-      try {
-        let res = await fetch(`${API_BASE_URL}/api/v1/wine-products/${id}`, {
-          headers: {
-            Accept: 'application/json',
-            Authorization: `Bearer ${effectiveToken.replace(/^Bearer\s+/i, '')}`,
-          },
+    try {
+      // 1. Fetch by id from Wayneven Wine Products (public endpoint)
+      const res = await fetch(`${API_BASE_URL}/api/v1/wine-products/${id}`, {
+        headers,
+        cache: 'no-store',
+      });
+
+      if (res.ok) {
+        const raw = await res.json();
+        const item = raw?.data || raw;
+        if (item && (item.id || item.product_name || item.name)) {
+          return mapWineItemToProduct(item, isAuth, API_BASE_URL);
+        }
+      }
+
+      // 2. Fetch by id from Wayneven Catalog Products (fallback with token)
+      const effectiveToken = token || (await getWaynevenApiToken());
+      if (effectiveToken) {
+        const catHeaders: Record<string, string> = {
+          Accept: 'application/json',
+          Authorization: `Bearer ${effectiveToken.replace(/^Bearer\s+/i, '')}`,
+          'X-Branch-Id': '1',
+        };
+        const catRes = await fetch(`${API_BASE_URL}/api/v1/catalog/products/${id}`, {
+          headers: catHeaders,
           cache: 'no-store',
         });
-
-        if (!res.ok) {
-          res = await fetch(`${API_BASE_URL}/api/v1/catalog/products/${id}`, {
-            headers: {
-              Accept: 'application/json',
-              Authorization: `Bearer ${effectiveToken.replace(/^Bearer\s+/i, '')}`,
-            },
-            cache: 'no-store',
-          });
+      if (catRes.ok) {
+        const raw = await catRes.json();
+        const item = raw?.data || raw;
+        if (item && (item.id || item.product_name || item.name)) {
+          return mapWineItemToProduct(item, isAuth, API_BASE_URL);
         }
-
-        if (res.ok) {
-          const raw = await res.json();
-          const item = raw?.data || raw;
-          if (item && (item.id || item.product_name || item.name)) {
-            const rawName = String(item.product_name || item.name || 'Wine');
-            const wineType = String(item.categories_en || item.wine_type || item.type || rawName);
-            let color = 'red';
-            const lowerType = wineType.toLowerCase();
-            if (
-              lowerType.includes('white') ||
-              lowerType.includes('blanc') ||
-              lowerType.includes('chardonnay') ||
-              lowerType.includes('sauvignon blanc') ||
-              lowerType.includes('riesling')
-            ) {
-              color = 'white';
-            } else if (
-              lowerType.includes('rose') ||
-              lowerType.includes('rosé') ||
-              lowerType.includes('pink')
-            ) {
-              color = 'rose';
-            } else {
-              color = 'red';
-            }
-
-            let images: ProductImage[] = [];
-            if (Array.isArray(item.images) && item.images.length > 0) {
-              images = item.images.map((img: any, idx: number) => ({
-                id: img.id || idx + 1,
-                image_url: String(img.image_url),
-                created_at: img.created_at || new Date().toISOString(),
-              }));
-            }
-            if (images.length === 0 && item.image_url) {
-              images.push({
-                id: 1,
-                image_url: String(item.image_url),
-                created_at: item.created_at || new Date().toISOString(),
-              });
-            }
-            if (images.length > 0 && item.image_small_url && item.image_small_url !== item.image_url) {
-              images.push({
-                id: 2,
-                image_url: String(item.image_small_url),
-                created_at: item.created_at || new Date().toISOString(),
-              });
-            }
-
-            const defaultWineImg = `/images/wine_${color}.png`;
-            const primaryImageUrl = images.length > 0 ? images[0].image_url : defaultWineImg;
-            const itemId = Number(item.id) || Number(id);
-            const basePrice = Number(item.selling_price) || Number(item.price) || (890 + ((itemId * 73) % 2900));
-            const originalPrice = Number(item.price && item.selling_price && Number(item.price) > Number(item.selling_price) ? item.price : 0) || (basePrice > 1500 ? Math.round(basePrice * 1.15) : undefined);
-            const stock = item.stock !== undefined && item.stock !== null ? Number(item.stock) : (10 + (itemId % 40));
-            const subType = String(item.brands || item.wine_type || item.sub_type || 'Classic');
-            const region = String(item.origins_en || item.region || (item.countries_en ? `${item.countries_en}` : 'Selected Vineyard'));
-
-            let alcohol = String(item.alcohol_100g || item.alcohol || '');
-            if (alcohol) {
-              const alcNum = parseFloat(alcohol);
-              if (!isNaN(alcNum)) {
-                alcohol = alcNum > 30 ? `${(11 + (itemId % 4)).toFixed(1)}%` : `${alcNum.toFixed(1)}%`;
-              }
-            } else {
-              alcohol = '12.5%';
-            }
-
-            const product: Product = {
-              id: itemId,
-              name: rawName,
-              price: basePrice,
-              originalPrice,
-              stock,
-              color,
-              type: String(item.categories_en || item.type || 'Wine'),
-              sub_type: subType,
-              region,
-              image: isAuth ? primaryImageUrl : '/images/bottle-silhouette.svg',
-              images: isAuth ? images : [],
-              description: String(item.ingredients_text || item.description || `ไวน์ชั้นเลิศคัดสรรพิเศษสำหรับสมาชิก The Bottle Club แบรนด์ ${subType}`),
-              vintage: item.vintage ? Number(item.vintage) : (2018 + (itemId % 6)),
-              alcohol,
-              designation: String(item.brands || item.winery || subType),
-              countryCode: String(item.countries_en || item.country || 'fr').toLowerCase().slice(0, 2),
-            };
-
-            return product;
-          }
-        }
-      } catch (err) {
-        console.warn(`Could not fetch wine by id ${id} from Wayneven API:`, err);
       }
     }
+  } catch (err) {
+    console.warn(`Could not fetch wine by id ${id} from Wayneven API:`, err);
+  }
 
-    // Check catalog products
-    const products = await getProducts(undefined, token);
-    const found = products.find((p) => p.id === Number(id));
-    if (found) return found;
+  // Fallback to FALLBACK_PRODUCTS
+  const fallbackFound = FALLBACK_PRODUCTS.find((p) => p.id === Number(id));
+  if (fallbackFound) {
+    return sanitizeProductsForAuth([fallbackFound], isAuth)[0] ?? null;
+  }
 
-    // Direct match in FALLBACK_PRODUCTS
-    const fallbackFound = FALLBACK_PRODUCTS.find((p) => p.id === Number(id));
-    if (fallbackFound) {
-      return sanitizeProductsForAuth([fallbackFound], isAuth)[0] ?? null;
-    }
 
     // Check local database if running server-side
     if (typeof window === 'undefined') {

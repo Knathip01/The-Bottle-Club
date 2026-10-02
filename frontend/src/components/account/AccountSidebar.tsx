@@ -20,12 +20,18 @@ import { logout } from '@/app/actions/auth';
 import { useLanguage } from '@/context/LanguageContext';
 
 type AccountUser = {
+  id?: string | number | null;
   first_name?: string | null;
   last_name?: string | null;
   email?: string | null;
   username?: string | null;
   avatar?: string | null;
   provider?: string | null;
+  points?: number | null;
+  loyalty_points?: number | null;
+  loyalty_points_balance?: number | null;
+  member_code?: string | null;
+  tier?: string | null;
 };
 
 interface AccountSidebarProps {
@@ -37,6 +43,21 @@ export default function AccountSidebar({ user, activePath = '/account' }: Accoun
   const { t, language } = useLanguage();
   const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ').trim();
   const displayName = fullName || user?.username || user?.email || 'Member';
+
+  const points = Number(user?.points ?? user?.loyalty_points ?? user?.loyalty_points_balance ?? 0);
+  const tier = user?.tier || (
+    points >= 10000 ? 'DIAMOND VIP' :
+    points >= 5000 ? 'PLATINUM LEVEL' :
+    points >= 2000 ? 'GOLD VIP' :
+    points >= 500 ? 'SILVER LEVEL' :
+    'CLASSIC LEVEL'
+  );
+
+  const memberCode = user?.member_code 
+    ? user.member_code 
+    : user?.id 
+      ? `•••• •••• •••• ${String(user.id).slice(-4).padStart(4, '0')}`
+      : '•••• •••• •••• 2026';
   
   const handleLogout = async () => {
     localStorage.removeItem('cart');
@@ -135,13 +156,13 @@ export default function AccountSidebar({ user, activePath = '/account' }: Accoun
             </div>
 
             <div className="relative mt-5 flex items-baseline gap-2">
-              <span className="text-3xl font-black tracking-tight text-white">0</span>
+              <span className="text-3xl font-black tracking-tight text-white">{points.toLocaleString()}</span>
               <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider">PTS</span>
             </div>
 
             <div className="relative mt-4 flex items-center justify-between border-t border-stone-800 pt-3 text-[9px] font-black tracking-widest text-stone-500 uppercase">
-              <span>•••• •••• •••• 2026</span>
-              <span className="text-stone-400">CLASSIC LEVEL</span>
+              <span>{memberCode}</span>
+              <span className={points >= 2000 ? 'text-amber-400 font-black' : 'text-stone-400'}>{tier}</span>
             </div>
           </div>
         </div>

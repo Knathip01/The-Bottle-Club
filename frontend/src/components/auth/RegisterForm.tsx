@@ -29,6 +29,11 @@ export default function RegisterForm() {
     e.preventDefault();
     setError(null);
 
+    if (formData.password.length < 8) {
+      setError('รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร');
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError(t('auth.error_mismatch'));
       return;
@@ -210,6 +215,7 @@ export default function RegisterForm() {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="••••••••"
+                    minLength={8}
                     className="w-full bg-white/50 border border-stone-200/40 pl-16 pr-6 py-5 text-stone-900 text-base rounded-[1.8rem] focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/40 focus:bg-white transition-all placeholder-stone-300 shadow-sm"
                     required
                     disabled={loading}
@@ -231,6 +237,7 @@ export default function RegisterForm() {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     placeholder="••••••••"
+                    minLength={8}
                     className="w-full bg-white/50 border border-stone-200/40 pl-16 pr-6 py-5 text-stone-900 text-base rounded-[1.8rem] focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/40 focus:bg-white transition-all placeholder-stone-300 shadow-sm"
                     required
                     disabled={loading}

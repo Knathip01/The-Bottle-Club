@@ -4,12 +4,16 @@ import { useLanguage } from '@/context/LanguageContext';
 
 interface RewardPointsContentProps {
   user?: {
+    id?: string | number | null;
     points?: number | null;
+    loyalty_points?: number | null;
+    loyalty_points_balance?: number | null;
   };
 }
 
 export default function RewardPointsContent({ user }: RewardPointsContentProps) {
   const { t } = useLanguage();
+  const currentPoints = Number(user?.points ?? user?.loyalty_points ?? user?.loyalty_points_balance ?? 0);
 
   return (
     <div className="flex-1">
@@ -20,10 +24,10 @@ export default function RewardPointsContent({ user }: RewardPointsContentProps) 
       <h1 className="text-xl font-bold mb-10">{t('account.points_title')}</h1>
 
       {/* Points Summary Header */}
-      <div className="relative bg-gradient-to-r from-red-400 to-red-200 rounded-3xl p-10 text-white mb-12 flex flex-col items-center justify-center overflow-hidden">
+      <div className="relative bg-gradient-to-r from-[#a11a1a] via-[#851515] to-[#450a0a] rounded-3xl p-10 text-white mb-12 flex flex-col items-center justify-center overflow-hidden shadow-xl shadow-stone-900/10">
         <div className="text-center z-10">
-          <span className="text-4xl font-bold block mb-1">{user?.points || 0}</span>
-          <span className="text-[11px] font-bold uppercase tracking-widest opacity-90">{t('account.points_available')}</span>
+          <span className="text-5xl font-black block mb-1 tracking-tight">{currentPoints.toLocaleString()}</span>
+          <span className="text-[11px] font-black uppercase tracking-widest text-amber-300">{t('account.points_available')} (PTS)</span>
         </div>
         
         {/* Decorative logo on the right */}

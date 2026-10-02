@@ -22,9 +22,34 @@ export async function syncSession() {
     if (response.ok) {
       const parsed = await response.json();
       const userData = parsed.data || parsed;
+      let points = Number(userData.points ?? userData.loyalty_points ?? userData.loyalty_points_balance ?? session.user.points ?? 0);
+
+      // Attempt to fetch fresh loyalty points from /api/v1/loyalty/balance/{id}
+      const customerId = userData.id || session.user.id;
+      if (customerId) {
+        try {
+          const loyaltyRes = await fetch(`${API_BASE_URL}/api/v1/loyalty/balance/${customerId}`, {
+            headers: {
+              'Authorization': `Bearer ${session.user.access_token}`,
+            },
+            cache: 'no-store',
+          });
+          if (loyaltyRes.ok) {
+            const loyaltyData = await loyaltyRes.json();
+            if (loyaltyData && typeof loyaltyData.balance === 'number') {
+              points = loyaltyData.balance;
+            }
+          }
+        } catch {
+          // ignore error if customer loyalty record doesn't exist yet
+        }
+      }
+
       const updatedUser = {
         ...session.user,
         ...userData,
+        points,
+        loyalty_points: points,
         first_name: userData.first_name || userData.display_name?.split(' ')[0] || session.user.first_name,
         last_name: userData.last_name || userData.display_name?.split(' ')[1] || session.user.last_name,
       };
@@ -80,8 +105,35 @@ function getAuthToken(payload: AuthPayload) {
   );
 }
 
-function getApiMessage(payload: AuthPayload, fallback: string) {
-  return firstString(payload.detail, payload.message) || fallback;
+function getApiMessage(payload: AuthPayload, fallback: string): string {
+  if (Array.isArray(payload.detail)) {
+    const messages = payload.detail.map((item: any) => {
+      if (typeof item === 'string') return item;
+      const field = Array.isArray(item.loc) ? item.loc[item.loc.length - 1] : '';
+      const msg = item.msg || '';
+      if (field === 'password' && (msg.includes('at least 8') || item.type === 'string_too_short')) {
+        return 'รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร (Password must be at least 8 characters)';
+      }
+      if (field === 'display_name' && (msg.includes('required') || item.type === 'missing')) {
+        return 'กรุณากรอกชื่อ-นามสกุล (Display name is required)';
+      }
+      if (field === 'email') {
+        return 'กรุณากรอกอีเมลให้ถูกต้อง (Valid email is required)';
+      }
+      return `${field ? field + ': ' : ''}${msg}`;
+    });
+    return messages.join('; ') || fallback;
+  }
+
+  if (typeof payload.detail === 'string') {
+    return payload.detail;
+  }
+
+  if (typeof payload.message === 'string') {
+    return payload.message;
+  }
+
+  return fallback;
 }
 
 function isRedirectError(error: unknown) {
@@ -109,26 +161,34 @@ function normalizeAuthSession(payload: AuthPayload, email: string) {
 export async function register(formData: RegisterFormData) {
   const { firstName, lastName, email, phone, username, password } = formData;
 
-  const effectiveUsername = username || email;
+  const trimmedEmail = (email || '').trim().toLowerCase();
+  const trimmedPassword = (password || '');
+  const effectiveUsername = (username || trimmedEmail).trim();
+  const displayName = [firstName, lastName].filter(Boolean).join(' ').trim() || effectiveUsername || 'User';
 
-  if (!email || !password) {
-    return { error: 'Please fill in all required fields.' };
+  if (!trimmedEmail || !trimmedPassword) {
+    return { error: 'กรุณากรอกข้อมูลให้ครบถ้วน (Please fill in all required fields)' };
+  }
+
+  if (trimmedPassword.length < 8) {
+    return { error: 'รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร (Password must be at least 8 characters)' };
   }
 
   try {
+    const registerPayload = {
+      username: effectiveUsername,
+      email: trimmedEmail,
+      password: trimmedPassword,
+      display_name: displayName,
+      phone: phone ? phone.trim() : null,
+    };
+
     const response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        first_name: firstName,
-        last_name: lastName,
-        email: email,
-        phone: phone || '',
-        username: effectiveUsername,
-        password: password
-      }),
+      body: JSON.stringify(registerPayload),
     });
 
     let data: AuthPayload;
@@ -143,21 +203,68 @@ export async function register(formData: RegisterFormData) {
     }
 
     if (!response.ok) {
-      if (response.status === 409) {
-        return { error: 'This email or username is already in use.' };
+      if (response.status === 409 || (response.status === 400 && String(data.detail).includes('already'))) {
+        return { error: 'อีเมลหรือชื่อผู้ใช้นี้ถูกใช้งานแล้ว (This email or username is already in use)' };
       }
       return { error: getApiMessage(data, 'Registration failed. Please try again.') };
     }
 
-    // After successful registration, login the user
-    await setAuthSession(data);
-    revalidatePath('/');
+    // Registration succeeded (201 Created) — automatically log in to obtain access_token
+    try {
+      const loginRes = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          username: effectiveUsername,
+          password: trimmedPassword,
+        }),
+      });
+
+      if (loginRes.ok) {
+        const loginData = await loginRes.json();
+        const sessionPayload = normalizeAuthSession(loginData, trimmedEmail);
+        const accessToken = sessionPayload.access_token || getAuthToken(loginData);
+
+        // Sync customer record to FastAPI /api/v1/customers/ (สมาชิก e-Commerce)
+        try {
+          if (accessToken) {
+            await fetch(`${API_BASE_URL}/api/v1/customers/`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`,
+                'X-Branch-Id': '1',
+              },
+              body: JSON.stringify({
+                first_name: firstName?.trim() || displayName.split(' ')[0] || effectiveUsername,
+                last_name: lastName?.trim() || (displayName.split(' ').length > 1 ? displayName.split(' ').slice(1).join(' ') : null),
+                email: trimmedEmail,
+                phone: phone ? phone.trim() : null,
+              }),
+            });
+          }
+        } catch (custErr) {
+          console.warn('Customer record creation sync notice:', custErr);
+        }
+
+        await setAuthSession(sessionPayload);
+        revalidatePath('/');
+        redirect('/account');
+      }
+    } catch (loginErr) {
+      if (isRedirectError(loginErr)) throw loginErr;
+      console.warn('Auto-login after register failed:', loginErr);
+    }
   } catch (error: unknown) {
+    if (isRedirectError(error)) throw error;
     console.error('Registration error:', error);
     return { error: 'Could not contact the server. Please try again.' };
   }
 
-  redirect('/account');
+  redirect('/login?registered=true');
 }
 
 export async function login(formData: LoginFormData) {
@@ -263,5 +370,76 @@ export async function setSessionFromToken(token: string, userData?: any) {
   } catch (error) {
     console.error('Error in setSessionFromToken:', error);
     return { error: 'Failed to process token' };
+  }
+}
+
+export async function updateProfile(formData: {
+  first_name: string;
+  last_name: string;
+  phone?: string;
+}) {
+  const session = await getSession();
+  if (!session?.user) {
+    return { error: 'กรุณาเข้าสู่ระบบก่อนทำการบันทึกข้อมูล' };
+  }
+
+  const token = session.user.access_token;
+  const customerId = session.user.id;
+
+  try {
+    if (token && customerId) {
+      // 1. Update customer in FastAPI CRM
+      try {
+        await fetch(`${API_BASE_URL}/api/v1/customers/${customerId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            first_name: formData.first_name,
+            last_name: formData.last_name || null,
+            phone: formData.phone || null,
+            email: session.user.email || null,
+          })
+        });
+      } catch (custErr) {
+        console.warn('Could not update customer via /api/v1/customers:', custErr);
+      }
+
+      // 2. Also update user display name if endpoint exists
+      try {
+        await fetch(`${API_BASE_URL}/api/v1/users/${customerId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            display_name: `${formData.first_name} ${formData.last_name}`.trim(),
+            phone: formData.phone || null,
+          })
+        });
+      } catch (userErr) {
+        console.warn('Could not update user display_name:', userErr);
+      }
+    }
+
+    // 3. Update session cookie
+    const updatedUser = {
+      ...session.user,
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      phone: formData.phone || session.user.phone,
+    };
+    await setAuthSession(updatedUser);
+
+    revalidatePath('/account');
+    revalidatePath('/account/profile');
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Update profile error:', err);
+    return { error: err.message || 'บันทึกข้อมูลไม่สำเร็จ' };
   }
 }

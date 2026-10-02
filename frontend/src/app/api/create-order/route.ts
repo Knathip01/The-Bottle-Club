@@ -205,8 +205,10 @@ export async function POST(request: Request) {
     const requestTotalAmount = Number(body.totalAmount) || 0;
     
     try {
+      const branchId = Number(body.branchId || body.branch_id || 1);
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
+        'X-Branch-Id': String(branchId),
       };
 
       if (token) {
@@ -214,8 +216,9 @@ export async function POST(request: Request) {
       }
 
       const orderPayload = {
-        branch_id: 1,
+        branch_id: branchId,
         customer_id: user?.id ? parseInt(String(user.id)) : null,
+        order_source: 'ecommerce',
         notes: `Payment: ${requestedPaymentMethod}, Shipping: ${requestedShippingMethod}`,
         items: items.map((item: any) => ({
           product_id: parseInt(String(item.product_id ?? item.id), 10) || 1,

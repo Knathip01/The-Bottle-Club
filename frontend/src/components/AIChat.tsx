@@ -23,7 +23,6 @@ interface Message {
 
 export default function AIChat() {
   const pathname = usePathname();
-  if (pathname?.startsWith('/admin')) return null;
 
   const { language, t } = useLanguage();
   const locale = AI_PRICE_LOCALES[language] || 'en-US';

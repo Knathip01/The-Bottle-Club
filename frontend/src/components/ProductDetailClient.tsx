@@ -364,7 +364,7 @@ export default function ProductDetailClient({
           <div className="flex items-start justify-between">
             <div>
               <div className="text-[10px] font-bold uppercase text-stone-400">
-                {t('products.price_label')}
+                {t('common.price_label') || 'ราคา (PRICE)'}
               </div>
 
               <div className="flex items-baseline gap-2">
@@ -381,7 +381,7 @@ export default function ProductDetailClient({
 
             <div className="text-right">
               <div className="text-[10px] font-bold uppercase text-stone-400">
-                {t('products.in_stock')}
+                {t('common.in_stock') || 'จำนวนในคลัง (IN STOCK)'}
               </div>
 
               <div className="text-sm font-semibold text-stone-700">
@@ -420,7 +420,7 @@ export default function ProductDetailClient({
                 </div>
 
                 <div className="text-sm font-bold">
-                  {/* Leave blank */}
+                  {product.quantity || '75 cl'}
                 </div>
               </div>
             </div>
@@ -505,7 +505,11 @@ export default function ProductDetailClient({
                 </div>
 
                 <div className="text-sm font-bold">
-                  {product.alcohol ? `${product.alcohol}%` : ''}
+                  {product.alcohol
+                    ? product.alcohol.includes('%')
+                      ? product.alcohol
+                      : `${product.alcohol}%`
+                    : '12.5%'}
                 </div>
               </div>
             </div>

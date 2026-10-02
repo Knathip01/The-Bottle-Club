@@ -13,8 +13,10 @@ export async function POST(request: Request) {
     console.log('--- Order Proxy Request ---');
     console.log('Target:', targetUrl);
     
+    const branchId = body?.branch_id || 1;
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
+      'X-Branch-Id': String(branchId),
     };
 
     if (token) {
