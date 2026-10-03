@@ -36,11 +36,12 @@ export default function Footer() {
   const { t } = useLanguage();
 
   return (
-    <footer className="hidden md:block relative bg-[#EAD3A9] text-stone-800 pt-20 pb-10 overflow-hidden border-t border-[#D9C4A1]/80">
+    <footer className="relative bg-[#EAD3A9] text-stone-800 pt-16 sm:pt-20 pb-28 md:pb-12 overflow-hidden border-t border-[#D9C4A1]/80">
 
       {/* Background Doodle Pattern */}
       <div
-        className="absolute inset-0 bg-[url('/images/footer-pattern.jpg')] bg-cover bg-center pointer-events-none opacity-90"
+        className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-90"
+        style={{ backgroundImage: "url('/images/footer-pattern.jpg?v=3')" }}
       />
 
       {/* Layered Atmospheric Wash — richer depth */}
