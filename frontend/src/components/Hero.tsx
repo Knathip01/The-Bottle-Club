@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
-import { ArrowRight, Clock3, ShieldCheck, Sparkles, Star, Users, Award, Wine } from 'lucide-react';
+import { ArrowRight, Sparkles, Award, Wine } from 'lucide-react';
 import { PromotionItem } from '@/lib/promotions.types';
 
 interface HeroProps {
@@ -63,17 +63,6 @@ export default function Hero({ heroPromo: initialHeroPromo }: HeroProps = {}) {
   const floatingImage = promo?.heroImageUrl || (promo?.images && promo.images.length > 1 ? promo.images[1] : null) || '/images/wine_hero.png';
   const isCustomFloating = typeof floatingImage === 'string' && (floatingImage.startsWith('data:') || floatingImage.startsWith('http'));
 
-  const stats = [
-    { value: '500+', label: t('hero.stats.items'), icon: Award },
-    { value: '50+',  label: t('hero.stats.brands'), icon: Star },
-    { value: '10K+', label: t('hero.stats.customers'), icon: Users },
-  ];
-
-  const serviceBadges = [
-    { label: t('hero.service.delivery'), icon: Clock3 },
-    { label: t('hero.service.curated'), icon: Sparkles },
-    { label: t('hero.service.secure'), icon: ShieldCheck },
-  ];
 
   return (
     <section className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden bg-stone-950 text-white sm:min-h-[760px]">
@@ -198,39 +187,6 @@ export default function Hero({ heroPromo: initialHeroPromo }: HeroProps = {}) {
             )}
           </div>
 
-          {/* ── Stats Row ── */}
-          <div className="mt-10 flex flex-wrap gap-8 border-t border-white/10 pt-8">
-            {stats.map((stat) => {
-              const Icon = stat.icon;
-              return (
-                <div key={stat.value} className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <Icon className="h-4 w-4 text-[#d4a017]" strokeWidth={2} />
-                  </div>
-                  <div>
-                    <strong className="block text-xl font-black text-white leading-none">{stat.value}</strong>
-                    <span className="text-[10px] font-semibold uppercase tracking-widest text-stone-400">{stat.label}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* ── Service Badges ── */}
-          <div className="mt-6 flex flex-wrap gap-2">
-            {serviceBadges.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.label}
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/8 px-3.5 py-2 text-xs font-semibold text-white/80 backdrop-blur-sm"
-                >
-                  <Icon className="h-3.5 w-3.5 text-[#d4a017]" strokeWidth={2.5} />
-                  {item.label}
-                </div>
-              );
-            })}
-          </div>
         </div>
 
         {/* ── Floating bottle image (desktop) ── */}
