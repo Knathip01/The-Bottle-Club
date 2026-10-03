@@ -1,4 +1,4 @@
-﻿﻿'use client';
+'use client';
 
 import React, { createContext, useContext, useEffect, useSyncExternalStore } from 'react';
 import { getAiString } from '@/lib/ai-translations';
@@ -79,8 +79,8 @@ const translations = {
     'tracking.preview_title': 'มุมมองแบบ Grab',
     'tracking.preview_desc': 'กรอกเลขพัสดุเพื่อเปิดแผนที่เต็มจอ',
     'hero.welcome': 'ยินดีต้อนรับสู่ The Bottle Club',
-    'hero.title': 'คัดสรรไวน์ ระดับพรีเมียม เพื่อคุณโดยเฉพาะ',
-    'hero.subtitle': 'เราคือพาร์ทเนอร์ที่ขาดไม่ได้ของคุณในธุรกิจ Hospitality เราช่วยบาร์และร้านอาหารด้วยเครื่องดื่มระดับพรีเมียม คำปรึกษาจากผู้เชี่ยวชาญ และโซลูชันที่ออกแบบเฉพาะเพื่อยกระดับแบรนด์และการดำเนินงานของคุณ',
+    'hero.title': 'We are your essential partner for hospitality success.',
+    'hero.subtitle': 'We provide bars and restaurants with a premier selection of beverages, expert consultancy, and bespoke solutions designed to elevate your brand and operations.',
     'hero.cta_all': 'ดูไวน์ทั้งหมด',
     'hero.cta_more': 'เรียนรู้เพิ่มเติม',
     'hero.service.delivery': 'จัดส่งรวดเร็ว',
@@ -364,8 +364,8 @@ const translations = {
     'tracking.preview_title': 'Grab-style view',
     'tracking.preview_desc': 'Enter a tracking number for full-screen map',
     'hero.welcome': 'Welcome to The Bottle Club',
-    'hero.title': 'Premium Wine Curated Exclusively For You',
-    'hero.subtitle': 'We are your essential partner for hospitality success. We provide bars and restaurants with a premier selection of beverages, expert consultancy, and bespoke solutions designed to elevate your brand and operations.',
+    'hero.title': 'We are your essential partner for hospitality success.',
+    'hero.subtitle': 'We provide bars and restaurants with a premier selection of beverages, expert consultancy, and bespoke solutions designed to elevate your brand and operations.',
     'hero.cta_all': 'Shop All Wines',
     'hero.cta_more': 'Learn More',
     'hero.service.delivery': 'Fast Delivery',
