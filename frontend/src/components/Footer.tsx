@@ -70,27 +70,19 @@ export default function Footer() {
             <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-[#D9A050]/10 blur-xl pointer-events-none" />
 
             <div className="space-y-4 relative">
-              <Link href="/" className="inline-flex items-center gap-4 group/logo">
-                <div className="relative">
+              <Link href="/" className="inline-block group/logo">
+                <div className="relative inline-block">
                   {/* Glow ring around logo */}
-                  <div className="absolute inset-0 rounded-2xl bg-[#a11a1a]/15 blur-md scale-110 group-hover/logo:scale-125 transition-transform duration-300" />
-                  <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-white via-[#FFF9EE] to-[#F5E6CC] border border-[#D9C4A1] flex items-center justify-center p-2 shadow-lg shadow-[#6e3010]/15 group-hover/logo:scale-105 group-hover/logo:-rotate-2 transition-all duration-300">
+                  <div className="absolute -inset-1 rounded-2xl bg-[#a11a1a]/15 blur-md scale-105 group-hover/logo:scale-125 transition-transform duration-300" />
+                  <div className="relative h-18 w-18 px-3 py-2 rounded-2xl bg-gradient-to-br from-white via-[#FFF9EE] to-[#F5E6CC] border border-[#D9C4A1] flex items-center justify-center shadow-lg shadow-[#6e3010]/15 group-hover/logo:scale-105 group-hover/logo:-rotate-2 transition-all duration-300">
                     <Image
                       src="/logos/thebottleclub-mascot.png"
-                      alt="The Bottle Club Logo"
-                      width={38}
-                      height={48}
-                      className="h-10 w-auto object-contain drop-shadow-sm group-hover/logo:scale-105 transition-transform duration-300"
+                      alt="The Bottle Club"
+                      width={48}
+                      height={64}
+                      className="h-14 w-auto object-contain drop-shadow-sm group-hover/logo:scale-105 transition-transform duration-300"
                     />
                   </div>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-2xl font-serif font-black tracking-tight text-stone-900 uppercase leading-none drop-shadow-sm">
-                    The Bottle Club
-                  </span>
-                  <span className="text-[10px] font-black tracking-[0.3em] text-[#a11a1a] uppercase mt-1">
-                    Est. 2025 · Premium Selections
-                  </span>
                 </div>
               </Link>
 
