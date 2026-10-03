@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Clock3, Mail, MessageCircle, Phone, Wine, Send, ArrowUpRight } from "lucide-react";
+import { Clock3, Mail, MessageCircle, Phone, Wine, Send } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function Footer() {
@@ -113,25 +113,8 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Newsletter & Contact */}
-          <div className="lg:col-span-4 space-y-10">
-            <div className="space-y-6">
-              <h4 className="text-white text-xs font-black uppercase tracking-[0.3em]">
-                {t('footer.newsletter_title')}
-              </h4>
-              <p className="text-sm text-stone-500">{t('footer.newsletter_desc')}</p>
-              <form className="flex gap-2">
-                <input 
-                  type="email" 
-                  placeholder={t('footer.newsletter_placeholder')} 
-                  className="flex-1 bg-white/5 border border-white/5 rounded-2xl px-6 py-3.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#a11a1a]/40 focus:bg-white/10 transition-all"
-                />
-                <button className="p-4 bg-[#a11a1a] text-white rounded-2xl hover:bg-[#8e1515] transition-all shadow-lg shadow-[#a11a1a]/20 group active:scale-95">
-                  <ArrowUpRight size={20} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </button>
-              </form>
-            </div>
-
+          {/* Contact Information */}
+          <div className="lg:col-span-4">
             <div className="p-8 bg-gradient-to-br from-stone-900/50 to-stone-950/50 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] space-y-6">
               <div className="flex items-center gap-5 group">
                 <div className="p-3 bg-white/5 rounded-xl group-hover:bg-[#a11a1a]/10 transition-colors">
