@@ -21,80 +21,126 @@ function FacebookIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
+/* Decorative divider ✦ */
+function OrnamentDivider() {
+  return (
+    <div className="flex items-center gap-2 my-1">
+      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#D9C4A1]/70 to-transparent" />
+      <span className="text-[#a11a1a]/50 text-[10px]">✦</span>
+      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#D9C4A1]/70 to-transparent" />
+    </div>
+  );
+}
+
 export default function Footer() {
   const { t } = useLanguage();
 
   return (
     <footer className="hidden md:block relative bg-[#EAD3A9] text-stone-800 pt-20 pb-10 overflow-hidden border-t border-[#D9C4A1]/80">
-      {/* Background Doodle Pattern (Your Local Drunk Dealer removed) */}
-      <div 
-        className="absolute inset-0 bg-[url('/images/footer-pattern.jpg')] bg-cover bg-center pointer-events-none opacity-90" 
+
+      {/* Background Doodle Pattern */}
+      <div
+        className="absolute inset-0 bg-[url('/images/footer-pattern.jpg')] bg-cover bg-center pointer-events-none opacity-90"
       />
 
-      {/* Subtle Warm Atmospheric Wash for contrast and readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#EAD3A9]/50 via-transparent to-[#EAD3A9]/60 pointer-events-none" />
+      {/* Layered Atmospheric Wash — richer depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#EAD3A9]/60 via-[#EAD3A9]/10 to-[#C9A97A]/55 pointer-events-none" />
+
+      {/* Top vignette glow */}
+      <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-[#a11a1a]/5 to-transparent pointer-events-none" />
+
+      {/* Ambient bottom warm glow */}
+      <div className="absolute bottom-0 inset-x-0 h-56 bg-gradient-to-t from-[#7a3a0a]/20 to-transparent pointer-events-none" />
+
+      {/* Subtle radial gold shimmer center */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 100%, rgba(212,165,89,0.18) 0%, transparent 70%)' }}
+      />
 
       <div className="container relative mx-auto px-6 lg:px-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-6 pb-12">
-          
-          {/* Brand & Mission Card */}
-          <div className="lg:col-span-4 bg-white/85 backdrop-blur-md p-8 rounded-3xl border border-[#D9C4A1]/80 shadow-xl shadow-[#6e512c]/5 flex flex-col justify-between space-y-6">
-            <div className="space-y-4">
-              <Link href="/" className="inline-flex items-center gap-4 group">
+
+          {/* ── Brand & Mission Card ── */}
+          <div className="lg:col-span-4 relative bg-white/90 backdrop-blur-xl p-8 rounded-3xl border border-[#D9C4A1]/90 shadow-2xl shadow-[#6e3010]/15 flex flex-col justify-between space-y-6 overflow-hidden group">
+            {/* Card inner glow on hover */}
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#fff8ee]/60 via-transparent to-[#ffe8c8]/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            {/* Decorative top-right wine stain circle */}
+            <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-[#a11a1a]/5 blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-[#D9A050]/10 blur-xl pointer-events-none" />
+
+            <div className="space-y-4 relative">
+              <Link href="/" className="inline-flex items-center gap-4 group/logo">
                 <div className="relative">
-                  <div className="w-13 h-13 rounded-2xl bg-[#a11a1a] flex items-center justify-center shadow-lg shadow-[#a11a1a]/25 group-hover:scale-105 group-hover:rotate-3 transition-all duration-300">
-                    <Wine className="h-6 w-6 text-white" strokeWidth={2.5} />
+                  {/* Glow ring around icon */}
+                  <div className="absolute inset-0 rounded-2xl bg-[#a11a1a]/20 blur-md scale-110 group-hover/logo:scale-125 transition-transform duration-300" />
+                  <div className="relative w-13 h-13 rounded-2xl bg-gradient-to-br from-[#c42020] to-[#7a0f0f] flex items-center justify-center shadow-lg shadow-[#a11a1a]/40 group-hover/logo:scale-105 group-hover/logo:rotate-3 transition-all duration-300">
+                    <Wine className="h-6 w-6 text-white drop-shadow" strokeWidth={2.5} />
                   </div>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-2xl font-serif font-black tracking-tight text-stone-900 uppercase leading-none">
+                  <span className="text-2xl font-serif font-black tracking-tight text-stone-900 uppercase leading-none drop-shadow-sm">
                     The Bottle Club
                   </span>
                   <span className="text-[10px] font-black tracking-[0.3em] text-[#a11a1a] uppercase mt-1">
-                    Est. 2025 Premium Selections
+                    Est. 2025 · Premium Selections
                   </span>
                 </div>
               </Link>
 
-              <p className="text-stone-700 text-xs sm:text-sm leading-relaxed font-medium">
+              <OrnamentDivider />
+
+              <p className="text-stone-600 text-xs sm:text-sm leading-relaxed font-medium relative">
                 {t('footer.brand_desc')}. {t('footer.tagline')}.
               </p>
             </div>
 
-            {/* Social Buttons: Only LINE and Facebook */}
-            <div className="pt-2 border-t border-stone-200/60">
-              <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest block mb-3">
+            {/* Social Buttons */}
+            <div className="pt-3 border-t border-[#D9C4A1]/60 relative">
+              <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block mb-3">
                 Connect With Us
               </span>
               <div className="flex items-center gap-3">
-                <Link 
-                  href="https://line.me/ti/p/@thebottleclub" 
+                {/* LINE button */}
+                <Link
+                  href="https://line.me/ti/p/@thebottleclub"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#06C755] hover:bg-[#05b34c] text-white rounded-xl shadow-md shadow-[#06C755]/25 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer font-black text-xs uppercase tracking-wider"
+                  className="relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white font-black text-xs uppercase tracking-wider overflow-hidden group/btn transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-[#06C755]/30 hover:shadow-xl hover:shadow-[#06C755]/40"
+                  style={{ background: 'linear-gradient(135deg, #07d95e 0%, #06C755 50%, #04a344 100%)' }}
                 >
-                  <LineIcon className="w-4 h-4 fill-current" />
-                  <span>LINE</span>
+                  <span className="absolute inset-0 bg-white/0 group-hover/btn:bg-white/10 transition-colors duration-200 rounded-xl" />
+                  {/* shimmer sweep */}
+                  <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent skew-x-12" />
+                  <LineIcon className="w-4 h-4 fill-current relative z-10" />
+                  <span className="relative z-10">LINE</span>
                 </Link>
-                <Link 
-                  href="https://www.facebook.com/thebottleclub.cm" 
+
+                {/* Facebook button */}
+                <Link
+                  href="https://www.facebook.com/thebottleclub.cm"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#1877F2] hover:bg-[#1464cc] text-white rounded-xl shadow-md shadow-[#1877F2]/25 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer font-black text-xs uppercase tracking-wider"
+                  className="relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white font-black text-xs uppercase tracking-wider overflow-hidden group/btn transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-[#1877F2]/30 hover:shadow-xl hover:shadow-[#1877F2]/40"
+                  style={{ background: 'linear-gradient(135deg, #3b90f5 0%, #1877F2 50%, #1055cc 100%)' }}
                 >
-                  <FacebookIcon className="w-4 h-4 fill-current" />
-                  <span>Facebook</span>
+                  <span className="absolute inset-0 bg-white/0 group-hover/btn:bg-white/10 transition-colors duration-200 rounded-xl" />
+                  <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent skew-x-12" />
+                  <FacebookIcon className="w-4 h-4 fill-current relative z-10" />
+                  <span className="relative z-10">Facebook</span>
                 </Link>
               </div>
             </div>
           </div>
 
-          {/* Quick Links Column 1: Categories */}
-          <div className="lg:col-span-2 bg-white/85 backdrop-blur-md p-6 sm:p-7 rounded-3xl border border-[#D9C4A1]/80 shadow-xl shadow-[#6e512c]/5 space-y-4">
-            <h4 className="text-stone-900 text-xs font-black uppercase tracking-[0.25em] pb-2 border-b border-stone-200/60">
+          {/* ── Quick Links: Categories ── */}
+          <div className="lg:col-span-2 relative bg-white/88 backdrop-blur-xl p-6 sm:p-7 rounded-3xl border border-[#D9C4A1]/80 shadow-xl shadow-[#6e3010]/10 space-y-4 overflow-hidden group">
+            <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-[#a11a1a]/4 blur-2xl pointer-events-none" />
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#fff8ee]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+            <h4 className="relative text-stone-900 text-xs font-black uppercase tracking-[0.25em] pb-2 border-b border-[#D9C4A1]/60">
               {t('footer.categories')}
             </h4>
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col gap-3 relative">
               {[
                 { label: t('footer.red_wine'), href: '/product?category=red' },
                 { label: t('footer.white_wine'), href: '/product?category=white' },
@@ -102,21 +148,24 @@ export default function Footer() {
                 { label: t('footer.gifts'), href: '/promotions' },
               ].map((link, idx) => (
                 <li key={idx}>
-                  <Link href={link.href} className="group flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-[#a11a1a] transition-all duration-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#a11a1a]/40 group-hover:bg-[#a11a1a] group-hover:scale-125 transition-all"></span>
-                    {link.label}
+                  <Link href={link.href} className="group/link flex items-center gap-2.5 text-xs font-bold text-stone-600 hover:text-[#a11a1a] transition-all duration-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#a11a1a]/35 group-hover/link:bg-[#a11a1a] group-hover/link:scale-150 group-hover/link:shadow-sm group-hover/link:shadow-[#a11a1a]/40 transition-all duration-300" />
+                    <span className="group-hover/link:translate-x-0.5 transition-transform duration-200">{link.label}</span>
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Quick Links Column 2: Services */}
-          <div className="lg:col-span-2 bg-white/85 backdrop-blur-md p-6 sm:p-7 rounded-3xl border border-[#D9C4A1]/80 shadow-xl shadow-[#6e512c]/5 space-y-4">
-            <h4 className="text-stone-900 text-xs font-black uppercase tracking-[0.25em] pb-2 border-b border-stone-200/60">
+          {/* ── Quick Links: Services ── */}
+          <div className="lg:col-span-2 relative bg-white/88 backdrop-blur-xl p-6 sm:p-7 rounded-3xl border border-[#D9C4A1]/80 shadow-xl shadow-[#6e3010]/10 space-y-4 overflow-hidden group">
+            <div className="absolute -bottom-10 -left-10 w-28 h-28 rounded-full bg-[#D9A050]/8 blur-2xl pointer-events-none" />
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#fff8ee]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+            <h4 className="relative text-stone-900 text-xs font-black uppercase tracking-[0.25em] pb-2 border-b border-[#D9C4A1]/60">
               {t('footer.services')}
             </h4>
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col gap-3 relative">
               {[
                 { label: t('footer.how_to_order'), href: '#' },
                 { label: t('footer.tracking'), href: '/tracking' },
@@ -124,69 +173,94 @@ export default function Footer() {
                 { label: t('footer.faq'), href: '#' },
               ].map((link, idx) => (
                 <li key={idx}>
-                  <Link href={link.href} className="group flex items-center gap-2 text-xs font-bold text-stone-700 hover:text-[#a11a1a] transition-all duration-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#a11a1a]/40 group-hover:bg-[#a11a1a] group-hover:scale-125 transition-all"></span>
-                    {link.label}
+                  <Link href={link.href} className="group/link flex items-center gap-2.5 text-xs font-bold text-stone-600 hover:text-[#a11a1a] transition-all duration-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#a11a1a]/35 group-hover/link:bg-[#a11a1a] group-hover/link:scale-150 group-hover/link:shadow-sm group-hover/link:shadow-[#a11a1a]/40 transition-all duration-300" />
+                    <span className="group-hover/link:translate-x-0.5 transition-transform duration-200">{link.label}</span>
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Contact Information Card */}
-          <div className="lg:col-span-4 bg-white/85 backdrop-blur-md p-7 sm:p-8 rounded-3xl border border-[#D9C4A1]/80 shadow-xl shadow-[#6e512c]/5 space-y-5">
-            <h4 className="text-stone-900 text-xs font-black uppercase tracking-[0.25em] pb-2 border-b border-stone-200/60">
-              {t('footer.inquiry')} & {t('footer.store_hours')}
+          {/* ── Contact Information Card ── */}
+          <div className="lg:col-span-4 relative bg-white/90 backdrop-blur-xl p-7 sm:p-8 rounded-3xl border border-[#D9C4A1]/90 shadow-2xl shadow-[#6e3010]/15 space-y-5 overflow-hidden group">
+            <div className="absolute -top-8 -left-8 w-32 h-32 rounded-full bg-[#a11a1a]/5 blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-8 -right-8 w-36 h-36 rounded-full bg-[#D9A050]/10 blur-2xl pointer-events-none" />
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-tl from-[#ffe8c8]/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+            <h4 className="relative text-stone-900 text-xs font-black uppercase tracking-[0.25em] pb-2 border-b border-[#D9C4A1]/60">
+              {t('footer.inquiry')} &amp; {t('footer.store_hours')}
             </h4>
-            <div className="flex items-center gap-4 group">
-              <div className="p-3 bg-red-50 text-[#a11a1a] rounded-xl group-hover:bg-[#a11a1a] group-hover:text-white transition-all shadow-sm">
-                <Phone size={18} />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest">{t('footer.direct_line')}</span>
-                <span className="text-sm text-stone-900 font-extrabold tracking-wide">093 578 6466</span>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-4 group">
-              <div className="p-3 bg-red-50 text-[#a11a1a] rounded-xl group-hover:bg-[#a11a1a] group-hover:text-white transition-all shadow-sm">
-                <Mail size={18} />
+            {[
+              {
+                icon: <Phone size={18} />,
+                label: t('footer.direct_line'),
+                value: '093 578 6466',
+              },
+              {
+                icon: <Mail size={18} />,
+                label: t('footer.inquiry'),
+                value: 'whatsup@thebottle.club',
+              },
+              {
+                icon: <Clock3 size={18} />,
+                label: t('footer.store_hours'),
+                value: '08:00 – 00:00 (Daily)',
+              },
+            ].map((item, idx) => (
+              <div key={idx} className="flex items-center gap-4 group/row relative">
+                {/* Icon bubble */}
+                <div className="relative flex-shrink-0">
+                  <div className="absolute inset-0 rounded-xl bg-[#a11a1a]/10 blur-sm scale-110 group-hover/row:bg-[#a11a1a]/20 transition-all duration-300" />
+                  <div className="relative p-3 bg-gradient-to-br from-red-50 to-rose-100/60 text-[#a11a1a] rounded-xl group-hover/row:bg-[#a11a1a] group-hover/row:text-white group-hover/row:shadow-lg group-hover/row:shadow-[#a11a1a]/30 transition-all duration-300">
+                    {item.icon}
+                  </div>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">{item.label}</span>
+                  <span className="text-sm text-stone-900 font-extrabold tracking-wide">{item.value}</span>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest">{t('footer.inquiry')}</span>
-                <span className="text-sm text-stone-900 font-extrabold tracking-wide">whatsup@thebottle.club</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 group">
-              <div className="p-3 bg-red-50 text-[#a11a1a] rounded-xl group-hover:bg-[#a11a1a] group-hover:text-white transition-all shadow-sm">
-                <Clock3 size={18} />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest">{t('footer.store_hours')}</span>
-                <span className="text-sm text-stone-900 font-extrabold tracking-wide">08:00 - 00:00 (Daily)</span>
-              </div>
-            </div>
+            ))}
           </div>
 
         </div>
 
-        {/* Partners & Footer Bottom Bar */}
-        <div className="py-6 flex flex-col lg:flex-row items-center justify-between gap-6 border-t border-[#D9C4A1]/80">
-          <div className="flex items-center gap-5 flex-wrap justify-center bg-white/80 backdrop-blur-md px-6 py-2.5 rounded-full border border-[#D9C4A1]/60 shadow-sm">
-            <span className="text-[9px] font-black text-stone-600 uppercase tracking-[0.3em]">Delivery Partners</span>
-            <Image src="/logos/dhl.png" alt="DHL" width={50} height={20} className="object-contain" style={{ height: 'auto' }} />
-            <Image src="/logos/Lalamove.png" alt="Lalamove" width={75} height={20} className="object-contain" style={{ height: 'auto' }} />
+        {/* ── Partners & Bottom Bar ── */}
+        <div className="py-6 flex flex-col lg:flex-row items-center justify-between gap-6 border-t border-[#D9C4A1]/70">
+
+          {/* Delivery Partners pill */}
+          <div className="flex items-center gap-5 flex-wrap justify-center relative bg-white/85 backdrop-blur-xl px-7 py-3 rounded-2xl border border-[#D9C4A1]/70 shadow-md shadow-[#6e3010]/10 hover:shadow-lg hover:shadow-[#6e3010]/15 transition-shadow duration-300">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#fff8ee]/50 to-transparent pointer-events-none" />
+            <span className="text-[9px] font-black text-stone-500 uppercase tracking-[0.3em] relative">Delivery Partners</span>
+            <div className="w-px h-4 bg-[#D9C4A1]/60 relative" />
+            <Image src="/logos/dhl.png" alt="DHL" width={50} height={20} className="object-contain opacity-80 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
+            <Image src="/logos/Lalamove.png" alt="Lalamove" width={75} height={20} className="object-contain opacity-80 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
           </div>
 
-          <div className="flex items-center gap-4 flex-wrap justify-center bg-white/80 backdrop-blur-md px-6 py-2.5 rounded-full border border-[#D9C4A1]/60 shadow-sm">
-            <span className="text-[9px] font-black text-stone-600 uppercase tracking-[0.3em]">Secure Checkout</span>
-            <Image src="/payments/visa.png" alt="Visa" width={28} height={14} className="object-contain" style={{ height: 'auto' }} />
-            <Image src="/payments/mastercard.png" alt="Mastercard" width={28} height={14} className="object-contain" style={{ height: 'auto' }} />
-            <Image src="/payments/jcb.png" alt="JCB" width={24} height={14} className="object-contain" style={{ height: 'auto' }} />
-            <Image src="/payments/promptpay.png" alt="PromptPay" width={38} height={14} className="object-contain" style={{ height: 'auto' }} />
-            <Image src="/payments/shopeepay.png" alt="ShopeePay" width={38} height={14} className="object-contain" style={{ height: 'auto' }} />
+          {/* Secure Checkout pill */}
+          <div className="flex items-center gap-4 flex-wrap justify-center relative bg-white/85 backdrop-blur-xl px-7 py-3 rounded-2xl border border-[#D9C4A1]/70 shadow-md shadow-[#6e3010]/10 hover:shadow-lg hover:shadow-[#6e3010]/15 transition-shadow duration-300">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-l from-[#fff8ee]/50 to-transparent pointer-events-none" />
+            <span className="text-[9px] font-black text-stone-500 uppercase tracking-[0.3em] relative">Secure Checkout</span>
+            <div className="w-px h-4 bg-[#D9C4A1]/60 relative" />
+            <Image src="/payments/visa.png" alt="Visa" width={28} height={14} className="object-contain opacity-80 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
+            <Image src="/payments/mastercard.png" alt="Mastercard" width={28} height={14} className="object-contain opacity-80 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
+            <Image src="/payments/jcb.png" alt="JCB" width={24} height={14} className="object-contain opacity-80 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
+            <Image src="/payments/promptpay.png" alt="PromptPay" width={38} height={14} className="object-contain opacity-80 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
+            <Image src="/payments/shopeepay.png" alt="ShopeePay" width={38} height={14} className="object-contain opacity-80 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
           </div>
+
+        </div>
+
+        {/* ── Copyright strip ── */}
+        <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-[#D9C4A1]/40">
+          <p className="text-[10px] font-bold text-stone-500 tracking-widest uppercase">
+            © {new Date().getFullYear()} The Bottle Club · All Rights Reserved
+          </p>
+          <p className="text-[10px] font-bold text-[#a11a1a]/60 tracking-wider uppercase flex items-center gap-1">
+            <Wine size={10} /> Premium Wine Curated in Thailand
+          </p>
         </div>
 
       </div>
