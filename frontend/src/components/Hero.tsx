@@ -60,9 +60,6 @@ export default function Hero({ heroPromo: initialHeroPromo }: HeroProps = {}) {
   const bgImage = promo?.imageUrl || (promo?.images && promo.images.length > 0 ? promo.images[0] : null) || '/images/wine_banner.png';
   const isCustomBg = typeof bgImage === 'string' && (bgImage.startsWith('data:') || bgImage.startsWith('http'));
 
-  const floatingImage = promo?.heroImageUrl || (promo?.images && promo.images.length > 1 ? promo.images[1] : null) || '/images/wine_hero.png';
-  const isCustomFloating = typeof floatingImage === 'string' && (floatingImage.startsWith('data:') || floatingImage.startsWith('http'));
-
 
   return (
     <section className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden bg-stone-950 text-white sm:min-h-[760px]">
@@ -171,29 +168,6 @@ export default function Hero({ heroPromo: initialHeroPromo }: HeroProps = {}) {
             )}
           </div>
 
-        </div>
-
-        {/* ── Floating bottle image (desktop) ── */}
-        <div className="pointer-events-none absolute bottom-4 right-4 hidden w-[min(30vw,340px)] lg:block">
-          <div className="relative aspect-[3/4]">
-            {isCustomFloating ? (
-              <img
-                src={floatingImage}
-                alt=""
-                className="h-full w-full object-contain drop-shadow-[0_40px_60px_rgba(0,0,0,.65)]"
-              />
-            ) : (
-              <Image
-                src={floatingImage}
-                alt=""
-                fill
-                sizes="340px"
-                className="object-contain drop-shadow-[0_40px_60px_rgba(0,0,0,.65)]"
-              />
-            )}
-            {/* Subtle glow under bottle */}
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-12 w-40 rounded-full bg-[#a11a1a]/20 blur-2xl" />
-          </div>
         </div>
 
       </div>
