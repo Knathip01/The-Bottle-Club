@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import {
   Search, ShoppingBag, Menu, X, User, LogOut,
   ChevronDown, MapPin, Wine, Sparkles, Grape,
-  MapPinned, ShieldCheck, BadgePercent,
+  MapPinned, ShieldCheck, BadgePercent, Globe,
 } from 'lucide-react';
 import { logout } from '@/app/actions/auth';
 import { useLanguage } from '@/context/LanguageContext';
@@ -382,31 +382,63 @@ export default function Header({ user }: HeaderProps) {
               <div className="relative hidden md:block">
                 <button
                   onClick={() => setIsLangOpen(!isLangOpen)}
+                  aria-label="Select Language"
+                  aria-expanded={isLangOpen}
                   className={`flex items-center gap-1.5 rounded-xl border border-stone-200/60 bg-white/70 shadow-sm transition-all duration-500 hover:border-[#a11a1a]/20 hover:bg-white hover:shadow-md ${
                     scrolled ? 'px-2 py-1.5' : 'px-3 py-2.5'
                   }`}
                 >
-                  <span className="text-lg leading-none">{currentLang.flag}</span>
+                  <span className="text-base font-bold text-stone-800 leading-none">{currentLang.flag}</span>
                   <ChevronDown
                     size={10} strokeWidth={3}
-                    className={`text-stone-300 transition-transform duration-300 ${isLangOpen ? 'rotate-180' : ''}`}
+                    className={`text-stone-400 transition-transform duration-300 ${isLangOpen ? 'rotate-180' : ''}`}
                   />
                 </button>
 
                 {isLangOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-3 w-20 overflow-hidden rounded-2xl border border-white/60 bg-white/85 shadow-2xl backdrop-blur-2xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-200">
-                    {languages.map(lang => (
-                      <button
-                        key={lang.code}
-                        onClick={() => handleLanguageChange(lang.code)}
-                        aria-label={lang.name}
-                        aria-pressed={language === lang.code}
-                        className={`flex w-full items-center justify-center px-3 py-2.5 transition-colors hover:bg-[#a11a1a]/5 ${language === lang.code ? 'bg-[#a11a1a]/8' : ''}`}
-                      >
-                        <span className="text-xl leading-none">{lang.flag}</span>
-                      </button>
-                    ))}
-                  </div>
+                  <>
+                    {/* Backdrop to close dropdown on click outside */}
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setIsLangOpen(false)} 
+                    />
+                    <div className="absolute right-0 top-full z-50 mt-2.5 w-[290px] rounded-2xl border border-stone-200/80 bg-white/95 p-3.5 shadow-2xl backdrop-blur-2xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-200">
+                      <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-stone-100">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-stone-500 flex items-center gap-1.5">
+                          <Globe size={13} className="text-[#a11a1a]" />
+                          Select Language
+                        </span>
+                        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest bg-stone-100 px-2 py-0.5 rounded-md">
+                          {currentLang.name}
+                        </span>
+                      </div>
+
+                      {/* Horizontal Grid (5 columns x 5 rows) */}
+                      <div className="grid grid-cols-5 gap-1.5">
+                        {languages.map(lang => (
+                          <button
+                            key={lang.code}
+                            onClick={() => handleLanguageChange(lang.code)}
+                            title={lang.name}
+                            aria-label={lang.name}
+                            aria-pressed={language === lang.code}
+                            className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-200 group ${
+                              language === lang.code
+                                ? 'bg-[#a11a1a] text-white shadow-md shadow-[#a11a1a]/30 scale-105 font-bold'
+                                : 'bg-stone-50 hover:bg-[#a11a1a]/10 hover:text-[#a11a1a] text-stone-700'
+                            }`}
+                          >
+                            <span className="text-base leading-none mb-0.5">{lang.flag}</span>
+                            <span className={`text-[9px] font-black uppercase tracking-tight ${
+                              language === lang.code ? 'text-white' : 'text-stone-400 group-hover:text-[#a11a1a]'
+                            }`}>
+                              {lang.code}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
 
