@@ -77,7 +77,7 @@ export default function Footer() {
                   <span>LINE</span>
                 </Link>
                 <Link 
-                  href="https://facebook.com/thebottleclub" 
+                  href="https://www.facebook.com/thebottleclub.cm" 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#1877F2] hover:bg-[#1464cc] text-white rounded-xl shadow-md shadow-[#1877F2]/25 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer font-black text-xs uppercase tracking-wider"
