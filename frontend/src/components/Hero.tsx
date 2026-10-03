@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
-import { ArrowRight, Sparkles, Award, Wine } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { PromotionItem } from '@/lib/promotions.types';
 
 interface HeroProps {
@@ -70,13 +70,13 @@ export default function Hero({ heroPromo: initialHeroPromo }: HeroProps = {}) {
       {/* ── Background Image ── */}
       <div className="absolute inset-0 z-0">
         {isCustomBg ? (
-          <img src={bgImage} alt={copy.title} className="h-full w-full object-cover object-[58%_center]" />
+          <img src={bgImage} alt={copy.title} className="h-full w-full object-cover object-[62%_center] md:object-[66%_center]" />
         ) : (
           <Image
             src={bgImage}
             alt="The Bottle Club wine selection"
             fill priority sizes="100vw"
-            className="object-cover object-[58%_center]"
+            className="object-cover object-[62%_center] md:object-[66%_center]"
           />
         )}
 
@@ -98,7 +98,7 @@ export default function Hero({ heroPromo: initialHeroPromo }: HeroProps = {}) {
 
       {/* ── Main Content ── */}
       <div className="container relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] flex-col justify-end px-4 pb-8 pt-28 sm:min-h-[760px] sm:px-6 sm:pb-14 lg:px-12">
-        <div className="max-w-4xl">
+        <div className="w-full max-w-xl lg:max-w-lg xl:max-w-xl">
 
           {/* Badge pill */}
           <div className="mb-5 inline-flex items-center gap-2.5 rounded-full border border-[#d4a017]/30 bg-white/10 px-4 py-2 backdrop-blur-md shadow-lg shadow-black/20">
@@ -107,7 +107,7 @@ export default function Hero({ heroPromo: initialHeroPromo }: HeroProps = {}) {
           </div>
 
           {/* Title — Bespoke Luxury Typography */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.12] drop-shadow-2xl">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-[1.14] drop-shadow-2xl">
             {copy.title.toLowerCase().includes('essential partner') ? (
               <>
                 <span className="font-light tracking-wide text-stone-100">We are your </span>
@@ -128,8 +128,8 @@ export default function Hero({ heroPromo: initialHeroPromo }: HeroProps = {}) {
           </h1>
 
           {/* Subtitle / Descriptive Lead with Editorial Typography */}
-          <div className="mt-6 max-w-2xl">
-            <p className="text-sm sm:text-base lg:text-lg leading-relaxed sm:leading-8 text-stone-200/90 font-light tracking-wide drop-shadow-sm">
+          <div className="mt-5 max-w-lg">
+            <p className="text-sm sm:text-base leading-relaxed sm:leading-7 text-stone-200/90 font-light tracking-wide drop-shadow-sm">
               {copy.subtitle.toLowerCase().includes('premier selection of beverages') ? (
                 <>
                   We provide bars and restaurants with a{' '}
@@ -150,22 +150,6 @@ export default function Hero({ heroPromo: initialHeroPromo }: HeroProps = {}) {
                 copy.subtitle
               )}
             </p>
-          </div>
-
-          {/* Hospitality Core Pillars */}
-          <div className="mt-5 flex flex-wrap gap-2.5">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md text-xs font-semibold text-stone-200 transition-all duration-300">
-              <Wine className="w-3.5 h-3.5 text-[#d4a017]" />
-              Premier Beverages
-            </span>
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md text-xs font-semibold text-amber-200/90 transition-all duration-300">
-              <Sparkles className="w-3.5 h-3.5 text-[#d4a017]" />
-              Expert Consultancy
-            </span>
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md text-xs font-semibold text-stone-200 transition-all duration-300">
-              <Award className="w-3.5 h-3.5 text-[#d4a017]" />
-              Bespoke Solutions
-            </span>
           </div>
 
           {/* CTA Buttons */}
