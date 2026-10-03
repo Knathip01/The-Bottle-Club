@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Clock3, Mail, Phone, Wine } from "lucide-react";
+import { Clock3, Mail, Phone } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 function LineIcon({ className = "w-4 h-4" }: { className?: string }) {
@@ -36,7 +36,7 @@ export default function Footer() {
   const { t } = useLanguage();
 
   return (
-    <footer className="relative bg-[#EAD3A9] text-stone-800 pt-16 sm:pt-20 pb-28 md:pb-12 overflow-hidden border-t border-[#D9C4A1]/80">
+    <footer className="hidden md:block relative bg-[#EAD3A9] text-stone-800 pt-20 pb-10 overflow-hidden border-t border-[#D9C4A1]/80">
 
       {/* Background Doodle Pattern */}
       <div
@@ -72,10 +72,16 @@ export default function Footer() {
             <div className="space-y-4 relative">
               <Link href="/" className="inline-flex items-center gap-4 group/logo">
                 <div className="relative">
-                  {/* Glow ring around icon */}
-                  <div className="absolute inset-0 rounded-2xl bg-[#a11a1a]/20 blur-md scale-110 group-hover/logo:scale-125 transition-transform duration-300" />
-                  <div className="relative w-13 h-13 rounded-2xl bg-gradient-to-br from-[#c42020] to-[#7a0f0f] flex items-center justify-center shadow-lg shadow-[#a11a1a]/40 group-hover/logo:scale-105 group-hover/logo:rotate-3 transition-all duration-300">
-                    <Wine className="h-6 w-6 text-white drop-shadow" strokeWidth={2.5} />
+                  {/* Glow ring around logo */}
+                  <div className="absolute inset-0 rounded-2xl bg-[#a11a1a]/15 blur-md scale-110 group-hover/logo:scale-125 transition-transform duration-300" />
+                  <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-white via-[#FFF9EE] to-[#F5E6CC] border border-[#D9C4A1] flex items-center justify-center p-2 shadow-lg shadow-[#6e3010]/15 group-hover/logo:scale-105 group-hover/logo:-rotate-2 transition-all duration-300">
+                    <Image
+                      src="/logos/thebottleclub-mascot.png"
+                      alt="The Bottle Club Logo"
+                      width={38}
+                      height={48}
+                      className="h-10 w-auto object-contain drop-shadow-sm group-hover/logo:scale-105 transition-transform duration-300"
+                    />
                   </div>
                 </div>
                 <div className="flex flex-col">
@@ -259,8 +265,15 @@ export default function Footer() {
           <p className="text-[10px] font-bold text-stone-500 tracking-widest uppercase">
             © {new Date().getFullYear()} The Bottle Club · All Rights Reserved
           </p>
-          <p className="text-[10px] font-bold text-[#a11a1a]/60 tracking-wider uppercase flex items-center gap-1">
-            <Wine size={10} /> Premium Wine Curated in Thailand
+          <p className="text-[10px] font-bold text-[#a11a1a]/70 tracking-wider uppercase flex items-center gap-1.5">
+            <Image
+              src="/logos/thebottleclub-mascot.png"
+              alt=""
+              width={12}
+              height={16}
+              className="h-3.5 w-auto object-contain inline-block opacity-80"
+            />
+            Premium Wine Curated in Thailand
           </p>
         </div>
 
