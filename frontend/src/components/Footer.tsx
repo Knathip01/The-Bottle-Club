@@ -62,43 +62,45 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-6 pb-12">
 
           {/* ── Brand & Mission Card ── */}
-          <div className="lg:col-span-4 relative bg-white/90 backdrop-blur-xl p-8 rounded-3xl border border-[#D9C4A1]/90 shadow-2xl shadow-[#6e3010]/15 flex flex-col justify-between space-y-6 overflow-hidden group">
+          <div className="lg:col-span-4 relative bg-white/90 backdrop-blur-xl p-8 rounded-3xl border border-[#D9C4A1]/90 shadow-2xl shadow-[#6e3010]/15 flex flex-col justify-between space-y-6 overflow-hidden group text-center">
             {/* Card inner glow on hover */}
             <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#fff8ee]/60 via-transparent to-[#ffe8c8]/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             {/* Decorative top-right wine stain circle */}
             <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-[#a11a1a]/5 blur-2xl pointer-events-none" />
             <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-[#D9A050]/10 blur-xl pointer-events-none" />
 
-            <div className="space-y-4 relative">
-              <Link href="/" className="inline-block group/logo">
+            <div className="space-y-5 relative flex flex-col items-center">
+              <Link href="/" className="inline-block group/logo mx-auto">
                 <div className="relative inline-block">
                   {/* Glow ring around logo */}
-                  <div className="absolute -inset-1 rounded-2xl bg-[#a11a1a]/15 blur-md scale-105 group-hover/logo:scale-125 transition-transform duration-300" />
-                  <div className="relative h-18 w-18 px-3 py-2 rounded-2xl bg-gradient-to-br from-white via-[#FFF9EE] to-[#F5E6CC] border border-[#D9C4A1] flex items-center justify-center shadow-lg shadow-[#6e3010]/15 group-hover/logo:scale-105 group-hover/logo:-rotate-2 transition-all duration-300">
+                  <div className="absolute -inset-1.5 rounded-3xl bg-[#a11a1a]/20 blur-md scale-105 group-hover/logo:scale-125 transition-transform duration-300" />
+                  <div className="relative h-20 w-20 px-3 py-2 rounded-2xl bg-gradient-to-br from-white via-[#FFF9EE] to-[#F5E6CC] border border-[#D9C4A1] flex items-center justify-center shadow-lg shadow-[#6e3010]/15 group-hover/logo:scale-105 group-hover/logo:-rotate-2 transition-all duration-300">
                     <Image
                       src="/logos/thebottleclub-mascot.png"
                       alt="The Bottle Club"
-                      width={48}
-                      height={64}
-                      className="h-14 w-auto object-contain drop-shadow-sm group-hover/logo:scale-105 transition-transform duration-300"
+                      width={52}
+                      height={68}
+                      className="h-16 w-auto object-contain drop-shadow-sm group-hover/logo:scale-105 transition-transform duration-300"
                     />
                   </div>
                 </div>
               </Link>
 
-              <OrnamentDivider />
+              <div className="w-full">
+                <OrnamentDivider />
+              </div>
 
-              <p className="text-stone-600 text-xs sm:text-sm leading-relaxed font-medium relative">
+              <p className="text-stone-600 text-xs sm:text-sm leading-relaxed font-medium relative text-center">
                 {t('footer.brand_desc')}. {t('footer.tagline')}.
               </p>
             </div>
 
             {/* Social Buttons */}
-            <div className="pt-3 border-t border-[#D9C4A1]/60 relative">
-              <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block mb-3">
+            <div className="pt-3 border-t border-[#D9C4A1]/60 relative flex flex-col items-center">
+              <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block mb-3 text-center">
                 Connect With Us
               </span>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center gap-3">
                 {/* LINE button */}
                 <Link
                   href="https://line.me/ti/p/@thebottleclub"
