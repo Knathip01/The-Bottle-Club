@@ -36,51 +36,64 @@ export default function Footer() {
   const { t } = useLanguage();
 
   return (
-    <footer className="hidden md:block relative bg-[#EAD3A9] text-stone-800 pt-20 pb-10 overflow-hidden border-t border-[#D9C4A1]/80">
+    <footer className="hidden md:block relative bg-[#0e0c0a] text-white pt-24 pb-12 overflow-hidden border-t border-amber-500/20">
 
-      {/* Background Doodle Pattern */}
+      {/* ── Background Doodle Pattern with enhanced sharpness & warmth ── */}
       <div
-        className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-90"
-        style={{ backgroundImage: "url('/images/footer-pattern.jpg?v=3')" }}
+        className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-90 mix-blend-luminosity scale-100"
+        style={{ backgroundImage: "url('/images/footer-pattern.jpg?v=5')" }}
+      />
+      {/* Warm Golden Craft Paper Base Glow so the drawings pop warmly */}
+      <div
+        className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-85"
+        style={{ backgroundImage: "url('/images/footer-pattern.jpg?v=5')" }}
       />
 
-      {/* Layered Atmospheric Wash — richer depth */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#EAD3A9]/60 via-[#EAD3A9]/10 to-[#C9A97A]/55 pointer-events-none" />
+      {/* Multi-layer Cinematic Vignette & Ambient Radial Lighting */}
+      {/* Top transition from page above */}
+      <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-[#0c0a09] via-[#0c0a09]/50 to-transparent pointer-events-none" />
 
-      {/* Top vignette glow */}
-      <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-[#a11a1a]/5 to-transparent pointer-events-none" />
-
-      {/* Ambient bottom warm glow */}
-      <div className="absolute bottom-0 inset-x-0 h-56 bg-gradient-to-t from-[#7a3a0a]/20 to-transparent pointer-events-none" />
-
-      {/* Subtle radial gold shimmer center */}
-      <div className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 100%, rgba(212,165,89,0.18) 0%, transparent 70%)' }}
+      {/* Warm golden-amber & wine aura in center to accentuate background art */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse 85% 70% at 50% 40%, rgba(212,160,23,0.12) 0%, rgba(161,26,26,0.10) 45%, rgba(12,10,9,0.75) 100%)'
+        }}
       />
 
-      <div className="container relative mx-auto px-6 lg:px-12">
+      {/* Bottom vignette */}
+      <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-[#0c0a09] via-[#0c0a09]/70 to-transparent pointer-events-none" />
+
+      <div className="container relative z-10 mx-auto px-6 lg:px-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-6 pb-12">
 
-          {/* ── Brand & Mission Card ── */}
-          <div className="lg:col-span-4 relative bg-white/90 backdrop-blur-xl p-8 rounded-3xl border border-[#D9C4A1]/90 shadow-2xl shadow-[#6e3010]/15 flex flex-col justify-between space-y-6 overflow-hidden group text-center">
+          {/* ── Brand & Mission Card (Black Glass) ── */}
+          <div className="lg:col-span-4 relative bg-stone-950/75 backdrop-blur-2xl p-8 rounded-3xl border border-white/12 shadow-[0_20px_50px_rgba(0,0,0,0.65)] hover:border-amber-400/35 hover:shadow-[0_25px_60px_rgba(0,0,0,0.85),0_0_30px_rgba(212,160,23,0.15)] transition-all duration-500 flex flex-col justify-between space-y-6 overflow-hidden group text-center">
+            {/* Top glass reflection rim */}
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent pointer-events-none" />
+            
             {/* Card inner glow on hover */}
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#fff8ee]/60 via-transparent to-[#ffe8c8]/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            {/* Decorative top-right wine stain circle */}
-            <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-[#a11a1a]/5 blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-[#D9A050]/10 blur-xl pointer-events-none" />
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-transparent to-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            
+            {/* Subtle decorative wine radial accent */}
+            <div className="absolute -top-12 -right-12 w-36 h-36 rounded-full bg-[#a11a1a]/20 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-amber-500/15 blur-2xl pointer-events-none" />
 
             <div className="space-y-5 relative flex flex-col items-center">
               <Link href="/" className="inline-block group/logo mx-auto">
                 <div className="relative inline-block">
-                  {/* Glow ring around logo */}
-                  <div className="absolute -inset-1.5 rounded-3xl bg-[#a11a1a]/20 blur-md scale-105 group-hover/logo:scale-125 transition-transform duration-300" />
-                  <div className="relative h-20 w-20 px-3 py-2 rounded-2xl bg-gradient-to-br from-white via-[#FFF9EE] to-[#F5E6CC] border border-[#D9C4A1] flex items-center justify-center shadow-lg shadow-[#6e3010]/15 group-hover/logo:scale-105 group-hover/logo:-rotate-2 transition-all duration-300">
+                  {/* Aura glow around mascot logo */}
+                  <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-amber-500/30 via-[#a11a1a]/35 to-amber-500/30 blur-xl opacity-70 group-hover:opacity-100 transition-opacity duration-500" />
+                  
+                  {/* Mascot badge in polished black glass */}
+                  <div className="relative h-22 w-22 px-3 py-2.5 rounded-3xl bg-gradient-to-br from-stone-900/90 via-black/95 to-stone-950/90 border border-white/20 shadow-2xl flex items-center justify-center group-hover:scale-105 group-hover:-rotate-2 transition-all duration-300">
+                    <div className="absolute inset-x-2 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
                     <Image
                       src="/logos/thebottleclub-mascot.png"
                       alt="The Bottle Club"
-                      width={52}
-                      height={68}
-                      className="h-16 w-auto object-contain drop-shadow-sm group-hover/logo:scale-105 transition-transform duration-300"
+                      width={56}
+                      height={72}
+                      className="h-16 w-auto object-contain drop-shadow-[0_4px_12px_rgba(255,255,255,0.25)] group-hover:scale-110 transition-transform duration-300"
                     />
                   </div>
                 </div>
@@ -90,13 +103,13 @@ export default function Footer() {
                 <OrnamentDivider />
               </div>
 
-              <p className="text-stone-600 text-xs sm:text-sm leading-relaxed font-medium relative text-center">
+              <p className="text-stone-300 text-xs sm:text-sm leading-relaxed font-light relative text-center">
                 {t('footer.brand_desc')}. {t('footer.tagline')}.
               </p>
             </div>
 
             {/* Social Buttons */}
-            <div className="pt-3 border-t border-[#D9C4A1]/60 relative flex flex-col items-center">
+            <div className="pt-4 border-t border-white/10 relative flex flex-col items-center">
               <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest block mb-3 text-center">
                 Connect With Us
               </span>
@@ -106,12 +119,11 @@ export default function Footer() {
                   href="https://line.me/ti/p/@thebottleclub"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white font-black text-xs uppercase tracking-wider overflow-hidden group/btn transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-[#06C755]/30 hover:shadow-xl hover:shadow-[#06C755]/40"
+                  className="relative inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-black text-xs uppercase tracking-wider overflow-hidden group/btn transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-[#06C755]/30 hover:shadow-xl hover:shadow-[#06C755]/40 border border-white/15"
                   style={{ background: 'linear-gradient(135deg, #07d95e 0%, #06C755 50%, #04a344 100%)' }}
                 >
                   <span className="absolute inset-0 bg-white/0 group-hover/btn:bg-white/10 transition-colors duration-200 rounded-xl" />
-                  {/* shimmer sweep */}
-                  <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent skew-x-12" />
+                  <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12" />
                   <LineIcon className="w-4 h-4 fill-current relative z-10" />
                   <span className="relative z-10">LINE</span>
                 </Link>
@@ -121,11 +133,11 @@ export default function Footer() {
                   href="https://www.facebook.com/thebottleclub.cm"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white font-black text-xs uppercase tracking-wider overflow-hidden group/btn transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-[#1877F2]/30 hover:shadow-xl hover:shadow-[#1877F2]/40"
+                  className="relative inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-black text-xs uppercase tracking-wider overflow-hidden group/btn transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-[#1877F2]/30 hover:shadow-xl hover:shadow-[#1877F2]/40 border border-white/15"
                   style={{ background: 'linear-gradient(135deg, #3b90f5 0%, #1877F2 50%, #1055cc 100%)' }}
                 >
                   <span className="absolute inset-0 bg-white/0 group-hover/btn:bg-white/10 transition-colors duration-200 rounded-xl" />
-                  <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent skew-x-12" />
+                  <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12" />
                   <FacebookIcon className="w-4 h-4 fill-current relative z-10" />
                   <span className="relative z-10">Facebook</span>
                 </Link>
@@ -133,13 +145,15 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* ── Quick Links: Categories ── */}
-          <div className="lg:col-span-2 relative bg-white/88 backdrop-blur-xl p-6 sm:p-7 rounded-3xl border border-[#D9C4A1]/80 shadow-xl shadow-[#6e3010]/10 space-y-4 overflow-hidden group">
-            <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-[#a11a1a]/4 blur-2xl pointer-events-none" />
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#fff8ee]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+          {/* ── Quick Links: Categories (Black Glass) ── */}
+          <div className="lg:col-span-2 relative bg-stone-950/75 backdrop-blur-2xl p-6 sm:p-7 rounded-3xl border border-white/12 shadow-[0_20px_50px_rgba(0,0,0,0.65)] hover:border-amber-400/35 transition-all duration-500 space-y-4 overflow-hidden group">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent pointer-events-none" />
+            <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-[#a11a1a]/15 blur-2xl pointer-events-none" />
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-            <h4 className="relative text-stone-900 text-xs font-black uppercase tracking-[0.25em] pb-2 border-b border-[#D9C4A1]/60">
-              {t('footer.categories')}
+            <h4 className="relative text-white text-xs font-black uppercase tracking-[0.25em] pb-3 border-b border-white/10 flex items-center justify-between">
+              <span>{t('footer.categories')}</span>
+              <span className="text-amber-400/70 text-[10px]">✦</span>
             </h4>
             <ul className="flex flex-col gap-3 relative">
               {[
@@ -149,22 +163,24 @@ export default function Footer() {
                 { label: t('footer.gifts'), href: '/promotions' },
               ].map((link, idx) => (
                 <li key={idx}>
-                  <Link href={link.href} className="group/link flex items-center gap-2.5 text-xs font-bold text-stone-600 hover:text-[#a11a1a] transition-all duration-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#a11a1a]/35 group-hover/link:bg-[#a11a1a] group-hover/link:scale-150 group-hover/link:shadow-sm group-hover/link:shadow-[#a11a1a]/40 transition-all duration-300" />
-                    <span className="group-hover/link:translate-x-0.5 transition-transform duration-200">{link.label}</span>
+                  <Link href={link.href} className="group/link flex items-center gap-2.5 text-xs font-semibold text-stone-300 hover:text-white transition-all duration-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400/60 group-hover/link:bg-amber-300 group-hover/link:scale-150 group-hover/link:shadow-[0_0_8px_rgba(251,191,36,0.9)] transition-all duration-300" />
+                    <span className="group-hover/link:translate-x-1 transition-transform duration-200">{link.label}</span>
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* ── Quick Links: Services ── */}
-          <div className="lg:col-span-2 relative bg-white/88 backdrop-blur-xl p-6 sm:p-7 rounded-3xl border border-[#D9C4A1]/80 shadow-xl shadow-[#6e3010]/10 space-y-4 overflow-hidden group">
-            <div className="absolute -bottom-10 -left-10 w-28 h-28 rounded-full bg-[#D9A050]/8 blur-2xl pointer-events-none" />
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#fff8ee]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+          {/* ── Quick Links: Services (Black Glass) ── */}
+          <div className="lg:col-span-2 relative bg-stone-950/75 backdrop-blur-2xl p-6 sm:p-7 rounded-3xl border border-white/12 shadow-[0_20px_50px_rgba(0,0,0,0.65)] hover:border-amber-400/35 transition-all duration-500 space-y-4 overflow-hidden group">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-28 h-28 rounded-full bg-amber-500/15 blur-2xl pointer-events-none" />
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-            <h4 className="relative text-stone-900 text-xs font-black uppercase tracking-[0.25em] pb-2 border-b border-[#D9C4A1]/60">
-              {t('footer.services')}
+            <h4 className="relative text-white text-xs font-black uppercase tracking-[0.25em] pb-3 border-b border-white/10 flex items-center justify-between">
+              <span>{t('footer.services')}</span>
+              <span className="text-amber-400/70 text-[10px]">✦</span>
             </h4>
             <ul className="flex flex-col gap-3 relative">
               {[
@@ -174,23 +190,25 @@ export default function Footer() {
                 { label: t('footer.faq'), href: '#' },
               ].map((link, idx) => (
                 <li key={idx}>
-                  <Link href={link.href} className="group/link flex items-center gap-2.5 text-xs font-bold text-stone-600 hover:text-[#a11a1a] transition-all duration-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#a11a1a]/35 group-hover/link:bg-[#a11a1a] group-hover/link:scale-150 group-hover/link:shadow-sm group-hover/link:shadow-[#a11a1a]/40 transition-all duration-300" />
-                    <span className="group-hover/link:translate-x-0.5 transition-transform duration-200">{link.label}</span>
+                  <Link href={link.href} className="group/link flex items-center gap-2.5 text-xs font-semibold text-stone-300 hover:text-white transition-all duration-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400/60 group-hover/link:bg-amber-300 group-hover/link:scale-150 group-hover/link:shadow-[0_0_8px_rgba(251,191,36,0.9)] transition-all duration-300" />
+                    <span className="group-hover/link:translate-x-1 transition-transform duration-200">{link.label}</span>
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* ── Contact Information Card ── */}
-          <div className="lg:col-span-4 relative bg-white/90 backdrop-blur-xl p-7 sm:p-8 rounded-3xl border border-[#D9C4A1]/90 shadow-2xl shadow-[#6e3010]/15 space-y-5 overflow-hidden group">
-            <div className="absolute -top-8 -left-8 w-32 h-32 rounded-full bg-[#a11a1a]/5 blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-8 -right-8 w-36 h-36 rounded-full bg-[#D9A050]/10 blur-2xl pointer-events-none" />
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-tl from-[#ffe8c8]/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+          {/* ── Contact Information Card (Black Glass) ── */}
+          <div className="lg:col-span-4 relative bg-stone-950/75 backdrop-blur-2xl p-7 sm:p-8 rounded-3xl border border-white/12 shadow-[0_20px_50px_rgba(0,0,0,0.65)] hover:border-amber-400/35 transition-all duration-500 space-y-5 overflow-hidden group">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent pointer-events-none" />
+            <div className="absolute -top-8 -left-8 w-32 h-32 rounded-full bg-[#a11a1a]/20 blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-8 -right-8 w-36 h-36 rounded-full bg-amber-500/15 blur-2xl pointer-events-none" />
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-tl from-white/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-            <h4 className="relative text-stone-900 text-xs font-black uppercase tracking-[0.25em] pb-2 border-b border-[#D9C4A1]/60">
-              {t('footer.inquiry')} &amp; {t('footer.store_hours')}
+            <h4 className="relative text-white text-xs font-black uppercase tracking-[0.25em] pb-3 border-b border-white/10 flex items-center justify-between">
+              <span>{t('footer.inquiry')} &amp; {t('footer.store_hours')}</span>
+              <span className="text-amber-400/70 text-[10px]">✦</span>
             </h4>
 
             {[
@@ -213,14 +231,14 @@ export default function Footer() {
               <div key={idx} className="flex items-center gap-4 group/row relative">
                 {/* Icon bubble */}
                 <div className="relative flex-shrink-0">
-                  <div className="absolute inset-0 rounded-xl bg-[#a11a1a]/10 blur-sm scale-110 group-hover/row:bg-[#a11a1a]/20 transition-all duration-300" />
-                  <div className="relative p-3 bg-gradient-to-br from-red-50 to-rose-100/60 text-[#a11a1a] rounded-xl group-hover/row:bg-[#a11a1a] group-hover/row:text-white group-hover/row:shadow-lg group-hover/row:shadow-[#a11a1a]/30 transition-all duration-300">
+                  <div className="absolute inset-0 rounded-xl bg-amber-400/10 blur-sm scale-110 group-hover/row:bg-amber-400/25 transition-all duration-300" />
+                  <div className="relative p-3 bg-white/10 border border-white/10 text-amber-300 rounded-xl group-hover/row:bg-amber-500/20 group-hover/row:border-amber-400/40 group-hover/row:text-amber-200 transition-all duration-300 shadow-sm">
                     {item.icon}
                   </div>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">{item.label}</span>
-                  <span className="text-sm text-stone-900 font-extrabold tracking-wide">{item.value}</span>
+                  <span className="text-sm text-white font-extrabold tracking-wide drop-shadow-sm">{item.value}</span>
                 </div>
               </div>
             ))}
@@ -228,44 +246,44 @@ export default function Footer() {
 
         </div>
 
-        {/* ── Partners & Bottom Bar ── */}
-        <div className="py-6 flex flex-col lg:flex-row items-center justify-between gap-6 border-t border-[#D9C4A1]/70">
+        {/* ── Partners & Bottom Bar (Black Glass Pills) ── */}
+        <div className="py-6 flex flex-col lg:flex-row items-center justify-between gap-6 border-t border-white/10">
 
           {/* Delivery Partners pill */}
-          <div className="flex items-center gap-5 flex-wrap justify-center relative bg-white/85 backdrop-blur-xl px-7 py-3 rounded-2xl border border-[#D9C4A1]/70 shadow-md shadow-[#6e3010]/10 hover:shadow-lg hover:shadow-[#6e3010]/15 transition-shadow duration-300">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#fff8ee]/50 to-transparent pointer-events-none" />
-            <span className="text-[9px] font-black text-stone-500 uppercase tracking-[0.3em] relative">Delivery Partners</span>
-            <div className="w-px h-4 bg-[#D9C4A1]/60 relative" />
-            <Image src="/logos/dhl.png" alt="DHL" width={50} height={20} className="object-contain opacity-80 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
-            <Image src="/logos/Lalamove.png" alt="Lalamove" width={75} height={20} className="object-contain opacity-80 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
+          <div className="flex items-center gap-5 flex-wrap justify-center relative bg-stone-950/70 backdrop-blur-2xl px-7 py-3 rounded-2xl border border-white/12 shadow-xl shadow-black/40 hover:border-amber-400/30 transition-all duration-300">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white/5 to-transparent pointer-events-none" />
+            <span className="text-[9px] font-black text-stone-300 uppercase tracking-[0.3em] relative">Delivery Partners</span>
+            <div className="w-px h-4 bg-white/20 relative" />
+            <Image src="/logos/dhl.png" alt="DHL" width={50} height={20} className="object-contain brightness-110 contrast-125 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
+            <Image src="/logos/Lalamove.png" alt="Lalamove" width={75} height={20} className="object-contain brightness-110 contrast-125 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
           </div>
 
           {/* Secure Checkout pill */}
-          <div className="flex items-center gap-4 flex-wrap justify-center relative bg-white/85 backdrop-blur-xl px-7 py-3 rounded-2xl border border-[#D9C4A1]/70 shadow-md shadow-[#6e3010]/10 hover:shadow-lg hover:shadow-[#6e3010]/15 transition-shadow duration-300">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-l from-[#fff8ee]/50 to-transparent pointer-events-none" />
-            <span className="text-[9px] font-black text-stone-500 uppercase tracking-[0.3em] relative">Secure Checkout</span>
-            <div className="w-px h-4 bg-[#D9C4A1]/60 relative" />
-            <Image src="/payments/visa.png" alt="Visa" width={28} height={14} className="object-contain opacity-80 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
-            <Image src="/payments/mastercard.png" alt="Mastercard" width={28} height={14} className="object-contain opacity-80 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
-            <Image src="/payments/jcb.png" alt="JCB" width={24} height={14} className="object-contain opacity-80 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
-            <Image src="/payments/promptpay.png" alt="PromptPay" width={38} height={14} className="object-contain opacity-80 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
-            <Image src="/payments/shopeepay.png" alt="ShopeePay" width={38} height={14} className="object-contain opacity-80 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
+          <div className="flex items-center gap-4 flex-wrap justify-center relative bg-stone-950/70 backdrop-blur-2xl px-7 py-3 rounded-2xl border border-white/12 shadow-xl shadow-black/40 hover:border-amber-400/30 transition-all duration-300">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-l from-white/5 to-transparent pointer-events-none" />
+            <span className="text-[9px] font-black text-stone-300 uppercase tracking-[0.3em] relative">Secure Checkout</span>
+            <div className="w-px h-4 bg-white/20 relative" />
+            <Image src="/payments/visa.png" alt="Visa" width={28} height={14} className="object-contain brightness-110 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
+            <Image src="/payments/mastercard.png" alt="Mastercard" width={28} height={14} className="object-contain brightness-110 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
+            <Image src="/payments/jcb.png" alt="JCB" width={24} height={14} className="object-contain brightness-110 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
+            <Image src="/payments/promptpay.png" alt="PromptPay" width={38} height={14} className="object-contain brightness-110 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
+            <Image src="/payments/shopeepay.png" alt="ShopeePay" width={38} height={14} className="object-contain brightness-110 hover:opacity-100 transition-opacity relative" style={{ height: 'auto' }} />
           </div>
 
         </div>
 
         {/* ── Copyright strip ── */}
-        <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-[#D9C4A1]/40">
-          <p className="text-[10px] font-bold text-stone-500 tracking-widest uppercase">
+        <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-white/10">
+          <p className="text-[10px] font-semibold text-stone-400 tracking-widest uppercase">
             © {new Date().getFullYear()} The Bottle Club · All Rights Reserved
           </p>
-          <p className="text-[10px] font-bold text-[#a11a1a]/70 tracking-wider uppercase flex items-center gap-1.5">
+          <p className="text-[10px] font-bold text-amber-300/80 tracking-wider uppercase flex items-center gap-1.5">
             <Image
               src="/logos/thebottleclub-mascot.png"
               alt=""
-              width={12}
-              height={16}
-              className="h-3.5 w-auto object-contain inline-block opacity-80"
+              width={14}
+              height={18}
+              className="h-4 w-auto object-contain inline-block opacity-90 drop-shadow"
             />
             Premium Wine Curated in Thailand
           </p>
