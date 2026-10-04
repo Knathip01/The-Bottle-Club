@@ -225,7 +225,7 @@ export default function Footer() {
               {
                 icon: <Clock3 size={18} />,
                 label: t('footer.store_hours'),
-                value: '08:00 – 00:00 (Daily)',
+                value: '08:00 – 00:00',
               },
             ].map((item, idx) => (
               <div key={idx} className="flex items-center gap-4 group/row relative">
