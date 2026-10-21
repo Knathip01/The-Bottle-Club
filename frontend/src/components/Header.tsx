@@ -499,29 +499,6 @@ export default function Header({ user }: HeaderProps) {
                 )}
               </div>
 
-              {/* AI Scan button */}
-              <Link
-                href="/scan"
-                aria-label="AI Wine Scanner"
-                className={`group relative flex items-center gap-1.5 rounded-full border border-amber-300/80 bg-gradient-to-r from-amber-500/10 via-yellow-400/20 to-amber-500/10 text-stone-900 shadow-sm transition-all duration-500 hover:border-amber-400 hover:shadow-lg hover:shadow-amber-500/20 active:scale-95 ${
-                  scrolled ? 'h-9 px-2.5 md:h-10 md:px-3' : 'h-10 px-3 md:h-11 md:px-3.5'
-                }`}
-              >
-                <div className="relative flex items-center justify-center w-6 h-6 rounded-full overflow-hidden border border-amber-300 bg-white shadow-xs p-0.5">
-                  <img
-                    src="/logos/bottle-walking-icon.png"
-                    alt="AI Scan"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <span className="hidden sm:inline text-[10px] font-black uppercase tracking-wider text-amber-900">
-                  AI Scan
-                </span>
-                <span className="hidden lg:inline text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-amber-400 text-stone-950 uppercase">
-                  New
-                </span>
-              </Link>
-
               {/* Cart button */}
               <Link
                 href="/cart"
@@ -705,4 +682,3 @@ export default function Header({ user }: HeaderProps) {
     </>
   );
 }
-
