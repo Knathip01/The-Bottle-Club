@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   Camera, Sparkles, X, RotateCcw, Upload, Wine, ShieldCheck,
   CheckCircle2, MapPin, CalendarDays, Globe, Star, ExternalLink,
-  AlertTriangle, ImageIcon
+  AlertTriangle
 } from 'lucide-react';
 import Webcam from 'react-webcam';
 import { type Winery } from '@/data/wineriesData';
@@ -182,7 +182,6 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
   const [telemetryText, setTelemetryText] = useState('READY TO SCAN');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [cityImageUrl, setCityImageUrl] = useState<string | null>(null);
-  const [activeSampleId, setActiveSampleId] = useState<string | null>(null);
 
   const webcamRef = useRef<Webcam>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -201,9 +200,6 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
     const targetImg = sample ? sample.imageUrl : (imageSrc && imageSrc !== 'demo' ? imageSrc : null);
     if (targetImg) {
       setUploadedImage(targetImg);
-    }
-    if (sample) {
-      setActiveSampleId(sample.id);
     }
 
     const steps = [
@@ -326,7 +322,6 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
     setScanError(null);
     setUploadedImage(null);
     setCityImageUrl(null);
-    setActiveSampleId(null);
     setIsScanning(false);
     setTelemetryText('READY TO SCAN');
   };
@@ -339,7 +334,7 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
 
   return (
     <div className={`relative w-full max-w-md mx-auto flex flex-col items-center justify-between p-3 sm:p-5 select-none overflow-hidden ${
-      isStandalonePage ? 'rounded-[2.5rem] bg-[#0c0905]/95 border-2 border-amber-400/30 shadow-[0_25px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl my-4 min-h-[780px]' : 'h-full'
+      isStandalonePage ? 'rounded-[2.5rem] bg-[#0c0905]/95 border-2 border-amber-400/30 shadow-[0_25px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl my-4 min-h-[680px]' : 'h-full'
     }`}>
       {/* Background Graphic Pattern */}
       <div
@@ -381,7 +376,7 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
       </div>
 
       {/* Center Card Viewport */}
-      <div className="relative z-10 w-full aspect-[3/4] max-h-[58vh] sm:max-h-[62vh] rounded-[2.5rem] overflow-hidden border-2 border-amber-400/40 bg-stone-950/90 backdrop-blur-3xl shadow-[0_25px_60px_-10px_rgba(0,0,0,0.95),_0_0_40px_rgba(245,158,11,0.25),_inset_0_1px_2px_rgba(255,255,255,0.25)] my-auto flex flex-col justify-center">
+      <div className="relative z-10 w-full aspect-[3/4] max-h-[64vh] sm:max-h-[68vh] rounded-[2.5rem] overflow-hidden border-2 border-amber-400/40 bg-stone-950/90 backdrop-blur-3xl shadow-[0_25px_60px_-10px_rgba(0,0,0,0.95),_0_0_40px_rgba(245,158,11,0.25),_inset_0_1px_2px_rgba(255,255,255,0.25)] my-auto flex flex-col justify-center">
         {scanError ? (
           /* Error / Non-wine Alert */
           <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-stone-950/95 backdrop-blur-2xl z-40 animate-in fade-in duration-300">
@@ -767,7 +762,7 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
                   โหมดสแกน AI Wine Scanner
                 </p>
                 <p className="text-[10px] text-stone-400 mt-1 max-w-[220px]">
-                  เลือกรูปภาพตัวอย่างด้านล่าง หรืออัปโหลดรูปภาพขวดไวน์เพื่อเริ่มทดสอบ
+                  แตะปุ่มสแกน หรืออัปโหลดรูปภาพฉลากขวดไวน์เพื่อตรวจสอบ
                 </p>
               </div>
             )}
@@ -804,85 +799,41 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
         )}
       </div>
 
-      {/* Sample Photo Test Tray & Controls */}
+      {/* Shutter & Controls (เอารูปภาพตัวอย่างออกตามคำสั่ง) */}
       {!scanResult && !scanError && (
-        <div className="relative z-20 w-full flex flex-col gap-2 pt-1 pb-1">
-          {/* Sample Images Header */}
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 flex items-center gap-1">
-              <ImageIcon size={12} className="text-amber-400" />
-              เลือกรูปภาพทดสอบ (แตะเพื่อสแกนทันที):
-            </span>
-            <span className="text-[9px] text-stone-400 font-mono">5 รูปตัวอย่าง</span>
-          </div>
+        <div className="relative z-20 w-full flex items-center justify-center gap-5 pt-3 pb-3">
+          <button
+            type="button"
+            disabled={isScanning}
+            onClick={capture}
+            className="w-18 h-18 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-amber-600 via-yellow-400 to-amber-300 p-1.5 shadow-[0_0_35px_rgba(245,158,11,0.65),_0_0_70px_rgba(234,179,8,0.3)] active:scale-95 transition-all cursor-pointer flex items-center justify-center disabled:opacity-50"
+            aria-label="Scan Now"
+          >
+            <div className="w-full h-full border-2 border-amber-300/80 rounded-full bg-white flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] overflow-hidden p-2">
+              <img
+                src="/logos/bottle-walking-icon.png"
+                alt="Scan"
+                className="w-full h-full object-contain"
+              />
+            </div>
+          </button>
 
-          {/* Horizontal Scrollable Sample Images Picker */}
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none px-0.5">
-            {SAMPLE_BOTTLES.map((sample) => (
-              <button
-                key={sample.id}
-                type="button"
-                disabled={isScanning}
-                onClick={() => startAnalysisSequence(undefined, sample)}
-                className={`flex-shrink-0 w-24 bg-stone-900/90 hover:bg-stone-800/90 border rounded-2xl p-1.5 flex flex-col items-center gap-1 transition-all cursor-pointer text-left active:scale-95 disabled:opacity-50 ${
-                  activeSampleId === sample.id
-                    ? 'border-amber-400 ring-2 ring-amber-400/30 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                    : 'border-amber-400/20 hover:border-amber-400/50'
-                }`}
-              >
-                <div className="h-12 w-full flex items-center justify-center p-1 bg-black/40 rounded-xl">
-                  <img
-                    src={sample.imageUrl}
-                    alt={sample.name}
-                    className="h-full object-contain"
-                  />
-                </div>
-                <p className="text-[9px] font-bold text-stone-200 line-clamp-1 leading-tight w-full text-center">
-                  {sample.shortName}
-                </p>
-                <span className={`text-[7px] font-black px-1.5 py-0.5 rounded-md border text-center whitespace-nowrap ${sample.badgeClass}`}>
-                  {sample.badge}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Shutter & Upload Buttons */}
-          <div className="flex items-center justify-center gap-4 pt-1">
-            <button
-              type="button"
-              disabled={isScanning}
-              onClick={capture}
-              className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-600 via-yellow-400 to-amber-300 p-1 shadow-[0_0_35px_rgba(245,158,11,0.65),_0_0_70px_rgba(234,179,8,0.3)] active:scale-95 transition-all cursor-pointer flex items-center justify-center disabled:opacity-50"
-              aria-label="Scan Now"
-            >
-              <div className="w-full h-full border-2 border-amber-300/80 rounded-full bg-white flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] overflow-hidden p-1.5">
-                <img
-                  src="/logos/bottle-walking-icon.png"
-                  alt="Scan"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            </button>
-
-            <button
-              type="button"
-              disabled={isScanning}
-              onClick={() => fileInputRef.current?.click()}
-              className="px-4 py-2.5 rounded-2xl bg-stone-900/90 hover:bg-stone-800 border border-amber-400/40 text-amber-200 hover:text-white flex items-center gap-2 text-xs font-black uppercase tracking-wider shadow-lg active:scale-95 transition cursor-pointer disabled:opacity-50"
-            >
-              <Upload size={15} />
-              <span>อัปโหลดรูปภาพ</span>
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileUpload}
-            />
-          </div>
-
+          <button
+            type="button"
+            disabled={isScanning}
+            onClick={() => fileInputRef.current?.click()}
+            className="px-5 py-3 rounded-2xl bg-stone-900/90 hover:bg-stone-800 border border-amber-400/40 text-amber-200 hover:text-white flex items-center gap-2 text-xs font-black uppercase tracking-wider shadow-lg active:scale-95 transition cursor-pointer disabled:opacity-50"
+          >
+            <Upload size={16} />
+            <span>อัปโหลดรูปภาพ</span>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileUpload}
+          />
         </div>
       )}
 
