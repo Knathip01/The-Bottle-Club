@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import AccountSidebar from '@/components/account/AccountSidebar';
 import { query } from '@/lib/db';
 import OrdersContent from '@/components/account/OrdersContent';
+import { getBackendServiceToken, getCustomerLoyaltyInfo } from '@/app/actions/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
 
@@ -12,20 +13,19 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk
 function normalizeApiOrder(order: any): any {
   return {
     ...order,
-    // The new /api/orders/my endpoint returns total_price; also support total_amount
-    total_price: Number(order.total_price ?? order.total_amount ?? 0),
-    total_amount: Number(order.total_price ?? order.total_amount ?? 0),
-    subtotal_amount: Number(order.subtotal_amount ?? 0),
+    total_price: Number(order.grand_total ?? order.total_price ?? order.total_amount ?? 0),
+    total_amount: Number(order.grand_total ?? order.total_price ?? order.total_amount ?? 0),
+    subtotal_amount: Number(order.subtotal ?? order.subtotal_amount ?? 0),
     shipping_fee: Number(order.shipping_fee ?? 0),
-    payment_method: order.payment_method || 'credit_card',
+    payment_method: order.notes?.includes('Payment:')
+      ? order.notes.split('Payment:')[1].split(',')[0].trim()
+      : (order.payment_method || 'promptpay'),
     created_at: order.created_at || new Date().toISOString(),
-    // items already come from API as [{ product: { name, ... }, quantity, price }]
-    // re-shape to the flat format OrdersContent uses: { name, quantity, price }
     items: Array.isArray(order.items)
       ? order.items.map((item: any) => ({
           ...item,
           name: item.product?.name ?? item.name ?? `Product #${item.product_id ?? item.id}`,
-          price: Number(item.price ?? item.product?.price ?? 0),
+          price: Number(item.unit_price ?? item.price ?? item.product?.selling_price ?? 0),
           quantity: Number(item.quantity ?? 0),
         }))
       : [],
@@ -41,22 +41,43 @@ export default async function OrdersPage() {
   }
 
   const token: string | undefined = session?.user?.access_token;
-  const authHeaders: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+  const serviceToken = await getBackendServiceToken();
+  const tokenToUse = serviceToken || token;
+
+  // Resolve customer ID
+  let customerId: number | null = null;
+  if (user?.customer_id) {
+    customerId = Number(user.customer_id);
+  } else if (user?.email && tokenToUse) {
+    try {
+      const loyalty = await getCustomerLoyaltyInfo(user.email, tokenToUse);
+      customerId = loyalty?.customerId;
+    } catch {}
+  }
 
   // ── 1. Fetch from GET /api/v1/orders/ (Wayneven API) ──────────
   let apiOrders: any[] = [];
-  if (token) {
+  if (tokenToUse) {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/orders/`, {
-        headers: authHeaders,
+      const url = customerId
+        ? `${API_BASE_URL}/api/v1/orders/?customer_id=${customerId}&per_page=50`
+        : `${API_BASE_URL}/api/v1/orders/?per_page=50`;
+
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${tokenToUse}`,
+          'X-Branch-Id': '1',
+        },
         cache: 'no-store',
       });
 
       if (res.ok) {
         const data = await res.json();
-        const list = Array.isArray(data) ? data : (data.orders ?? data.items ?? data.data ?? []);
+        const list = Array.isArray(data)
+          ? data
+          : (data.data?.orders ?? data.orders ?? data.items ?? data.data ?? []);
         apiOrders = list.map(normalizeApiOrder);
-        console.log(`[OrdersPage] /api/v1/orders/ returned ${apiOrders.length} orders`);
+        console.log(`[OrdersPage] /api/v1/orders/ returned ${apiOrders.length} orders for customer ${customerId}`);
       } else if (res.status === 401 || res.status === 403) {
         console.warn('[OrdersPage] /api/v1/orders/ auth error:', res.status);
       } else {
@@ -72,9 +93,8 @@ export default async function OrdersPage() {
   try {
     const userId = user.id || user.user_id;
     if (userId) {
-      // Wrap in a timeout so a hung/terminated DB connection doesn't freeze rendering
       const dbTimeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('DB query timeout after 6s')), 6000)
+        setTimeout(() => reject(new Error('DB query timeout')), 2000)
       );
 
       const result = await Promise.race([
@@ -83,12 +103,11 @@ export default async function OrdersPage() {
           [String(userId)]
         ),
         dbTimeout,
-      ]);
+      ]) as any;
 
-      if (result.rows.length > 0) {
+      if (result?.rows?.length > 0) {
         const orderIds = result.rows.map((o: any) => o.id);
 
-        // Fetch items with LEFT JOIN so orders show even if products table is sparse
         const itemsResult = await Promise.race([
           query(
             `SELECT oi.id, oi.order_id, oi.product_id, oi.quantity, oi.price,
@@ -99,9 +118,9 @@ export default async function OrdersPage() {
             [orderIds]
           ),
           new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('DB items query timeout after 6s')), 6000)
+            setTimeout(() => reject(new Error('DB items query timeout')), 2000)
           ),
-        ]);
+        ]) as any;
 
         localOrders = result.rows.map((order: any) => ({
           ...order,
@@ -113,7 +132,7 @@ export default async function OrdersPage() {
           created_at: order.created_at?.toISOString
             ? order.created_at.toISOString()
             : (order.created_at || new Date().toISOString()),
-          items: itemsResult.rows
+          items: (itemsResult?.rows || [])
             .filter((item: any) => item.order_id === order.id)
             .map((item: any) => ({
               ...item,
@@ -126,32 +145,51 @@ export default async function OrdersPage() {
       }
     }
   } catch (error: any) {
-    // DB connection issue — gracefully fall back to API orders only
     console.warn('[OrdersPage] Local DB unavailable, using API orders only:', error?.message ?? error);
   }
 
-  // ── 3. Fetch user addresses for display in order details ────────────────────
+  // ── 3. Fetch user addresses and order shipping addresses ────────────────────
   let userAddresses: any[] = [];
+  let orderShippingMap: Record<string, any> = {};
+
   try {
-    const userId = user.id || user.user_id;
-    if (userId) {
-      const addrRes = await query(
-        `SELECT * FROM customer_addresses WHERE user_id = $1 ORDER BY id DESC`,
-        [String(userId)]
-      ).catch(() => ({ rows: [] }));
-      userAddresses = addrRes.rows || [];
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://yywymyxautnskmuvupwv.supabase.co';
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_L0zDWoTrfHQHPSvUBntbgA_H-kUMxgR';
+    const [addrRes, shippingRes] = await Promise.allSettled([
+      fetch(`${supabaseUrl}/rest/v1/settings?key=eq.customer_addresses&select=*`, {
+        headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
+        cache: 'no-store',
+      }),
+      fetch(`${supabaseUrl}/rest/v1/settings?key=eq.order_shipping_addresses&select=*`, {
+        headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
+        cache: 'no-store',
+      }),
+    ]);
+
+    if (addrRes.status === 'fulfilled' && addrRes.value.ok) {
+      const rows = await addrRes.value.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        const val = rows[0].value;
+        const map = typeof val === 'string' ? JSON.parse(val) : (val || {});
+        userAddresses = map[String(user.id)] || (user.email ? map[user.email.toLowerCase()] : []) || [];
+      }
+    }
+
+    if (shippingRes.status === 'fulfilled' && shippingRes.value.ok) {
+      const rows = await shippingRes.value.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        const val = rows[0].value;
+        orderShippingMap = typeof val === 'string' ? JSON.parse(val) : (val || {});
+      }
     }
   } catch (err) {
-    console.error('[OrdersPage] Failed to fetch addresses:', err);
+    console.warn('[OrdersPage] Failed to fetch shared addresses:', err);
   }
 
   // ── 4. Merge: API orders take priority; local DB fills gaps ─────────────────
-  // Use stripe_payment_intent_id as a reference to match remote API id with local id
   const apiOrderMap = new Map<number, any>(apiOrders.map((o) => [o.id, o]));
 
-  // Add local orders that aren't already covered by the API response
   for (const local of localOrders) {
-    // Check if this local order's api_order_id (stored in stripe_payment_intent_id) is already in apiOrders
     const apiRef = local.stripe_payment_intent_id
       ? parseInt(local.stripe_payment_intent_id, 10)
       : null;
@@ -165,7 +203,15 @@ export default async function OrdersPage() {
     }
   }
 
-  const orders = Array.from(apiOrderMap.values()).sort((a, b) => {
+  const orders = Array.from(apiOrderMap.values()).map((o) => {
+    const shippingInfo = orderShippingMap[String(o.id)] || (o.order_number ? orderShippingMap[String(o.order_number)] : null);
+    return {
+      ...o,
+      shipping_address: shippingInfo?.address || o.shipping_address || null,
+      recipient_name: shippingInfo?.recipient_name || o.recipient_name || null,
+      recipient_phone: shippingInfo?.phone || o.recipient_phone || null,
+    };
+  }).sort((a, b) => {
     const da = new Date(a.created_at).getTime();
     const db_ = new Date(b.created_at).getTime();
     return (isNaN(db_) ? 0 : db_) - (isNaN(da) ? 0 : da);

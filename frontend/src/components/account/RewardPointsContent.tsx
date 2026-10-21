@@ -1,6 +1,16 @@
 'use client';
 
 import { useLanguage } from '@/context/LanguageContext';
+import { TrendingUp, TrendingDown } from 'lucide-react';
+
+interface LoyaltyTx {
+  id?: number | string;
+  transaction_type?: string;
+  points?: number;
+  notes?: string | null;
+  created_at?: string;
+  expires_at?: string | null;
+}
 
 interface RewardPointsContentProps {
   user?: {
@@ -8,12 +18,14 @@ interface RewardPointsContentProps {
     points?: number | null;
     loyalty_points?: number | null;
     loyalty_points_balance?: number | null;
+    loyalty_transactions?: LoyaltyTx[];
   };
 }
 
 export default function RewardPointsContent({ user }: RewardPointsContentProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const currentPoints = Number(user?.points ?? user?.loyalty_points ?? user?.loyalty_points_balance ?? 0);
+  const transactions = user?.loyalty_transactions || [];
 
   return (
     <div className="flex-1">
@@ -73,9 +85,46 @@ export default function RewardPointsContent({ user }: RewardPointsContentProps) 
       {/* Transaction History */}
       <section>
         <h3 className="text-xs font-bold uppercase tracking-wider mb-6 pb-2 border-b border-stone-100">{t('account.points_history_title')}</h3>
-        <div className="text-[11px] text-stone-400 py-4 italic">
-          {t('account.points_no_history')}
-        </div>
+        {transactions && transactions.length > 0 ? (
+          <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
+            <div className="divide-y divide-stone-100">
+              {transactions.map((tx, idx) => {
+                const isEarn = tx.transaction_type === 'earn';
+                const createdDate = tx.created_at ? new Date(tx.created_at).toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }) : '-';
+                return (
+                  <div key={tx.id || idx} className="p-4 flex items-center justify-between hover:bg-stone-50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${isEarn ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                        {isEarn ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-stone-800">
+                          {tx.notes || (isEarn ? (language === 'th' ? 'ได้รับคะแนนสะสม' : 'Points Earned') : (language === 'th' ? 'แลกใช้คะแนน' : 'Points Redeemed'))}
+                        </p>
+                        <p className="text-[10px] text-stone-400 mt-0.5">{createdDate}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-sm font-black ${isEarn ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {isEarn ? `+${Math.abs(Number(tx.points || 0)).toLocaleString()}` : `-${Math.abs(Number(tx.points || 0)).toLocaleString()}`} PTS
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="text-[11px] text-stone-400 py-4 italic">
+            {t('account.points_no_history')}
+          </div>
+        )}
       </section>
     </div>
   );

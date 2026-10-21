@@ -16,17 +16,17 @@ import {
   Sparkles,
   ImagePlus,
   FileCheck2,
+  ExternalLink,
 } from 'lucide-react';
 
 interface ConfirmPaymentClientProps {
   accessToken: string;
   orderId: string;
   initialOrder: any;
+  existingSlip?: any;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
-
-export default function ConfirmPaymentClient({ accessToken, orderId, initialOrder }: ConfirmPaymentClientProps) {
+export default function ConfirmPaymentClient({ accessToken, orderId, initialOrder, existingSlip }: ConfirmPaymentClientProps) {
   const router = useRouter();
   const { t, language } = useLanguage();
   const order = initialOrder;
@@ -37,6 +37,14 @@ export default function ConfirmPaymentClient({ accessToken, orderId, initialOrde
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [currentSlip, setCurrentSlip] = useState<any>(existingSlip || null);
+
+  const subtotal = Number(order?.subtotal_amount ?? 0);
+  const shippingFee = Number(order?.shipping_fee ?? (subtotal >= 2000 ? 0 : 150));
+  const vatRate = 7;
+  const tax = Math.round(subtotal * (vatRate / 100));
+  const priceBeforeTax = (subtotal + shippingFee) - tax;
+  const total = subtotal + shippingFee;
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -86,23 +94,29 @@ export default function ConfirmPaymentClient({ accessToken, orderId, initialOrde
     formData.append('order_id', String(orderId));
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/slip-verify/upload`, {
+      const response = await fetch('/api/upload-slip', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || errorData.message || errorData.error || 'Failed to upload slip');
+        throw new Error(errorData.error || errorData.detail || errorData.message || 'Failed to upload slip');
+      }
+
+      const resData = await response.json();
+      if (resData.slip_url) {
+        setCurrentSlip({
+          slip_url: resData.slip_url,
+          uploaded_at: resData.uploaded_at || new Date().toISOString(),
+          status: 'pending',
+        });
       }
 
       setUploadSuccess(true);
       setTimeout(() => {
-        router.push('/account/orders');
-      }, 3000);
+        router.push('/account/confirm-payment');
+      }, 2500);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -264,20 +278,34 @@ export default function ConfirmPaymentClient({ accessToken, orderId, initialOrde
               <div className="border-t border-stone-100 bg-gradient-to-b from-stone-50/60 to-stone-100/40 px-7 py-6 sm:px-8">
                 <div className="space-y-2.5">
                   <div className="flex justify-between text-[11px] text-stone-500 font-semibold">
-                    <span>{t('checkout.subtotal') || 'Subtotal'}</span>
-                    <span className="text-stone-700 tabular-nums">฿{order.subtotal_amount?.toLocaleString() || 0}</span>
+                    <span>{t('checkout.subtotal') || 'ยอดรวมสินค้า (Subtotal)'}</span>
+                    <span className="text-stone-700 tabular-nums">฿{subtotal.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-[11px] text-stone-500 font-semibold">
-                    <span>{t('checkout.shipping_fee') || 'Shipping Fee'}</span>
-                    <span className="text-stone-700 tabular-nums">฿{order.shipping_fee?.toLocaleString() || 0}</span>
+                    <span>{language === 'th' ? 'ราคาก่อนภาษี' : 'Price Pre-Tax'}</span>
+                    <span className="text-stone-700 tabular-nums">฿{priceBeforeTax.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] text-stone-500 font-semibold">
+                    <span>{language === 'th' ? 'ภาษีมูลค่าเพิ่ม (VAT 7%)' : 'VAT (7%)'}</span>
+                    <span className="text-stone-700 tabular-nums">฿{tax.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] text-stone-500 font-semibold">
+                    <span>{t('checkout.shipping_fee') || 'ค่าจัดส่ง (Shipping Fee)'}</span>
+                    <span className="text-stone-700 tabular-nums">
+                      {shippingFee === 0 ? (
+                        <span className="text-emerald-600 font-bold">{language === 'th' ? 'ฟรี (ซื้อครบ ฿2,000)' : 'FREE'}</span>
+                      ) : (
+                        `฿${shippingFee.toLocaleString()}`
+                      )}
+                    </span>
                   </div>
                 </div>
                 <div className="mt-4 flex items-center justify-between border-t border-stone-200/80 pt-4">
                   <span className="text-sm font-black uppercase tracking-tight text-stone-900">
-                    {t('checkout.total_amount') || 'Total'}
+                    {t('checkout.total_amount') || 'ยอดชำระสุทธิ (Total)'}
                   </span>
                   <span className="text-xl font-black tracking-tight text-[#a11a1a] tabular-nums">
-                    ฿{order.total_price?.toLocaleString() || 0}
+                    ฿{total.toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -377,6 +405,46 @@ export default function ConfirmPaymentClient({ accessToken, orderId, initialOrde
                   /* ── UPLOAD FORM ── */
                   <div className="space-y-6">
 
+                    {/* Attached Slip View */}
+                    {currentSlip && (
+                      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-50/50 p-5">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle size={16} className="text-emerald-600" />
+                            <span className="text-xs font-bold text-emerald-900 uppercase tracking-wide">
+                              {currentSlip.status === 'approved' || order.status === 'completed' || order.status === 'paid'
+                                ? (language === 'th' ? 'แอดมินตรวจสอบและอนุมัติแล้ว' : 'Payment Approved')
+                                : (language === 'th' ? 'แนบสลิปเรียบร้อยแล้ว (รอเจ้าหน้าที่ตรวจสอบ)' : 'Slip Attached (Pending Review)')}
+                            </span>
+                          </div>
+                          {currentSlip.uploaded_at && (
+                            <span className="text-[10px] text-stone-500 font-medium">
+                              {new Date(currentSlip.uploaded_at).toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US')}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="relative aspect-[3/4] max-w-[220px] mx-auto overflow-hidden rounded-xl border border-stone-200 shadow-sm bg-white">
+                          <img
+                            src={currentSlip.slip_url || currentSlip.public_url}
+                            alt="Attached Slip"
+                            className="h-full w-full object-contain"
+                          />
+                        </div>
+
+                        <div className="mt-3.5 flex items-center justify-center gap-4">
+                          <a
+                            href={currentSlip.slip_url || currentSlip.public_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#a11a1a] hover:underline"
+                          >
+                            <ExternalLink size={13} /> {language === 'th' ? 'เปิดดูรูปสลิปขนาดเต็ม' : 'View Full Slip'}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Instructions */}
                     <div className="rounded-2xl bg-gradient-to-br from-stone-50 to-stone-100/60 p-5">
                       <div className="flex items-start gap-3.5">
@@ -385,7 +453,9 @@ export default function ConfirmPaymentClient({ accessToken, orderId, initialOrde
                         </div>
                         <div>
                           <h3 className="text-xs font-bold text-stone-900 mb-1">
-                            {t('checkout.upload_slip')}
+                            {currentSlip 
+                              ? (language === 'th' ? 'อัปโหลดสลิปใหม่ (แทนที่ของเดิม)' : 'Re-upload Slip (Replace current)')
+                              : (t('checkout.upload_slip') || 'Upload Transfer Slip')}
                           </h3>
                           <p className="text-[11px] text-stone-500 leading-relaxed font-medium">
                             {t('checkout.upload_instruction')}

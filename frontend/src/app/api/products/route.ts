@@ -15,6 +15,14 @@ export async function GET(request: Request) {
     const per_page = Math.min(100, Math.max(1, parseInt(searchParams.get('per_page') || '24', 10) || 24));
     const sort = searchParams.get('sort') || undefined;
 
+    const typesParam = searchParams.get('types');
+    const types = typesParam ? typesParam.split(',').map((s) => s.trim()).filter(Boolean) : undefined;
+    const max_price = searchParams.get('max_price') ? Number(searchParams.get('max_price')) : undefined;
+    const min_price = searchParams.get('min_price') ? Number(searchParams.get('min_price')) : undefined;
+    const min_rating = searchParams.get('min_rating') ? Number(searchParams.get('min_rating')) : undefined;
+    const natural_only = searchParams.get('natural_only') === 'true';
+    const discount_only = searchParams.get('discount_only') === 'true';
+
     const session = await getSession();
     const token = session?.user?.access_token;
 
@@ -27,6 +35,12 @@ export async function GET(request: Request) {
       per_page,
       sort,
       token,
+      types,
+      max_price,
+      min_price,
+      min_rating,
+      natural_only,
+      discount_only,
     });
 
     const requestId = crypto.randomUUID();
@@ -38,6 +52,8 @@ export async function GET(request: Request) {
         page: result.page,
         per_page: result.per_page,
         pages: result.pages,
+        source: result.source,
+        api_error: result.apiError,
       },
       meta: {
         page: result.page,
@@ -49,6 +65,8 @@ export async function GET(request: Request) {
       total: result.total,
       page: result.page,
       pages: result.pages,
+      source: result.source,
+      api_error: result.apiError,
       request_id: requestId,
     }, {
       headers: {

@@ -5,17 +5,14 @@ import {
   Award,
   CheckCircle2,
   Clock3,
+  Crown,
   Edit2,
-  FileText,
   MapPin,
   PackageCheck,
-  Plus,
   ShieldCheck,
   Sparkles,
   UserRound,
-  Upload,
   ChevronRight,
-  Sparkle
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import AccountSidebar from './AccountSidebar';
@@ -130,17 +127,19 @@ export default function AccountContent({ user }: AccountContentProps) {
   const displayName = fullName || user?.username || user?.email || 'Member';
 
   const userPoints = Number(user?.points ?? user?.loyalty_points ?? user?.loyalty_points_balance ?? 0);
+  const userTier = user?.tier || (
+    userPoints >= 10000 ? 'DIAMOND VIP' :
+    userPoints >= 5000 ? 'PLATINUM' :
+    userPoints >= 2000 ? 'GOLD VIP' :
+    userPoints >= 500 ? 'SILVER' :
+    'CLASSIC'
+  );
+
   const statusItems = [
     { label: t('account.your_points'), value: userPoints.toLocaleString(), icon: Award, tone: 'from-amber-400/20 to-amber-500/5 text-amber-700 border-amber-200/50 hover:shadow-amber-500/5' },
     { label: t('account.orders'), value: String(user?.order_count || 0), icon: PackageCheck, tone: 'from-emerald-400/20 to-emerald-500/5 text-emerald-700 border-emerald-200/50 hover:shadow-emerald-500/5' },
-    { label: t('account.docs_title'), value: '3', icon: FileText, tone: 'from-sky-400/20 to-sky-500/5 text-sky-700 border-sky-200/50 hover:shadow-sky-500/5' },
+    { label: language === 'th' ? 'ระดับสมาชิก' : 'Tier', value: userTier, icon: Crown, tone: 'from-amber-400/20 to-amber-500/5 text-amber-700 border-amber-200/50 hover:shadow-amber-500/5' },
     { label: t('account.privacy'), value: 'OK', icon: ShieldCheck, tone: 'from-rose-400/20 to-rose-500/5 text-rose-700 border-rose-200/50 hover:shadow-rose-500/5' },
-  ];
-
-  const requiredDocs = [
-    t('account.doc_liquor_license'),
-    t('account.doc_id_certificate'),
-    t('account.doc_vat_certificate'),
   ];
 
   // Modern soft pastel styling for active mesh gradients
@@ -325,7 +324,7 @@ export default function AccountContent({ user }: AccountContentProps) {
               </div>
               <div>
                 <p className="text-[9px] font-black uppercase tracking-widest text-amber-600/80 leading-none mb-1">{t('account.your_points')}</p>
-                <p className="text-base font-extrabold text-amber-900 leading-none">0 Points</p>
+                <p className="text-base font-extrabold text-amber-900 leading-none">{userPoints.toLocaleString()} Points</p>
               </div>
             </div>
           </section>
@@ -375,63 +374,6 @@ export default function AccountContent({ user }: AccountContentProps) {
                 <Link href="/account/addresses" className="text-[10px] font-black uppercase text-[#a11a1a] tracking-widest flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all hover:translate-x-1">
                   Manage <ChevronRight size={10} className="stroke-[3]" />
                 </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Required Documents Upload Section */}
-        <section className="rounded-2xl border border-stone-200/60 bg-white/80 backdrop-blur-xl p-6 shadow-xl shadow-stone-950/5">
-          <div className="mb-6 flex flex-col gap-4 border-b border-stone-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-sm font-black uppercase tracking-wider text-stone-900">{t('account.docs_title')}</h2>
-              <p className="mt-1 text-xs text-stone-400 font-medium">{t('account.docs_list_title')}</p>
-            </div>
-            <button className="inline-flex h-10 w-fit items-center gap-2 rounded-xl bg-[#a11a1a] hover:bg-[#7f1414] px-4 text-xs font-black uppercase tracking-widest text-white transition-all shadow-md active:scale-98">
-              <Plus size={13} className="stroke-[3]" />
-              {t('account.add_more_files')}
-            </button>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-            <div className="space-y-3">
-              {requiredDocs.map((doc) => (
-                <div key={doc} className="flex items-start gap-4 rounded-xl border border-stone-100 bg-stone-50/20 p-4 transition-all hover:bg-stone-50/50 hover:shadow-sm">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-stone-150 text-stone-600 shadow-inner">
-                    <FileText size={16} />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">Required Document</span>
-                    <span className="text-xs font-bold leading-normal text-stone-850">{doc}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Premium Drag and Drop Visual */}
-            <div className="rounded-2xl bg-gradient-to-br from-stone-900 to-stone-950 p-6 text-white shadow-lg border border-stone-800 flex flex-col justify-between min-h-[220px] group/upload">
-              <div>
-                <p className="text-xs font-black uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
-                  <Sparkle size={10} className="fill-amber-400" />
-                  {t('account.choose_file')}
-                </p>
-                
-                {/* Dashed Golden Hover Zone */}
-                <div className="mt-4 border-2 border-dashed border-stone-800 group-hover/upload:border-amber-400/40 rounded-xl bg-white/2 hover:bg-white/5 p-5 text-center transition-all duration-500 cursor-pointer flex flex-col items-center justify-center min-h-[110px]">
-                  <Upload size={24} className="text-stone-500 group-hover/upload:text-amber-400 group-hover/upload:-translate-y-1 transition-all duration-500 stroke-[2]" />
-                  <span className="block mt-2.5 text-[10px] font-bold text-stone-400 leading-normal group-hover/upload:text-stone-300">
-                    Drag & Drop File Here<br />
-                    <span className="text-stone-600 group-hover/upload:text-amber-500/80 font-black uppercase tracking-wider text-[8px]">or Browse device</span>
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-4 flex flex-col gap-1 border-t border-stone-800/80 pt-3">
-                <span className="text-[8px] font-black text-stone-500 uppercase tracking-widest">Active Verification Status</span>
-                <div className="rounded-lg bg-stone-900/60 border border-stone-800/60 px-3 py-2 text-[9px] font-bold text-stone-400 tracking-wider flex items-center justify-between">
-                  <span>{t('account.no_file_selected')}</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                </div>
               </div>
             </div>
           </div>

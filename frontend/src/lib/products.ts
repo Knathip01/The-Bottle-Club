@@ -1,3 +1,5 @@
+import { VIVINO_EXPLORE_PRODUCTS } from '@/data/vivinoExploreWines';
+
 export type ProductImage = {
   id: number;
   image_url: string;
@@ -14,15 +16,24 @@ export type Product = {
   sub_type?: string;
   type?: string;
   countryCode?: string;
+  country_code?: string;
+  country?: string;
   region?: string;
   image?: string;
   images?: ProductImage[];
   description?: string;
-  vintage?: number;
+  vintage?: number | string;
   alcohol?: string;
   designation?: string;
   brand?: string;
+  winery?: string;
+  wine_name?: string;
   quantity?: string;
+  rating?: number;
+  ratings_count?: number;
+  badge?: string;
+  discount?: boolean;
+  is_natural?: boolean;
 };
 
 export type WineProductQueryParams = {
@@ -34,6 +45,12 @@ export type WineProductQueryParams = {
   per_page?: number;
   sort?: string;
   token?: string;
+  types?: string[];
+  max_price?: number;
+  min_price?: number;
+  min_rating?: number;
+  natural_only?: boolean;
+  discount_only?: boolean;
 };
 
 export type PaginatedProductsResult = {
@@ -42,6 +59,8 @@ export type PaginatedProductsResult = {
   page: number;
   per_page: number;
   pages: number;
+  source?: 'api.wayneven.uk' | 'fallback';
+  apiError?: string | null;
 };
 
 export type ProductReview = {
@@ -138,6 +157,9 @@ function filterProducts(products: Product[], query?: string): Product[] {
   return products.filter(
     (p) =>
       p.name?.toLowerCase().includes(lowerQuery) ||
+      p.winery?.toLowerCase().includes(lowerQuery) ||
+      p.wine_name?.toLowerCase().includes(lowerQuery) ||
+      p.country?.toLowerCase().includes(lowerQuery) ||
       p.type?.toLowerCase().includes(lowerQuery) ||
       p.sub_type?.toLowerCase().includes(lowerQuery) ||
       p.region?.toLowerCase().includes(lowerQuery)
@@ -491,6 +513,61 @@ export function mapWineItemToProduct(
   };
 }
 
+export async function getProductReviewStatsMap(): Promise<Map<number, { count: number; avgRating: number }>> {
+  const map = new Map<number, { count: number; avgRating: number }>();
+  if (typeof window !== 'undefined') return map;
+
+  const productRatings: Record<number, number[]> = {};
+
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    const SHARED_REVIEWS_FILE = path.resolve('C:\\ProjectbottleClub1\\shared\\reviews.json');
+    if (fs.existsSync(SHARED_REVIEWS_FILE)) {
+      const data = fs.readFileSync(SHARED_REVIEWS_FILE, 'utf8');
+      const list = JSON.parse(data) || [];
+      if (Array.isArray(list)) {
+        for (const r of list) {
+          const pid = Number(r.product_id ?? r.productId ?? r.wine_id);
+          if (pid && !isNaN(pid)) {
+            const rating = Number(r.rating) || 5;
+            if (!productRatings[pid]) productRatings[pid] = [];
+            productRatings[pid].push(rating);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[getProductReviewStatsMap] Failed reading reviews file:', err);
+  }
+
+  try {
+    const { query } = await import('@/lib/db');
+    const res = await query(
+      `SELECT product_id, rating FROM product_reviews WHERE (is_approved IS NULL OR is_approved = true)`
+    );
+    if (res?.rows && Array.isArray(res.rows)) {
+      for (const row of res.rows) {
+        const pid = Number(row.product_id);
+        if (pid && !isNaN(pid)) {
+          const rating = Number(row.rating) || 5;
+          if (!productRatings[pid]) productRatings[pid] = [];
+          productRatings[pid].push(rating);
+        }
+      }
+    }
+  } catch {}
+
+  for (const [pidStr, ratings] of Object.entries(productRatings)) {
+    const pid = Number(pidStr);
+    const count = ratings.length;
+    const avgRating = Number((ratings.reduce((a, b) => a + b, 0) / count).toFixed(1));
+    map.set(pid, { count, avgRating });
+  }
+
+  return map;
+}
+
 export async function getWineProducts(params: WineProductQueryParams = {}): Promise<PaginatedProductsResult> {
   const {
     search,
@@ -502,6 +579,17 @@ export async function getWineProducts(params: WineProductQueryParams = {}): Prom
     sort,
     token,
   } = params;
+
+  const reviewStats = await getProductReviewStatsMap();
+  const applyReviewStats = (p: Product): Product => {
+    const stats = reviewStats.get(Number(p.id));
+    return {
+      ...p,
+      rating: stats ? stats.avgRating : 0,
+      ratings_count: stats ? stats.count : 0,
+      badge: undefined,
+    };
+  };
 
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_URL ||
@@ -536,6 +624,8 @@ export async function getWineProducts(params: WineProductQueryParams = {}): Prom
   const isServer = typeof window === 'undefined';
   const url = `${API_BASE_URL}/api/v1/wine-products/?${queryParams.toString()}`;
 
+  let apiErrorDetail: string | null = null;
+
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
@@ -562,9 +652,47 @@ export async function getWineProducts(params: WineProductQueryParams = {}): Prom
       const currentPerPage = Number(dataObj.per_page ?? json?.meta?.per_page ?? per_page);
       const totalPages = Number(dataObj.pages ?? Math.ceil(total / (currentPerPage || 1)) ?? 1);
 
-      let products: Product[] = rawItems.map((item: any) => mapWineItemToProduct(item, !!token, API_BASE_URL));
+      let products: Product[] = rawItems
+        .map((item: any) => mapWineItemToProduct(item, !!token, API_BASE_URL))
+        .map(applyReviewStats);
 
-      if (sort === 'price-asc') {
+      if (params.min_rating && params.min_rating > 0) {
+        products = products.filter((p) => (p.rating || 0) >= params.min_rating!);
+      }
+      if (params.max_price && params.max_price > 0) {
+        products = products.filter((p) => p.price <= params.max_price!);
+      }
+      if (params.min_price && params.min_price > 0) {
+        products = products.filter((p) => p.price >= params.min_price!);
+      }
+      if (params.types && params.types.length > 0) {
+        products = products.filter((p) => {
+          const prodType = (p.type || '').toLowerCase();
+          const color = (p.color || '').toLowerCase();
+          return params.types!.some((t) => {
+            const lowerT = t.toLowerCase();
+            if (lowerT === 'rosé' || lowerT === 'rose') {
+              return prodType.includes('rosé') || prodType.includes('rose') || color === 'rose';
+            }
+            if (lowerT === 'sparkling') {
+              return prodType.includes('sparkling') || prodType.includes('champagne') || color === 'sparkling';
+            }
+            if (lowerT === 'red') {
+              return prodType.includes('red') || color === 'red';
+            }
+            if (lowerT === 'white') {
+              return prodType.includes('white') || color === 'white';
+            }
+            return prodType.includes(lowerT);
+          });
+        });
+      }
+
+      if (sort === 'rating' || sort === 'highest-rated') {
+        products.sort((a: Product, b: Product) => (b.rating || 0) - (a.rating || 0));
+      } else if (sort === 'popular') {
+        products.sort((a: Product, b: Product) => (b.ratings_count || 0) - (a.ratings_count || 0));
+      } else if (sort === 'price-asc') {
         products.sort((a: Product, b: Product) => a.price - b.price);
       } else if (sort === 'price-desc') {
         products.sort((a: Product, b: Product) => b.price - a.price);
@@ -578,23 +706,97 @@ export async function getWineProducts(params: WineProductQueryParams = {}): Prom
         page: currentPage,
         per_page: currentPerPage,
         pages: totalPages,
+        source: 'api.wayneven.uk',
+        apiError: null,
       };
+    } else {
+      try {
+        const errJson = await response.json();
+        apiErrorDetail = `HTTP ${response.status} (${errJson.code || 'ERROR'}): ${errJson.detail || response.statusText}`;
+      } catch {
+        apiErrorDetail = `HTTP ${response.status}: ${response.statusText}`;
+      }
+      console.warn(`[getWineProducts] API ${url} returned error:`, apiErrorDetail);
     }
   } catch (error) {
+    if (!apiErrorDetail) {
+      apiErrorDetail = error instanceof Error ? error.message : String(error);
+    }
     console.warn('[getWineProducts] API fetch failed or timed out:', error);
   }
 
-  // Fallback to FALLBACK_PRODUCTS if API fails
-  let filtered = filterProducts(FALLBACK_PRODUCTS, search);
+  // Fallback to VIVINO_EXPLORE_PRODUCTS or FALLBACK_PRODUCTS if API fails
+  const rawPool = VIVINO_EXPLORE_PRODUCTS.length > 0 ? VIVINO_EXPLORE_PRODUCTS : FALLBACK_PRODUCTS;
+  const pool = rawPool.map(applyReviewStats);
+  let filtered = filterProducts(pool, search);
   if (category && category !== 'all') {
     filtered = filtered.filter((p) => p.type?.toLowerCase().includes(category.toLowerCase()));
   }
+  if (params.types && params.types.length > 0) {
+    filtered = filtered.filter((p) => {
+      const prodType = (p.type || '').toLowerCase();
+      const color = (p.color || '').toLowerCase();
+      return params.types!.some((t) => {
+        const lowerT = t.toLowerCase();
+        if (lowerT === 'rosé' || lowerT === 'rose') {
+          return prodType.includes('rosé') || prodType.includes('rose') || color === 'rose';
+        }
+        if (lowerT === 'sparkling') {
+          return prodType.includes('sparkling') || prodType.includes('champagne') || color === 'sparkling';
+        }
+        if (lowerT === 'red') {
+          return prodType.includes('red') || color === 'red';
+        }
+        if (lowerT === 'white') {
+          return prodType.includes('white') || color === 'white';
+        }
+        return prodType.includes(lowerT);
+      });
+    });
+  }
+  if (countries && countries !== 'all') {
+    filtered = filtered.filter((p) =>
+      p.country?.toLowerCase().includes(countries.toLowerCase()) ||
+      p.country_code?.toLowerCase() === countries.toLowerCase() ||
+      p.countryCode?.toLowerCase() === countries.toLowerCase()
+    );
+  }
+  if (params.min_rating && params.min_rating > 0) {
+    filtered = filtered.filter((p) => (p.rating || 0) >= params.min_rating!);
+  }
+  if (params.max_price && params.max_price > 0) {
+    filtered = filtered.filter((p) => p.price <= params.max_price!);
+  }
+  if (params.min_price && params.min_price > 0) {
+    filtered = filtered.filter((p) => p.price >= params.min_price!);
+  }
+  if (params.natural_only) {
+    filtered = filtered.filter((p) => p.is_natural);
+  }
+  if (params.discount_only) {
+    filtered = filtered.filter((p) => p.discount || (p.originalPrice && p.originalPrice > p.price));
+  }
+  if (sort === 'rating' || sort === 'highest-rated') {
+    filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  } else if (sort === 'price-asc') {
+    filtered.sort((a, b) => a.price - b.price);
+  } else if (sort === 'price-desc') {
+    filtered.sort((a, b) => b.price - a.price);
+  } else if (sort === 'name') {
+    filtered.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  const total = filtered.length;
+  const startIndex = (page - 1) * per_page;
+  const paginated = filtered.slice(startIndex, startIndex + per_page);
+
   return {
-    products: sanitizeProductsForAuth(filtered, !!token),
-    total: filtered.length,
-    page: 1,
+    products: paginated,
+    total,
+    page,
     per_page,
-    pages: 1,
+    pages: Math.ceil(total / per_page) || 1,
+    source: 'fallback',
+    apiError: apiErrorDetail,
   };
 }
 
@@ -609,6 +811,21 @@ export async function getProducts(query?: string, token?: string): Promise<Produ
 
 export async function getProductById(id: number, token?: string): Promise<Product | null> {
   const isAuth = !!token;
+  const reviewStats = await getProductReviewStatsMap();
+  const stats = reviewStats.get(Number(id));
+
+  const applyStats = (p: Product): Product => ({
+    ...p,
+    rating: stats ? stats.avgRating : 0,
+    ratings_count: stats ? stats.count : 0,
+    badge: undefined,
+  });
+
+  const exploreFound = VIVINO_EXPLORE_PRODUCTS.find((p) => p.id === Number(id));
+  if (exploreFound) {
+    return applyStats(exploreFound);
+  }
+
   try {
     const API_BASE_URL =
       process.env.NEXT_PUBLIC_API_URL ||
@@ -634,7 +851,7 @@ export async function getProductById(id: number, token?: string): Promise<Produc
         const raw = await res.json();
         const item = raw?.data || raw;
         if (item && (item.id || item.product_name || item.name)) {
-          return mapWineItemToProduct(item, isAuth, API_BASE_URL);
+          return applyStats(mapWineItemToProduct(item, isAuth, API_BASE_URL));
         }
       }
 
@@ -650,24 +867,28 @@ export async function getProductById(id: number, token?: string): Promise<Produc
           headers: catHeaders,
           cache: 'no-store',
         });
-      if (catRes.ok) {
-        const raw = await catRes.json();
-        const item = raw?.data || raw;
-        if (item && (item.id || item.product_name || item.name)) {
-          return mapWineItemToProduct(item, isAuth, API_BASE_URL);
+        if (catRes.ok) {
+          const raw = await catRes.json();
+          const item = raw?.data || raw;
+          if (item && (item.id || item.product_name || item.name)) {
+            return applyStats(mapWineItemToProduct(item, isAuth, API_BASE_URL));
+          }
         }
       }
+    } catch (err) {
+      console.warn(`Could not fetch wine by id ${id} from Wayneven API:`, err);
     }
-  } catch (err) {
-    console.warn(`Could not fetch wine by id ${id} from Wayneven API:`, err);
-  }
 
-  // Fallback to FALLBACK_PRODUCTS
-  const fallbackFound = FALLBACK_PRODUCTS.find((p) => p.id === Number(id));
-  if (fallbackFound) {
-    return sanitizeProductsForAuth([fallbackFound], isAuth)[0] ?? null;
-  }
-
+    // Fallback to VIVINO_EXPLORE_PRODUCTS or FALLBACK_PRODUCTS
+    const fallbackExplore = VIVINO_EXPLORE_PRODUCTS.find((p) => p.id === Number(id));
+    if (fallbackExplore) {
+      return applyStats(fallbackExplore);
+    }
+    const fallbackFound = FALLBACK_PRODUCTS.find((p) => p.id === Number(id));
+    if (fallbackFound) {
+      const sanitized = sanitizeProductsForAuth([fallbackFound], isAuth)[0];
+      return sanitized ? applyStats(sanitized) : null;
+    }
 
     // Check local database if running server-side
     if (typeof window === 'undefined') {
@@ -689,7 +910,8 @@ export async function getProductById(id: number, token?: string): Promise<Produc
             description: 'ไวน์ชั้นเลิศคัดสรรพิเศษสำหรับสมาชิก The Bottle Club',
             image: '/images/wine_red.png',
           };
-          return sanitizeProductsForAuth([dbProduct], isAuth)[0] ?? null;
+          const sanitized = sanitizeProductsForAuth([dbProduct], isAuth)[0];
+          return sanitized ? applyStats(sanitized) : null;
         }
       } catch {
         // non-fatal
@@ -734,7 +956,18 @@ export async function getReviews(wineId: number): Promise<ProductReview[]> {
     const response = await fetch(`/api/reviews?wine_id=${wineId}`, { cache: 'no-store' });
     if (!response.ok) return [];
     const data = await response.json();
-    return Array.isArray(data) ? data : data.reviews ?? data.data ?? [];
+    const rawList = Array.isArray(data) ? data : data.reviews ?? data.data ?? [];
+    return rawList.map((r: any) => ({
+      id: r.id,
+      wine_id: r.wine_id ?? r.product_id ?? r.productId ?? wineId,
+      user_id: r.user_id ?? r.userId ?? 'member',
+      username: r.username || r.user_name || r.userName || r.customer_name || 'ลูกค้าสมาชิก',
+      rating: Number(r.rating) || 5,
+      comment: r.comment || '',
+      images: Array.isArray(r.images) ? r.images : [],
+      videos: Array.isArray(r.videos) ? r.videos : [],
+      created_at: r.created_at || r.createdAt || new Date().toISOString(),
+    }));
   } catch (error) {
     console.error('Failed to fetch reviews:', error);
     return [];
@@ -752,6 +985,7 @@ export async function createReview(
     username: string;
     rating: number;
     comment: string;
+    product_name?: string;
     images?: string[];
     videos?: string[];
   }
@@ -766,6 +1000,7 @@ export async function createReview(
         username: payload.username,
         rating: Number(payload.rating),
         comment: payload.comment,
+        product_name: payload.product_name,
         images: payload.images ?? [],
         videos: payload.videos ?? [],
       }),

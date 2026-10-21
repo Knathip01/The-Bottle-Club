@@ -3,6 +3,7 @@ import MainHeader from '@/components/MainHeader';
 import Hero from '@/components/Hero';
 import ProductGridSection from '@/components/ProductGridSection';
 import ProductGridSkeleton from '@/components/ProductGridSkeleton';
+import WineriesCarouselSection from '@/components/WineriesCarouselSection';
 import PromotionSection from '@/components/PromotionSection';
 import Footer from '@/components/Footer';
 import { getPromotions } from '@/lib/promotions.server';
@@ -21,6 +22,7 @@ export default async function Home() {
         <Suspense fallback={<ProductGridSkeleton />}>
           <ProductGridSection />
         </Suspense>
+        <WineriesCarouselSection />
         <PromotionSection promotions={promotions} />
       </div>
       <Footer />

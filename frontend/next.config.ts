@@ -33,6 +33,21 @@ const nextConfig: NextConfig = {
         hostname: 'images.unsplash.com',
         pathname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: 'thumbs.vivino.com',
+        pathname: '**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.vivino.com',
+        pathname: '**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'vivino.s3.amazonaws.com',
+        pathname: '**',
+      },
     ],
   },
   async rewrites() {

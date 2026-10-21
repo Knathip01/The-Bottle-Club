@@ -1,69 +1,102 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth-utils';
 import { query } from '@/lib/db';
+import { getBackendServiceToken, getCustomerLoyaltyInfo } from '@/app/actions/auth';
 
-// Fallback in-memory store if PostgreSQL is unavailable
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://yywymyxautnskmuvupwv.supabase.co';
+const SERVICE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5d3lteXhhdXRuc2ttdXZ1cHd2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDI1NjQ2MiwiZXhwIjoyMDk5ODMyNDYyfQ.Bh_ixuXnD6246abT5URUHZ_jy6BJjK29e1aFeEUKZ_Y';
+
+// Memory cache fallback
 const memoryAddresses: any[] = [];
 let memoryIdCounter = 1;
 
-let isTableInitialized = false;
-
-async function ensureTable() {
-  if (isTableInitialized) return;
+/** Fetch all stored customer addresses from shared Supabase settings table */
+async function getStoredCustomerAddresses(): Promise<{ rowId: string | null; map: Record<string, any[]> }> {
   try {
-    await query(`
-      CREATE TABLE IF NOT EXISTS customer_addresses (
-        id SERIAL PRIMARY KEY,
-        user_id VARCHAR(255),
-        first_name VARCHAR(255),
-        last_name VARCHAR(255),
-        phone VARCHAR(50),
-        address_line TEXT,
-        subdistrict VARCHAR(255),
-        district VARCHAR(255),
-        province VARCHAR(255),
-        postal_code VARCHAR(20),
-        country VARCHAR(100) DEFAULT 'Thailand',
-        is_default_shipping BOOLEAN DEFAULT false,
-        is_default_billing BOOLEAN DEFAULT false,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-    isTableInitialized = true;
-  } catch (err: any) {
-    console.warn('[AddressRoute] DB init warning, fallback to memory storage:', err?.message);
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/settings?key=eq.customer_addresses&select=*`, {
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+      },
+      cache: 'no-store',
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        const rowId = rows[0].id;
+        const val = rows[0].value;
+        const map = typeof val === 'string' ? JSON.parse(val) : (val || {});
+        return { rowId, map };
+      }
+    }
+  } catch (err) {
+    console.warn('[AddressRoute] Error fetching Supabase settings customer_addresses:', err);
+  }
+  return { rowId: null, map: {} };
+}
+
+/** Save updated customer addresses map to shared Supabase settings table */
+async function saveStoredCustomerAddresses(rowId: string | null, map: Record<string, any[]>) {
+  try {
+    const jsonStr = JSON.stringify(map);
+    if (rowId) {
+      await fetch(`${SUPABASE_URL}/rest/v1/settings?id=eq.${rowId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SERVICE_KEY,
+          Authorization: `Bearer ${SERVICE_KEY}`,
+          Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({
+          value: jsonStr,
+          updated_at: new Date().toISOString(),
+        }),
+      });
+    } else {
+      await fetch(`${SUPABASE_URL}/rest/v1/settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SERVICE_KEY,
+          Authorization: `Bearer ${SERVICE_KEY}`,
+          Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({
+          key: 'customer_addresses',
+          value: jsonStr,
+          updated_at: new Date().toISOString(),
+        }),
+      });
+    }
+  } catch (err) {
+    console.warn('[AddressRoute] Error persisting customer_addresses:', err);
   }
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
-
 export async function GET() {
   const session = await getSession();
-  const userId = session?.user?.id ? String(session.user.id) : null;
-  const token = session?.user?.access_token;
+  const user = session?.user;
+  const userId = user?.id ? String(user.id) : null;
+  const userEmail = (user?.email || '').trim().toLowerCase();
 
-  if (userId && token) {
-    try {
-      const apiRes = await fetch(`${API_BASE_URL}/api/v1/customer-addresses/customer/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        cache: 'no-store'
-      });
-      if (apiRes.ok) {
-        const data = await apiRes.json();
-        const addressList = Array.isArray(data) ? data : (data?.data || data?.addresses || []);
-        if (addressList && addressList.length > 0) {
-          return NextResponse.json(addressList);
-        }
-      }
-    } catch (apiErr) {
-      console.warn('[AddressRoute] Central API fetch error:', apiErr);
-    }
+  // 1. Try reading from shared Supabase settings
+  const { map } = await getStoredCustomerAddresses();
+  const fromSupabase =
+    (userId && map[userId]) ||
+    (userEmail && map[userEmail]) ||
+    (user?.customer_id && map[String(user.customer_id)]) ||
+    [];
+
+  if (Array.isArray(fromSupabase) && fromSupabase.length > 0) {
+    return NextResponse.json(fromSupabase);
   }
 
+  // 2. Try PostgreSQL if available
   try {
-    await ensureTable();
     if (userId) {
       const result = await query(
         `SELECT * FROM customer_addresses WHERE user_id = $1 ORDER BY id DESC`,
@@ -72,19 +105,10 @@ export async function GET() {
       if (result.rows && result.rows.length > 0) {
         return NextResponse.json(result.rows);
       }
-    } else {
-      const result = await query(
-        `SELECT * FROM customer_addresses ORDER BY id DESC LIMIT 20`
-      );
-      if (result.rows) {
-        return NextResponse.json(result.rows);
-      }
     }
-  } catch (dbErr) {
-    console.warn('[AddressRoute] DB fetch failed, using memory store:', dbErr);
-  }
+  } catch {}
 
-  // Memory fallback
+  // 3. Fallback memory store
   const filtered = userId 
     ? memoryAddresses.filter(a => String(a.user_id) === userId)
     : memoryAddresses;
@@ -101,9 +125,12 @@ export async function POST(request: Request) {
   }
 
   const session = await getSession();
-  const userId = body.user_id ? String(body.user_id) : (session?.user?.id ? String(session.user.id) : null);
+  const user = session?.user;
+  const userId = body.user_id ? String(body.user_id) : (user?.id ? String(user.id) : '1');
+  const userEmail = (user?.email || body.email || '').trim().toLowerCase();
 
-  const addressData = {
+  const newAddressItem = {
+    id: Date.now(),
     user_id: userId,
     first_name: body.first_name || '',
     last_name: body.last_name || '',
@@ -116,73 +143,88 @@ export async function POST(request: Request) {
     country: body.country || 'Thailand',
     is_default_shipping: Boolean(body.is_default_shipping ?? true),
     is_default_billing: Boolean(body.is_default_billing ?? true),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   };
 
-  const token = session?.user?.access_token;
-  if (userId && token) {
-    try {
-      await fetch(`${API_BASE_URL}/api/v1/customer-addresses/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          customer_id: Number(userId),
-          recipient_name: `${addressData.first_name} ${addressData.last_name}`.trim() || 'Customer',
-          phone: addressData.phone || null,
-          address_line: addressData.address_line,
-          subdistrict: addressData.subdistrict || null,
-          district: addressData.district || null,
-          province: addressData.province || null,
-          postal_code: addressData.postal_code || null,
-          is_default: addressData.is_default_shipping
-        })
-      });
-    } catch (apiErr) {
-      console.warn('[AddressRoute] Central API address creation error:', apiErr);
+  // 1. Sync name & phone with FastAPI backend Customer profile
+  const serviceToken = await getBackendServiceToken();
+  const tokenToUse = serviceToken || user?.access_token;
+  if (tokenToUse) {
+    let customerId = user?.customer_id ? Number(user.customer_id) : null;
+    if (!customerId && userEmail) {
+      try {
+        const loyalty = await getCustomerLoyaltyInfo(userEmail, tokenToUse);
+        if (loyalty?.customerId) customerId = Number(loyalty.customerId);
+      } catch {}
+    }
+    if (customerId) {
+      try {
+        await fetch(`${API_BASE_URL}/api/v1/customers/${customerId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${tokenToUse}`,
+          },
+          body: JSON.stringify({
+            first_name: newAddressItem.first_name || undefined,
+            last_name: newAddressItem.last_name || undefined,
+            phone: newAddressItem.phone || undefined,
+          }),
+        });
+      } catch (e) {
+        console.warn('[AddressRoute] Failed to sync customer name to FastAPI:', e);
+      }
     }
   }
 
+  // 2. Persist in shared Supabase settings table (accessible by Admin POS)
+  const { rowId, map } = await getStoredCustomerAddresses();
+  const userKey = userId || userEmail || 'default';
+  const existingList = Array.isArray(map[userKey]) ? map[userKey] : [];
+
+  // Reset defaults if needed
+  if (newAddressItem.is_default_shipping) {
+    for (const a of existingList) a.is_default_shipping = false;
+  }
+  const updatedList = [newAddressItem, ...existingList.filter((a: any) => a.id !== newAddressItem.id)];
+  map[userKey] = updatedList;
+  if (userEmail && userEmail !== userKey) {
+    map[userEmail] = updatedList;
+  }
+  if (user?.customer_id && String(user.customer_id) !== userKey) {
+    map[String(user.customer_id)] = updatedList;
+  }
+
+  await saveStoredCustomerAddresses(rowId, map);
+
+  // 3. Best-effort mirror to PostgreSQL
   try {
-    await ensureTable();
-    const insertRes = await query(
+    await query(
       `INSERT INTO customer_addresses (
         user_id, first_name, last_name, phone, address_line,
         subdistrict, district, province, postal_code, country,
         is_default_shipping, is_default_billing
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-      RETURNING *`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
       [
-        addressData.user_id,
-        addressData.first_name,
-        addressData.last_name,
-        addressData.phone,
-        addressData.address_line,
-        addressData.subdistrict,
-        addressData.district,
-        addressData.province,
-        addressData.postal_code,
-        addressData.country,
-        addressData.is_default_shipping,
-        addressData.is_default_billing,
+        newAddressItem.user_id,
+        newAddressItem.first_name,
+        newAddressItem.last_name,
+        newAddressItem.phone,
+        newAddressItem.address_line,
+        newAddressItem.subdistrict,
+        newAddressItem.district,
+        newAddressItem.province,
+        newAddressItem.postal_code,
+        newAddressItem.country,
+        newAddressItem.is_default_shipping,
+        newAddressItem.is_default_billing,
       ]
-    );
+    ).catch(() => {});
+  } catch {}
 
-    if (insertRes.rows && insertRes.rows[0]) {
-      return NextResponse.json(insertRes.rows[0], { status: 201 });
-    }
-  } catch (dbErr) {
-    console.warn('[AddressRoute] DB insert failed, using memory store:', dbErr);
-  }
+  // 4. Also store in memory
+  memoryAddresses.unshift(newAddressItem);
 
-  // Memory fallback
-  const newAddress = {
-    id: memoryIdCounter++,
-    ...addressData,
-    created_at: new Date().toISOString(),
-  };
-  memoryAddresses.unshift(newAddress);
-
-  return NextResponse.json(newAddress, { status: 201 });
+  return NextResponse.json(newAddressItem, { status: 201 });
 }

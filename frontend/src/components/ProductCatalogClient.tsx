@@ -1,28 +1,26 @@
 'use client';
 
-import React, { useState, useEffect, useTransition } from 'react';
-import Image from 'next/image';
+import React, { useState, useMemo, useEffect, useTransition, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Search,
-  Filter,
-  Wine,
-  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  ShoppingCart,
+  RotateCcw,
+  SlidersHorizontal,
+  X,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  ShoppingCart,
-  Check,
-  RotateCcw,
-  Globe,
-  SlidersHorizontal,
-  X,
   Lock,
-  Tag,
-  Flame,
-  ArrowUpDown,
+  ExternalLink,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import type { Product } from '@/lib/products';
 import { addCartItem } from '@/lib/cart';
@@ -39,29 +37,107 @@ interface ProductCatalogClientProps {
   currentCountry?: string;
   currentSort?: string;
   isLoggedIn: boolean;
+  initialSource?: 'api.wayneven.uk' | 'fallback';
+  initialApiError?: string | null;
 }
 
-// Category mappings for quick filter pills
-const WINE_CATEGORIES = [
-  { id: 'all', label: 'ทั้งหมด', labelEn: 'All Wines', icon: Wine },
-  { id: 'Red wines', label: 'ไวน์แดง', labelEn: 'Red Wine', icon: Wine, color: 'text-red-600 bg-red-50 hover:bg-red-100' },
-  { id: 'White wines', label: 'ไวน์ขาว', labelEn: 'White Wine', icon: Wine, color: 'text-amber-600 bg-amber-50 hover:bg-amber-100' },
-  { id: 'Rosé wines', label: 'ไวน์โรเซ่', labelEn: 'Rosé Wine', icon: Wine, color: 'text-pink-600 bg-pink-50 hover:bg-pink-100' },
-  { id: 'Champagnes', label: 'แชมเปญ', labelEn: 'Champagne', icon: Sparkles, color: 'text-yellow-600 bg-yellow-50 hover:bg-yellow-100' },
-  { id: 'Sparkling wines', label: 'สปาร์กลิ้ง', labelEn: 'Sparkling', icon: Sparkles, color: 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100' },
-  { id: 'Sweet wines', label: 'ไวน์หวาน', labelEn: 'Sweet & Dessert', icon: Tag, color: 'text-purple-600 bg-purple-50 hover:bg-purple-100' },
+const WINE_TYPES = [
+  { id: 'Red', label: 'Red' },
+  { id: 'White', label: 'White' },
+  { id: 'Sparkling', label: 'Sparkling' },
+  { id: 'Rosé', label: 'Rosé' },
+  { id: 'Dessert', label: 'Dessert' },
+  { id: 'Fortified', label: 'Fortified' },
 ];
 
-// Country flags and mappings
-const TOP_COUNTRIES = [
-  { id: 'all', label: 'ทุกประเทศ', flag: '🌍' },
-  { id: 'France', label: 'ฝรั่งเศส', flag: '🇫🇷' },
-  { id: 'Italy', label: 'อิตาลี', flag: '🇮🇹' },
-  { id: 'Spain', label: 'สเปน', flag: '🇪🇸' },
-  { id: 'United States', label: 'สหรัฐอเมริกา', flag: '🇺🇸' },
-  { id: 'Australia', label: 'ออสเตรเลีย', flag: '🇦🇺' },
-  { id: 'Germany', label: 'เยอรมนี', flag: '🇩🇪' },
-];
+const COUNTRY_FLAGS: Record<string, string> = {
+  us: '🇺🇸',
+  'united states': '🇺🇸',
+  fr: '🇫🇷',
+  france: '🇫🇷',
+  it: '🇮🇹',
+  italy: '🇮🇹',
+  es: '🇪🇸',
+  spain: '🇪🇸',
+  au: '🇦🇺',
+  australia: '🇦🇺',
+  nz: '🇳🇿',
+  'new zealand': '🇳🇿',
+  cl: '🇨🇱',
+  chile: '🇨🇱',
+  ar: '🇦🇷',
+  argentina: '🇦🇷',
+  de: '🇩🇪',
+  germany: '🇩🇪',
+  pt: '🇵🇹',
+  portugal: '🇵🇹',
+  za: '🇿🇦',
+  'south africa': '🇿🇦',
+  hu: '🇭🇺',
+  hungary: '🇭🇺',
+};
+
+function getCountryFlag(countryCode?: string, countryName?: string): string {
+  const code = (countryCode || '').toLowerCase();
+  const name = (countryName || '').toLowerCase();
+  return COUNTRY_FLAGS[code] || COUNTRY_FLAGS[name] || '🍷';
+}
+
+function CrimsonStars({ rating = 0 }: { rating?: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => {
+        const fillAmount = Math.max(0, Math.min(1, rating - (star - 1)));
+        return (
+          <div key={star} className="relative inline-block w-3.5 h-3.5 sm:w-4 sm:h-4">
+            <svg
+              viewBox="0 0 24 24"
+              className="w-full h-full text-stone-200 fill-stone-200"
+            >
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+            </svg>
+            <div
+              className="absolute top-0 left-0 overflow-hidden"
+              style={{ width: `${fillAmount * 100}%` }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#ba1628] fill-[#ba1628]"
+              >
+                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+              </svg>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function VivinoBadge({ text }: { text: string }) {
+  const isTopPercent = text.includes('top') || text.includes('1%') || text.includes('3%') || text.includes('5%');
+  const isVintage = text.includes('vintage') || text.includes('Latest');
+  const cleanText = text.replace(/^[⭐🏛🏷️🔥]\s*/, '');
+
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full bg-[#f4f4f4] px-3.5 py-1.5 text-xs text-stone-800 font-normal">
+      {isTopPercent ? (
+        <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#e5a824] text-[10px] text-white">
+          ★
+        </span>
+      ) : isVintage ? (
+        <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#b89569] text-[9px] text-white">
+          🏛
+        </span>
+      ) : (
+        <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-stone-400 text-[10px] text-white">
+          ★
+        </span>
+      )}
+      <span>{cleanText}</span>
+    </div>
+  );
+}
 
 export default function ProductCatalogClient({
   initialProducts,
@@ -72,86 +148,188 @@ export default function ProductCatalogClient({
   currentSearch = '',
   currentCategory = 'all',
   currentCountry = 'all',
-  currentSort = 'default',
+  currentSort = 'highest-rated',
   isLoggedIn,
+  initialSource,
+  initialApiError,
 }: ProductCatalogClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
+  const [effectiveLoggedIn, setEffectiveLoggedIn] = useState(isLoggedIn);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hasToken = !!localStorage.getItem('token') || !!document.cookie.match(/token|session|auth/);
+      setEffectiveLoggedIn(isLoggedIn || hasToken);
+    }
+  }, [isLoggedIn]);
+
+  // Data state powered by /api/products
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [totalCount, setTotalCount] = useState<number>(total);
+  const [totalPagesCount, setTotalPagesCount] = useState<number>(totalPages);
+  const [activePage, setActivePage] = useState<number>(currentPage);
+  const [isLoadingApi, setIsLoadingApi] = useState<boolean>(false);
+  const [apiSource, setApiSource] = useState<'api.wayneven.uk' | 'fallback' | undefined>(initialSource);
+  const [apiError, setApiError] = useState<string | null | undefined>(initialApiError);
+
+  // Search input state
   const [searchInput, setSearchInput] = useState(currentSearch);
-  const [addedItems, setAddedItems] = useState<Record<number, boolean>>({});
-  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
 
-  // Sync state if searchParams change externally
+  // Filter States
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([
+    'Red',
+    'White',
+    'Sparkling',
+    'Rosé',
+    'Dessert',
+    'Fortified',
+  ]);
+  const [naturalOnly, setNaturalOnly] = useState(false);
+  const [discountOnly, setDiscountOnly] = useState(false);
+  const [maxPrice, setMaxPrice] = useState<number>(0);
+  const [selectedRating, setSelectedRating] = useState<number>(0);
+  const [sortOption, setSortOption] = useState<string>(
+    currentSort === 'default' ? 'highest-rated' : currentSort
+  );
+
+  // Accordion open/close states
+  const [openSections, setOpenSections] = useState({
+    types: true,
+    price: true,
+    rating: true,
+  });
+
+  // Mobile filter drawer state
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  // Added to cart feedback
+  const [addedItems, setAddedItems] = useState<Record<number, boolean>>({});
+
+  const fetchProductsFromApi = useCallback(
+    async (
+      pageToFetch: number = activePage,
+      searchVal: string = searchInput,
+      sortVal: string = sortOption,
+      typesVal: string[] = selectedTypes,
+      priceVal: number = maxPrice,
+      ratingVal: number = selectedRating,
+      naturalVal: boolean = naturalOnly,
+      discountVal: boolean = discountOnly
+    ) => {
+      setIsLoadingApi(true);
+      try {
+        const q = new URLSearchParams();
+        q.set('page', String(pageToFetch));
+        q.set('per_page', String(perPage));
+        if (sortVal) q.set('sort', sortVal);
+        if (searchVal.trim()) q.set('search', searchVal.trim());
+        if (typesVal.length > 0 && typesVal.length < WINE_TYPES.length) {
+          q.set('types', typesVal.join(','));
+        }
+        if (priceVal > 0) q.set('max_price', String(priceVal));
+        if (ratingVal > 0) q.set('min_rating', String(ratingVal));
+        if (naturalVal) q.set('natural_only', 'true');
+        if (discountVal) q.set('discount_only', 'true');
+
+        const res = await fetch(`/api/products?${q.toString()}`);
+        if (res.ok) {
+          const json = await res.json();
+          const items = json?.data?.items || json?.products || [];
+          setProducts(items);
+          setTotalCount(json?.data?.total ?? json?.total ?? items.length);
+          setTotalPagesCount(json?.data?.pages ?? json?.pages ?? 1);
+          setActivePage(json?.data?.page ?? pageToFetch);
+          setApiSource(json?.data?.source || json?.source);
+          setApiError(json?.data?.api_error || json?.api_error || null);
+        } else {
+          setApiSource('fallback');
+          setApiError(`HTTP ${res.status}: Failed to fetch /api/products`);
+        }
+      } catch (err: any) {
+        console.error('[ProductCatalogClient] API fetch failed:', err);
+        setApiSource('fallback');
+        setApiError(err?.message || 'Failed to connect to API');
+      } finally {
+        setIsLoadingApi(false);
+      }
+    },
+    [perPage, activePage, searchInput, sortOption, selectedTypes, maxPrice, selectedRating, naturalOnly, discountOnly]
+  );
+
+  useEffect(() => {
+    // Actively load from API on mount
+    fetchProductsFromApi(1, currentSearch, sortOption);
+  }, []);
+
   useEffect(() => {
     setSearchInput(currentSearch);
   }, [currentSearch]);
 
-  const updateFilters = (updates: {
-    search?: string;
-    category?: string;
-    countries?: string;
-    page?: number;
-    per_page?: number;
-    sort?: string;
-  }) => {
-    const params = new URLSearchParams(searchParams.toString());
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
 
-    if (updates.search !== undefined) {
-      if (updates.search.trim()) params.set('search', updates.search.trim());
-      else params.delete('search');
-      params.set('page', '1');
-    }
+  const toggleType = (typeId: string) => {
+    const updated = selectedTypes.includes(typeId)
+      ? selectedTypes.filter((t) => t !== typeId)
+      : [...selectedTypes, typeId];
+    setSelectedTypes(updated);
+    fetchProductsFromApi(1, searchInput, sortOption, updated, maxPrice, selectedRating, naturalOnly, discountOnly);
+  };
 
-    if (updates.category !== undefined) {
-      if (updates.category && updates.category !== 'all') params.set('category', updates.category);
-      else params.delete('category');
-      params.set('page', '1');
-    }
+  const handlePriceChange = (newMax: number) => {
+    setMaxPrice(newMax);
+    fetchProductsFromApi(1, searchInput, sortOption, selectedTypes, newMax, selectedRating, naturalOnly, discountOnly);
+  };
 
-    if (updates.countries !== undefined) {
-      if (updates.countries && updates.countries !== 'all') params.set('countries', updates.countries);
-      else params.delete('countries');
-      params.set('page', '1');
-    }
+  const handleRatingChange = (newRatingVal: number) => {
+    const valToSet = selectedRating === newRatingVal ? 0 : newRatingVal;
+    setSelectedRating(valToSet);
+    fetchProductsFromApi(1, searchInput, sortOption, selectedTypes, maxPrice, valToSet, naturalOnly, discountOnly);
+  };
 
-    if (updates.sort !== undefined) {
-      if (updates.sort && updates.sort !== 'default') params.set('sort', updates.sort);
-      else params.delete('sort');
-      params.set('page', '1');
-    }
+  const handleNaturalToggle = () => {
+    const newVal = !naturalOnly;
+    setNaturalOnly(newVal);
+    fetchProductsFromApi(1, searchInput, sortOption, selectedTypes, maxPrice, selectedRating, newVal, discountOnly);
+  };
 
-    if (updates.per_page !== undefined) {
-      params.set('per_page', String(updates.per_page));
-      params.set('page', '1');
-    }
+  const handleDiscountToggle = () => {
+    const newVal = !discountOnly;
+    setDiscountOnly(newVal);
+    fetchProductsFromApi(1, searchInput, sortOption, selectedTypes, maxPrice, selectedRating, naturalOnly, newVal);
+  };
 
-    if (updates.page !== undefined) {
-      params.set('page', String(updates.page));
-    }
-
-    startTransition(() => {
-      router.push(`/product?${params.toString()}`);
-    });
+  const handleResetFilters = () => {
+    const allTypes = ['Red', 'White', 'Sparkling', 'Rosé', 'Dessert', 'Fortified'];
+    setSelectedTypes(allTypes);
+    setNaturalOnly(false);
+    setDiscountOnly(false);
+    setMaxPrice(0);
+    setSelectedRating(0);
+    setSearchInput('');
+    setSortOption('highest-rated');
+    fetchProductsFromApi(1, '', 'highest-rated', allTypes, 0, 0, false, false);
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateFilters({ search: searchInput });
+    fetchProductsFromApi(1, searchInput, sortOption, selectedTypes, maxPrice, selectedRating, naturalOnly, discountOnly);
   };
 
-  const handleClearSearch = () => {
-    setSearchInput('');
-    updateFilters({ search: '' });
+  const handleSortChange = (newSort: string) => {
+    setSortOption(newSort);
+    fetchProductsFromApi(1, searchInput, newSort, selectedTypes, maxPrice, selectedRating, naturalOnly, discountOnly);
   };
 
-  const handleResetAll = () => {
-    setSearchInput('');
-    startTransition(() => {
-      router.push('/product');
-    });
+  const handlePageChange = (newPage: number) => {
+    setActivePage(newPage);
+    fetchProductsFromApi(newPage, searchInput, sortOption, selectedTypes, maxPrice, selectedRating, naturalOnly, discountOnly);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
@@ -172,433 +350,657 @@ export default function ProductCatalogClient({
     }, 2000);
   };
 
-  // Calculate display ranges
-  const startItem = total === 0 ? 0 : (currentPage - 1) * perPage + 1;
-  const endItem = Math.min(currentPage * perPage, total);
-
-  // Generate pagination page numbers
-  const getPaginationNumbers = () => {
-    const pages: (number | string)[] = [];
-    const maxVisible = 5;
-
-    if (totalPages <= maxVisible + 2) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1);
-      if (currentPage > 3) pages.push('...');
-
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(totalPages - 1, currentPage + 1);
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-
-      if (currentPage < totalPages - 2) pages.push('...');
-      pages.push(totalPages);
-    }
-
-    return pages;
-  };
-
-  const getWineColorBadge = (color?: string, type?: string) => {
-    const lowerType = (type || '').toLowerCase();
-    if (lowerType.includes('champagne') || lowerType.includes('sparkling')) {
-      return { bg: 'bg-amber-100 text-amber-900 border-amber-200', label: 'Sparkling' };
-    }
-    if (color === 'white') {
-      return { bg: 'bg-yellow-100 text-yellow-900 border-yellow-200', label: 'White' };
-    }
-    if (color === 'rose') {
-      return { bg: 'bg-pink-100 text-pink-900 border-pink-200', label: 'Rosé' };
-    }
-    return { bg: 'bg-rose-100 text-rose-900 border-rose-200', label: 'Red' };
-  };
-
   return (
-    <div className="min-h-screen bg-stone-900 text-stone-100">
-      {/* ─── LUXURY HERO BANNER ────────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-b border-stone-800 bg-gradient-to-b from-stone-950 via-stone-900 to-stone-900 py-12 md:py-16">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#d4af37_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none" />
-        
-        <div className="container relative mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-          <div className="flex flex-col items-center text-center">
-            {/* Live API Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-amber-300 backdrop-blur-md mb-4 shadow-lg shadow-amber-950/20">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-              </span>
-              <span>Wayneven OpenAPI Catalog • 7,600+ Wines</span>
+    <div className="bg-[#ffffff] text-stone-900 min-h-screen">
+      <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Mobile Header Filter Trigger & Search */}
+        <div className="lg:hidden mb-4 flex items-center gap-2">
+          <button
+            onClick={() => setMobileFiltersOpen(true)}
+            className="flex items-center gap-2 rounded-lg border border-stone-300 bg-white px-3.5 py-2 text-xs font-semibold text-stone-800 shadow-sm"
+          >
+            <SlidersHorizontal className="h-4 w-4 text-stone-600" />
+            <span>Filters</span>
+          </button>
+
+          <form onSubmit={handleSearchSubmit} className="flex-1 relative">
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search wine, producer, region..."
+              className="w-full rounded-lg border border-stone-300 bg-white py-2 pl-8 pr-8 text-xs text-stone-900 placeholder-stone-400 focus:border-stone-900 focus:outline-none"
+            />
+            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-stone-400" />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={() => setSearchInput('')}
+                className="absolute right-2.5 top-2.5 text-stone-400 hover:text-stone-600"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </form>
+        </div>
+
+        {/* 2-Column Layout */}
+        <div className="flex items-start gap-8 lg:gap-10">
+          {/* ─── LEFT SIDEBAR (FILTERS) ─────────────────────────────────── */}
+          <aside
+            className={`
+              fixed inset-0 z-50 overflow-y-auto bg-white p-6 shadow-2xl transition-transform duration-300 lg:static lg:z-0 lg:block lg:w-64 lg:shrink-0 lg:p-0 lg:shadow-none
+              ${mobileFiltersOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            `}
+          >
+            {/* Mobile Close Header */}
+            <div className="flex items-center justify-between border-b border-stone-200 pb-3 mb-4 lg:hidden">
+              <span className="font-bold text-base text-stone-900">Filters</span>
+              <button
+                onClick={() => setMobileFiltersOpen(false)}
+                className="rounded-full p-1 text-stone-500 hover:bg-stone-100"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-black tracking-tight text-white mb-3">
-              THE BOTTLE CLUB <span className="bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 bg-clip-text text-transparent">CELLAR</span>
-            </h1>
-
-            <p className="max-w-2xl text-sm sm:text-base text-stone-400 mb-8 leading-relaxed">
-              คอลเลกชันไวน์นำเข้าและสุราชั้นเลิศ คัดสรรพิเศษจากไร่องุ่นชั้นนำทั่วโลก พร้อมจัดส่งตรงถึงมือคุณด้วยมาตรฐานการควบคุมอุณหภูมิระดับพรีเมียม
-            </p>
-
-            {/* Quick Search Input */}
-            <form onSubmit={handleSearchSubmit} className="relative w-full max-w-2xl">
-              <div className="relative flex items-center">
-                <Search className="absolute left-4 h-5 w-5 text-stone-400 pointer-events-none" />
+            {/* Quick Search on Desktop */}
+            <div className="hidden lg:block mb-6">
+              <form onSubmit={handleSearchSubmit} className="relative">
                 <input
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="ค้นหาชื่อไวน์, แบรนด์, ชนิดองุ่น หรือแคว้นที่ผลิต (เช่น Bordeaux, Margaux, Champagne)..."
-                  className="w-full rounded-2xl border border-stone-700 bg-stone-950/80 py-3.5 pl-12 pr-28 text-sm text-stone-100 placeholder-stone-500 shadow-2xl backdrop-blur-xl focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
+                  placeholder="Search wines..."
+                  className="w-full rounded-lg border border-stone-200 bg-stone-50/60 py-2 pl-8 pr-7 text-xs text-stone-900 placeholder-stone-400 focus:border-stone-900 focus:bg-white focus:outline-none transition-colors"
                 />
+                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-stone-400" />
                 {searchInput && (
                   <button
                     type="button"
-                    onClick={handleClearSearch}
-                    className="absolute right-20 text-stone-400 hover:text-white"
+                    onClick={() => setSearchInput('')}
+                    className="absolute right-2.5 top-2.5 text-stone-400 hover:text-stone-600"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3.5 w-3.5" />
                   </button>
                 )}
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="absolute right-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2 text-xs font-bold text-stone-950 shadow-md transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-                >
-                  {isPending ? 'ค้นหา...' : 'ค้นหา'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── FILTER CONTROLS & PILLS ──────────────────────────────────── */}
-      <section className="sticky top-0 z-30 border-b border-stone-800 bg-stone-950/90 backdrop-blur-xl py-3 shadow-md">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-          <div className="flex flex-col gap-3">
-            {/* Category Filter Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-              <span className="text-xs font-bold text-stone-500 uppercase tracking-wider whitespace-nowrap pl-1 pr-2 flex items-center gap-1">
-                <Filter className="h-3 w-3" /> ชนิด:
-              </span>
-              {WINE_CATEGORIES.map((cat) => {
-                const isActive = (currentCategory === cat.id) || (cat.id === 'all' && !currentCategory);
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => updateFilters({ category: cat.id })}
-                    className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium whitespace-nowrap transition-all ${
-                      isActive
-                        ? 'bg-amber-400 text-stone-950 font-bold shadow-md shadow-amber-500/20'
-                        : 'bg-stone-800/80 text-stone-300 hover:bg-stone-700/80 hover:text-white'
-                    }`}
-                  >
-                    <cat.icon className="h-3.5 w-3.5" />
-                    <span>{cat.label}</span>
-                  </button>
-                );
-              })}
+              </form>
             </div>
 
-            {/* Sub-bar: Countries & Sort */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-stone-800/50">
-              {/* Countries Filter */}
-              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
-                <span className="text-xs text-stone-500 whitespace-nowrap flex items-center gap-1 mr-1">
-                  <Globe className="h-3 w-3" /> ประเทศ:
-                </span>
-                {TOP_COUNTRIES.map((ct) => {
-                  const isActive = (currentCountry === ct.id) || (ct.id === 'all' && (!currentCountry || currentCountry === 'all'));
-                  return (
+            {/* ── Section 1: Wine types ───────────────────────────────── */}
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={() => toggleSection('types')}
+                className="flex w-full items-center justify-between text-left text-sm font-bold text-stone-900 focus:outline-none"
+              >
+                <span>Wine types</span>
+                {openSections.types ? (
+                  <ChevronUp className="h-4 w-4 text-stone-500" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-stone-500" />
+                )}
+              </button>
+
+              {openSections.types && (
+                <div className="mt-3.5 space-y-2.5">
+                  {WINE_TYPES.map((t) => {
+                    const isChecked = selectedTypes.includes(t.id);
+                    return (
+                      <label
+                        key={t.id}
+                        onClick={() => toggleType(t.id)}
+                        className="flex items-center gap-2.5 cursor-pointer text-xs sm:text-sm text-stone-900 select-none group"
+                      >
+                        <div
+                          className={`flex h-4 w-4 items-center justify-center rounded transition-colors ${
+                            isChecked
+                              ? 'bg-stone-900 text-white'
+                              : 'border border-stone-300 bg-white group-hover:border-stone-500'
+                          }`}
+                        >
+                          {isChecked && <Check className="h-3 w-3 stroke-[3]" />}
+                        </div>
+                        <span className="font-normal text-stone-900">{t.label}</span>
+                      </label>
+                    );
+                  })}
+
+                  {/* Natural wines only switch */}
+                  <div className="pt-3 flex items-center justify-between">
+                    <span className="text-xs sm:text-sm text-stone-800 font-normal">
+                      Natural wines only
+                    </span>
                     <button
-                      key={ct.id}
-                      onClick={() => updateFilters({ countries: ct.id })}
-                      className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs transition-all ${
-                        isActive
-                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold'
-                          : 'bg-stone-900 text-stone-400 border border-stone-800 hover:text-stone-200 hover:border-stone-700'
+                      type="button"
+                      onClick={handleNaturalToggle}
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${
+                        naturalOnly ? 'bg-stone-900' : 'bg-stone-200'
                       }`}
                     >
-                      <span>{ct.flag}</span>
-                      <span>{ct.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Sorting & Results Count */}
-              <div className="flex items-center gap-3 ml-auto">
-                <div className="flex items-center gap-2">
-                  <ArrowUpDown className="h-3 w-3 text-stone-500" />
-                  <select
-                    value={currentSort}
-                    onChange={(e) => updateFilters({ sort: e.target.value })}
-                    className="rounded-lg border border-stone-800 bg-stone-900 px-2.5 py-1 text-xs text-stone-300 focus:border-amber-400 focus:outline-none"
-                  >
-                    <option value="default">เรียงตาม: แนะนำ</option>
-                    <option value="price-asc">ราคา: ต่ำ ➔ สูง</option>
-                    <option value="price-desc">ราคา: สูง ➔ ต่ำ</option>
-                    <option value="name">ชื่อ: A ➔ Z</option>
-                  </select>
-                </div>
-
-                {(currentCategory !== 'all' || currentCountry !== 'all' || currentSearch) && (
-                  <button
-                    onClick={handleResetAll}
-                    className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 underline underline-offset-2 ml-1"
-                  >
-                    <RotateCcw className="h-3 w-3" /> ล้างตัวกรอง
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── MAIN CONTENT AREA ────────────────────────────────────────── */}
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl py-8">
-        {/* Results Counter Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-stone-800">
-          <div>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <span>รายการสินค้า</span>
-              <span className="text-xs font-normal text-stone-400 bg-stone-800 px-2.5 py-0.5 rounded-full border border-stone-700">
-                {total.toLocaleString()} รายการ
-              </span>
-            </h2>
-            <p className="text-xs text-stone-400 mt-0.5">
-              แสดง {startItem.toLocaleString()} - {endItem.toLocaleString()} จากทั้งหมด {total.toLocaleString()} รายการ
-            </p>
-          </div>
-
-          {!isLoggedIn && (
-            <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 text-xs text-amber-300">
-              <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-              <span>สมาชิกรับสิทธิพิเศษและสะสมแต้ม</span>
-              <Link href="/login" className="underline font-bold hover:text-white ml-1">
-                เข้าสู่ระบบ
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* ─── PRODUCT GRID ───────────────────────────────────────────── */}
-        {initialProducts.length === 0 ? (
-          <div className="py-24 text-center rounded-3xl border border-dashed border-stone-800 bg-stone-950/40 p-8">
-            <Wine className="mx-auto h-16 w-16 text-stone-600 mb-4 animate-pulse" />
-            <h3 className="text-xl font-bold text-white mb-2">ไม่พบสินค้าที่ตรงกับการค้นหา</h3>
-            <p className="text-sm text-stone-400 max-w-md mx-auto mb-6">
-              ลองเปลี่ยนคำค้นหา หรือล้างตัวกรองเพื่อดูรายการไวน์ทั้งหมดที่มีในคลัง
-            </p>
-            <button
-              onClick={handleResetAll}
-              className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-stone-950 shadow-lg hover:bg-amber-400 transition-all"
-            >
-              <RotateCcw className="h-4 w-4" /> ดูไวน์ทั้งหมด
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-6">
-            {initialProducts.map((product) => {
-              const badge = getWineColorBadge(product.color, product.type);
-              const isAdded = addedItems[product.id];
-              const hasImageError = imageErrors[product.id];
-
-              const displayImage =
-                !hasImageError && product.image && product.image !== '/images/bottle-silhouette.svg'
-                  ? product.image
-                  : `/images/wine_${product.color || 'red'}.png`;
-
-              return (
-                <div
-                  key={product.id}
-                  className="group relative flex flex-col overflow-hidden rounded-2xl border border-stone-800 bg-stone-950/70 hover:border-amber-500/40 hover:bg-stone-950 transition-all duration-300 hover:shadow-xl hover:shadow-amber-950/10 hover:-translate-y-1"
-                >
-                  {/* Card Image Area */}
-                  <Link
-                    href={`/product/${product.id}`}
-                    className="relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden bg-gradient-to-b from-stone-900 to-stone-950 p-6"
-                  >
-                    {/* Top Badges */}
-                    <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
-                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border shadow-sm ${badge.bg}`}>
-                        {badge.label}
-                      </span>
-                      {product.vintage && (
-                        <span className="rounded-full bg-stone-800/90 border border-stone-700 px-2 py-0.5 text-[10px] font-semibold text-stone-300">
-                          {product.vintage}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="absolute top-3 right-3 z-10">
-                      <span className="rounded-full bg-stone-900/80 border border-stone-700 px-2.5 py-0.5 text-[10px] font-medium text-stone-300 flex items-center gap-1">
-                        {product.countryCode ? product.countryCode.toUpperCase() : 'WINE'}
-                      </span>
-                    </div>
-
-                    {/* Bottle Image */}
-                    <div className="relative h-full w-full flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
-                      <img
-                        src={displayImage}
-                        alt={product.name}
-                        onError={() => setImageErrors((prev) => ({ ...prev, [product.id]: true }))}
-                        className="max-h-52 w-auto object-contain drop-shadow-2xl"
-                        loading="lazy"
-                      />
-                    </div>
-                  </Link>
-
-                  {/* Card Content Area */}
-                  <div className="flex flex-1 flex-col p-4 sm:p-5">
-                    {/* Brand / Winery */}
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400 line-clamp-1 mb-1">
-                      {product.brand || product.sub_type || product.region || 'The Bottle Club Selection'}
-                    </p>
-
-                    {/* Product Name */}
-                    <Link href={`/product/${product.id}`} className="group-hover:text-amber-300 transition-colors">
-                      <h3 className="text-sm font-bold text-white line-clamp-2 leading-snug mb-2" title={product.name}>
-                        {product.name}
-                      </h3>
-                    </Link>
-
-                    {/* Metadata Specs (Volume, Alcohol, Region) */}
-                    <div className="flex items-center gap-2 text-[11px] text-stone-400 mb-3">
-                      <span>{product.quantity || '75 cl'}</span>
-                      <span>•</span>
-                      <span>{product.alcohol || '12.5% Vol'}</span>
-                      {product.region && (
-                        <>
-                          <span>•</span>
-                          <span className="line-clamp-1">{product.region}</span>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Price and Cart Action */}
-                    <div className="mt-auto pt-3 border-t border-stone-800/80 flex items-center justify-between gap-2">
-                      <div>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-lg font-black text-amber-400">
-                            ฿{product.price.toLocaleString()}
-                          </span>
-                          {product.originalPrice && product.originalPrice > product.price && (
-                            <span className="text-xs text-stone-500 line-through">
-                              ฿{product.originalPrice.toLocaleString()}
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[10px] text-emerald-400 font-medium">✓ มีในสต็อก</span>
-                      </div>
-
-                      {/* Add to Cart Button */}
-                      <button
-                        type="button"
-                        onClick={(e) => handleAddToCart(e, product)}
-                        className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all shadow-md active:scale-90 ${
-                          isAdded
-                            ? 'bg-emerald-500 text-stone-950 font-bold'
-                            : 'bg-amber-500 hover:bg-amber-400 text-stone-950'
+                      <span
+                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                          naturalOnly ? 'translate-x-4' : 'translate-x-0.5'
                         }`}
-                        title="เพิ่มลงตะกร้า"
-                      >
-                        {isAdded ? (
-                          <Check className="h-5 w-5 stroke-[2.5]" />
-                        ) : (
-                          <ShoppingCart className="h-5 w-5" />
-                        )}
-                      </button>
-                    </div>
+                      />
+                    </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* ─── PAGINATION BAR ─────────────────────────────────────────── */}
-        {totalPages > 1 && (
-          <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-stone-800 pt-6">
-            <div className="text-xs text-stone-400">
-              หน้า <span className="font-bold text-white">{currentPage}</span> จาก{' '}
-              <span className="font-bold text-white">{totalPages}</span> หน้า ({total.toLocaleString()} ไวน์ทั้งหมด)
+              )}
             </div>
 
-            <div className="flex items-center gap-1.5">
-              {/* First Page */}
+            <hr className="my-5 border-stone-200" />
+
+            {/* ── Section 2: Price range (THB) ────────────────────────── */}
+            <div className="mb-6">
               <button
-                onClick={() => updateFilters({ page: 1 })}
-                disabled={currentPage <= 1 || isPending}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-stone-800 bg-stone-950 text-stone-300 hover:bg-stone-800 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all"
-                title="หน้าแรก"
+                type="button"
+                onClick={() => toggleSection('price')}
+                className="flex w-full items-center justify-between text-left text-sm font-bold text-stone-900 focus:outline-none"
               >
-                <ChevronsLeft className="h-4 w-4" />
+                <span>Price range <span className="font-normal text-stone-500 text-xs">(THB)</span></span>
+                {openSections.price ? (
+                  <ChevronUp className="h-4 w-4 text-stone-500" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-stone-500" />
+                )}
               </button>
 
-              {/* Prev Page */}
-              <button
-                onClick={() => updateFilters({ page: currentPage - 1 })}
-                disabled={currentPage <= 1 || isPending}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-stone-800 bg-stone-950 text-stone-300 hover:bg-stone-800 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all"
-                title="ก่อนหน้า"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
+              {openSections.price && (
+                <div className="mt-3.5 space-y-3">
+                  <div className="text-xs sm:text-sm font-medium text-stone-800">
+                    ฿0 - ฿{maxPrice === 0 ? '0' : maxPrice >= 250000 ? '250,000+' : maxPrice.toLocaleString()}
+                  </div>
 
-              {/* Page Number Pills */}
-              <div className="flex items-center gap-1">
-                {getPaginationNumbers().map((num, idx) => {
-                  if (num === '...') {
-                    return (
-                      <span key={`ellipsis-${idx}`} className="px-1 text-stone-600">
-                        ...
-                      </span>
-                    );
-                  }
-                  const isCurrent = num === currentPage;
-                  return (
+                  <div className="relative pt-1 pb-1">
+                    <input
+                      type="range"
+                      min="0"
+                      max="250000"
+                      step="5000"
+                      value={maxPrice}
+                      onChange={(e) => handlePriceChange(Number(e.target.value))}
+                      className="w-full h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-stone-900"
+                    />
+                  </div>
+
+                  {/* Only show wines with a discount switch */}
+                  <div className="pt-2 flex items-center justify-between">
+                    <span className="text-xs sm:text-sm text-stone-800 font-normal">
+                      Only show wines with a discount
+                    </span>
                     <button
-                      key={`page-${num}`}
-                      onClick={() => updateFilters({ page: Number(num) })}
-                      disabled={isPending}
-                      className={`flex h-9 min-w-9 items-center justify-center rounded-xl px-2.5 text-xs font-bold transition-all ${
-                        isCurrent
-                          ? 'bg-amber-400 text-stone-950 shadow-md shadow-amber-500/20'
-                          : 'border border-stone-800 bg-stone-950 text-stone-300 hover:bg-stone-800 hover:text-white'
+                      type="button"
+                      onClick={handleDiscountToggle}
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${
+                        discountOnly ? 'bg-stone-900' : 'bg-stone-200'
                       }`}
                     >
-                      {num}
+                      <span
+                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                          discountOnly ? 'translate-x-4' : 'translate-x-0.5'
+                        }`}
+                      />
                     </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <hr className="my-5 border-stone-200" />
+
+            {/* ── Section 3: Customer rating ─────────────────────── */}
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={() => toggleSection('rating')}
+                className="flex w-full items-center justify-between text-left text-sm font-bold text-stone-900 focus:outline-none"
+              >
+                <span>{language === 'th' ? 'คะแนนรีวิวจากลูกค้า' : 'Customer rating'}</span>
+                {openSections.rating ? (
+                  <ChevronUp className="h-4 w-4 text-stone-500" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-stone-500" />
+                )}
+              </button>
+
+              {openSections.rating && (
+                <div className="mt-3.5 space-y-2.5">
+                  {[
+                    { value: 4.5, label: language === 'th' ? '4.5 ดาวขึ้นไป' : '4.5 & up' },
+                    { value: 4.0, label: language === 'th' ? '4.0 ดาวขึ้นไป' : '4.0 & up' },
+                    { value: 3.5, label: language === 'th' ? '3.5 ดาวขึ้นไป' : '3.5 & up' },
+                    { value: 0, label: language === 'th' ? 'คะแนนทั้งหมด' : 'Any rating' },
+                  ].map((option) => {
+                    const isSelected = selectedRating === option.value;
+                    return (
+                      <label
+                        key={option.value}
+                        onClick={() => handleRatingChange(option.value)}
+                        className="flex items-center gap-2.5 cursor-pointer text-xs sm:text-sm text-stone-900 select-none group"
+                      >
+                        {/* Radio indicator */}
+                        <div
+                          className={`flex h-4 w-4 items-center justify-center rounded-full border transition-all ${
+                            isSelected
+                              ? 'border-stone-900'
+                              : 'border-stone-300 group-hover:border-stone-400'
+                          }`}
+                        >
+                          {isSelected && <div className="h-2 w-2 rounded-full bg-stone-900" />}
+                        </div>
+
+                        {option.value > 0 ? (
+                          <div className="flex items-center gap-1.5">
+                            <CrimsonStars rating={option.value} />
+                            <span className="font-normal text-stone-800 text-xs sm:text-sm">
+                              {option.label}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="font-normal text-stone-800 text-xs sm:text-sm">
+                            {option.label}
+                          </span>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Clear Filters CTA */}
+            <div className="pt-2">
+              <button
+                onClick={handleResetFilters}
+                className="flex items-center gap-1.5 text-xs text-stone-500 hover:text-stone-900 transition-colors"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Reset all filters</span>
+              </button>
+            </div>
+
+            {/* Mobile Apply Button */}
+            <div className="mt-8 lg:hidden">
+              <button
+                onClick={() => setMobileFiltersOpen(false)}
+                className="w-full rounded-xl bg-stone-900 py-3 text-center text-xs font-bold text-white shadow-md"
+              >
+                View {totalCount} Wines
+              </button>
+            </div>
+          </aside>
+
+          {/* ─── RIGHT SECTION (TOP BAR + PRODUCT CARDS) ─────────────────── */}
+          <main className="flex-1 min-w-0">
+            {/* Real API Status Banner */}
+            {apiSource === 'fallback' && (
+              <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-xs sm:text-sm text-stone-900 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                  <div className="flex items-start gap-2.5">
+                    <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-semibold text-stone-950 flex flex-wrap items-center gap-2">
+                        <span>สถานะ API (api.wayneven.uk):</span>
+                        <span className="inline-flex items-center rounded-full bg-amber-200/90 px-2 py-0.5 text-[11px] font-bold text-amber-900">
+                          {apiError ? 'Database Operation Failed (500)' : 'Fallback Mode'}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-stone-600 leading-relaxed">
+                        ระบบ Frontend เชื่อมต่อกับ Backend API โดยตรงที่{' '}
+                        <a
+                          href="https://api.wayneven.uk/api/v1/wine-products/"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-mono text-[#ba1628] underline inline-flex items-center gap-0.5 hover:text-black"
+                        >
+                          https://api.wayneven.uk/api/v1/wine-products/
+                          <ExternalLink className="h-3 w-3 inline" />
+                        </a>{' '}
+                        แต่เซิร์ฟเวอร์ Backend ตอบกลับด้วย{' '}
+                        <code className="bg-amber-100/90 px-1 py-0.5 rounded text-[11px] font-semibold text-stone-800">
+                          {apiError || 'HTTP 500 (DATABASE_ERROR)'}
+                        </code>{' '}
+                        เนื่องจากฐานข้อมูล PostgreSQL บน Render ขัดข้อง ระบบจึงแสดงข้อมูลสำรองเพื่อไม่ให้หน้าเว็บว่างเปล่า
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => fetchProductsFromApi(activePage)}
+                    disabled={isLoadingApi}
+                    className="shrink-0 self-start inline-flex items-center justify-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-semibold text-stone-800 hover:bg-stone-50 transition-colors shadow-sm disabled:opacity-50"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${isLoadingApi ? 'animate-spin' : ''}`} />
+                    <span>ลองเชื่อมต่อ API อีกครั้ง</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {apiSource === 'api.wayneven.uk' && (
+              <div className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3.5 text-xs sm:text-sm text-emerald-950 shadow-sm flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span className="font-medium">
+                    กำลังแสดงข้อมูลไวน์จริงจาก Backend API: <strong className="font-semibold text-emerald-900">api.wayneven.uk</strong> ({totalCount.toLocaleString()} รายการ)
+                  </span>
+                </div>
+                <span className="hidden sm:inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800">
+                  Live Data
+                </span>
+              </div>
+            )}
+
+            {/* Top Bar: Results Count + Sort Selector */}
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <div className="text-xs sm:text-sm text-stone-600 font-normal">
+                Showing {totalCount === 0 ? 0 : (activePage - 1) * perPage + 1}-{Math.min(activePage * perPage, totalCount)} of {totalCount.toLocaleString()} wines
+              </div>
+
+              {/* Sort Selector Dropdown */}
+              <div className="relative">
+                <div className="inline-flex items-center gap-1.5 rounded-md border border-stone-300 bg-white px-3 py-1.5 text-xs text-stone-800 shadow-sm hover:border-stone-400 transition-colors cursor-pointer">
+                  <span className="text-stone-500">Sort:</span>
+                  <select
+                    value={sortOption}
+                    onChange={(e) => handleSortChange(e.target.value)}
+                    className="bg-transparent font-medium text-stone-900 focus:outline-none cursor-pointer pr-1"
+                  >
+                    <option value="highest-rated">Highest rated</option>
+                    <option value="popular">Most popular</option>
+                    <option value="price-asc">Price: low to high</option>
+                    <option value="price-desc">Price: high to low</option>
+                    <option value="name">Name: A to Z</option>
+                  </select>
+                  <ChevronDown className="h-3.5 w-3.5 text-stone-500 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
+            {/* API Loading Banner */}
+            {isLoadingApi && (
+              <div className="mb-4 flex items-center justify-center gap-2 rounded-xl bg-stone-900 text-white px-4 py-2.5 text-xs font-semibold shadow-md animate-pulse">
+                <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <span>กำลังโหลดข้อมูลรายการไวน์จาก API...</span>
+              </div>
+            )}
+
+            {/* Wine Cards List */}
+            {products.length === 0 && !isLoadingApi ? (
+              <div className="py-20 text-center rounded-2xl border border-stone-200 bg-white p-8">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-stone-100 text-stone-400">
+                  <Search className="h-6 w-6" />
+                </div>
+                <h3 className="text-base font-bold text-stone-900 mb-1">No wines match your filters</h3>
+                <p className="text-xs sm:text-sm text-stone-500 mb-4 max-w-sm mx-auto">
+                  Try adjusting the rating threshold, price range, or selecting more wine types.
+                </p>
+                <button
+                  onClick={handleResetFilters}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-stone-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-black transition-colors"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  <span>Reset filters</span>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {products.map((product) => {
+                  const rating = Number(product.rating) || 0;
+                  const ratingsCount = Number(product.ratings_count) || 0;
+                  const isAdded = addedItems[product.id];
+                  const flag = getCountryFlag(product.countryCode || product.country_code, product.country);
+                  const displayImage = product.image || `/images/wine_${product.color || 'red'}.png`;
+
+                  // Format producer & title
+                  const wineryName = product.winery || product.brand || 'Selected Estate';
+                  const wineTitle = product.wine_name
+                    ? `${product.wine_name}${product.vintage ? ` ${product.vintage}` : ''}`
+                    : product.name;
+
+                  // Format region and country
+                  const locationString = product.region
+                    ? product.region
+                    : product.country
+                    ? product.country
+                    : 'Selected Vineyard';
+
+                  return (
+                    <div
+                      key={product.id}
+                      className="group relative flex flex-col md:flex-row items-center md:items-stretch gap-5 sm:gap-7 rounded-2xl border border-stone-200/90 bg-white p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-stone-300 transition-all duration-200"
+                    >
+                      {/* ── Column 1: Bottle Image ── */}
+                      <Link
+                        href={`/product/${product.id}`}
+                        className="w-28 sm:w-36 md:w-44 shrink-0 flex items-center justify-center relative py-1"
+                      >
+                        {effectiveLoggedIn ? (
+                          <img
+                            src={displayImage}
+                            alt={product.name}
+                            loading="lazy"
+                            className="max-h-52 sm:max-h-60 w-auto object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.12)] group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="relative flex h-52 sm:h-60 w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl bg-stone-50 p-3 transition-colors group-hover:bg-stone-100/80">
+                            <img
+                              src="/images/thebottleclub-locked-wine.png"
+                              alt={product.name}
+                              className="h-44 sm:h-52 w-auto object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-stone-900/85 backdrop-blur-xs px-2.5 py-0.5 text-[9px] font-bold text-white flex items-center gap-1 shadow-sm whitespace-nowrap opacity-90 group-hover:opacity-100 transition-opacity">
+                              <Lock size={10} className="text-amber-400" />
+                              <span>{language === 'th' ? 'เข้าสู่ระบบเพื่อดูขวดจริง' : 'Login to view'}</span>
+                            </div>
+                          </div>
+                        )}
+                      </Link>
+
+                      {/* ── Column 2: Wine Info ── */}
+                      <div className="flex-1 min-w-0 flex flex-col justify-center text-center md:text-left">
+                        {/* Wine Type / Classification */}
+                        <div className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-stone-400 mb-1">
+                          {(product.type || 'RED').toUpperCase()} - {product.sub_type || (language === 'th' ? 'คลาสสิค' : 'Classic')}
+                        </div>
+
+                        {/* Wine Name */}
+                        <Link href={`/product/${product.id}`}>
+                          <h2 className="text-base sm:text-xl font-bold text-stone-950 group-hover:text-[#ba1628] transition-colors leading-snug">
+                            {wineTitle}
+                          </h2>
+                        </Link>
+
+                        {/* Country Flag & Region */}
+                        <div className="mt-1.5 flex items-center justify-center md:justify-start gap-1.5 text-xs sm:text-sm text-stone-500 font-normal">
+                          <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full overflow-hidden text-xs">
+                            {flag}
+                          </span>
+                          <span>{locationString}</span>
+                        </div>
+                      </div>
+
+                      {/* ── Column 3: Rating & Action / Price ── */}
+                      <div className="w-full md:w-52 shrink-0 flex md:flex-col justify-between md:items-end items-center md:text-right border-t md:border-t-0 md:border-l border-stone-100 md:pl-6 pt-4 md:pt-0">
+                        {/* Rating block: ONLY show stars and review counts if real customer reviews exist */}
+                        {ratingsCount > 0 ? (
+                          <Link
+                            href={`/product/${product.id}#reviews`}
+                            className="group/rating flex flex-col md:items-end items-start hover:opacity-85 transition-opacity"
+                            title={
+                              language === 'th'
+                                ? `คะแนนรีวิวจากลูกค้า: ${rating.toFixed(1)} ดาว (${ratingsCount} รีวิว)`
+                                : `Customer rating: ${rating.toFixed(1)} (${ratingsCount} reviews)`
+                            }
+                          >
+                            <div className="flex items-baseline gap-1 mb-0.5">
+                              <span className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight leading-none">
+                                {rating.toFixed(1)}
+                              </span>
+                              <span className="text-xs text-stone-400 font-medium">/ 5.0</span>
+                            </div>
+                            <CrimsonStars rating={rating} />
+                            <div className="text-xs text-[#ba1628] font-semibold mt-1 flex items-center gap-1">
+                              <span>
+                                ({ratingsCount.toLocaleString()} {language === 'th' ? 'รีวิวจากลูกค้า' : 'reviews'})
+                              </span>
+                            </div>
+                          </Link>
+                        ) : (
+                          <Link
+                            href={`/product/${product.id}#reviews`}
+                            className="group/rating inline-flex items-center gap-1.5 rounded-lg border border-dashed border-stone-300 hover:border-[#ba1628] bg-stone-50/70 hover:bg-red-50/40 px-3 py-1.5 text-xs text-stone-500 hover:text-[#ba1628] transition-all"
+                            title={language === 'th' ? 'คลิกเพื่อรีวิวสินค้านี้เป็นคนแรก' : 'Click to be the first to review'}
+                          >
+                            <span className="text-stone-400 group-hover/rating:text-[#ba1628]">✍️</span>
+                            <span className="text-[11px] font-medium text-stone-600 group-hover/rating:text-[#ba1628]">
+                              {language === 'th' ? 'ยังไม่มีรีวิว (เขียนรีวิวคนแรก)' : 'No reviews yet (Write review)'}
+                            </span>
+                          </Link>
+                        )}
+
+                        {/* Price & Action button */}
+                        <div className="mt-auto pt-4 flex flex-col md:items-end items-end w-full sm:w-auto">
+                          {effectiveLoggedIn ? (
+                            <>
+                              <div className="text-lg sm:text-xl font-bold text-stone-950">
+                                THB {product.price.toLocaleString()}
+                              </div>
+                              {product.originalPrice && product.originalPrice > product.price && (
+                                <div className="text-xs text-stone-400 line-through">
+                                  THB {product.originalPrice.toLocaleString()}
+                                </div>
+                              )}
+                              <div className="text-xs text-stone-400 mb-2">
+                                {t('search.avg_price') || 'Average price'}
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={(e) => handleAddToCart(e, product)}
+                                className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold shadow-sm transition-all active:scale-95 ${
+                                  isAdded
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'bg-[#ba1628] hover:bg-[#991120] text-white'
+                                }`}
+                                title="Add to cart"
+                              >
+                                {isAdded ? (
+                                  <>
+                                    <Check className="h-3.5 w-3.5" />
+                                    <span>Added</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <ShoppingCart className="h-3.5 w-3.5" />
+                                    <span>Add to cart</span>
+                                  </>
+                                )}
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <div className="text-xs text-stone-400 mb-2 text-right">
+                                {t('search.avg_price') || 'ราคาเฉลี่ย'}
+                              </div>
+                              <Link
+                                href="/login"
+                                className="flex items-center justify-center gap-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white px-5 py-2.5 text-xs sm:text-sm font-bold shadow-md transition-all active:scale-95 cursor-pointer"
+                              >
+                                <Lock size={15} />
+                                <span>{t('auth.login') || 'เข้าสู่ระบบ'}</span>
+                              </Link>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
+            )}
 
-              {/* Next Page */}
-              <button
-                onClick={() => updateFilters({ page: currentPage + 1 })}
-                disabled={currentPage >= totalPages || isPending}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-stone-800 bg-stone-950 text-stone-300 hover:bg-stone-800 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all"
-                title="ถัดไป"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+            {/* Pagination Controls */}
+            {totalPagesCount > 1 && (
+              <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-stone-200 pt-6">
+                <div className="text-xs text-stone-500">
+                  Page <span className="font-semibold text-stone-900">{activePage}</span> of{' '}
+                  <span className="font-semibold text-stone-900">{totalPagesCount}</span>
+                </div>
 
-              {/* Last Page */}
-              <button
-                onClick={() => updateFilters({ page: totalPages })}
-                disabled={currentPage >= totalPages || isPending}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-stone-800 bg-stone-950 text-stone-300 hover:bg-stone-800 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all"
-                title="หน้าสุดท้าย"
-              >
-                <ChevronsRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
-      </main>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => handlePageChange(1)}
+                    disabled={activePage <= 1 || isLoadingApi}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                    title="First page"
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(activePage - 1)}
+                    disabled={activePage <= 1 || isLoadingApi}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                    title="Previous page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+
+                  <div className="flex items-center gap-1 px-1">
+                    {(() => {
+                      const maxButtons = 5;
+                      let start = Math.max(1, activePage - 2);
+                      let end = Math.min(totalPagesCount, start + maxButtons - 1);
+                      if (end - start < maxButtons - 1) {
+                        start = Math.max(1, end - maxButtons + 1);
+                      }
+                      const pages = [];
+                      for (let i = start; i <= end; i++) {
+                        pages.push(i);
+                      }
+                      return pages.map((pageNum) => {
+                        const isActive = pageNum === activePage;
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            disabled={isLoadingApi}
+                            className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-semibold transition-colors ${
+                              isActive
+                                ? 'bg-stone-900 text-white shadow-sm'
+                                : 'border border-stone-200 bg-white text-stone-700 hover:bg-stone-50'
+                            } disabled:opacity-50`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      });
+                    })()}
+                  </div>
+
+                  <button
+                    onClick={() => handlePageChange(activePage + 1)}
+                    disabled={activePage >= totalPagesCount || isLoadingApi}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                    title="Next page"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(totalPagesCount)}
+                    disabled={activePage >= totalPagesCount || isLoadingApi}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                    title="Last page"
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
     </div>
   );
 }

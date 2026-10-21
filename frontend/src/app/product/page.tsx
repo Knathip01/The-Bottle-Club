@@ -55,16 +55,16 @@ export default async function ProductPage({ searchParams }: ProductPageProps) {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-stone-900">
+    <div className="min-h-screen flex flex-col bg-[#fbfbfb] text-stone-900">
       <MainHeader />
       
       <div className="flex-1">
         <Suspense
           fallback={
-            <div className="min-h-screen flex items-center justify-center bg-stone-900 text-amber-400">
-              <div className="flex flex-col items-center gap-3">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
-                <p className="text-sm font-medium text-stone-300">กำลังโหลดรายการไวน์จากระบบ...</p>
+            <div className="min-h-[60vh] flex items-center justify-center bg-[#fbfbfb]">
+              <div className="flex flex-col items-center gap-3 text-stone-400">
+                <div className="h-9 w-9 animate-spin rounded-full border-2 border-stone-200 border-t-[#ba1628]" />
+                <p className="text-xs font-semibold uppercase tracking-wider text-stone-500">Loading Wine Collection...</p>
               </div>
             </div>
           }
@@ -80,6 +80,8 @@ export default async function ProductPage({ searchParams }: ProductPageProps) {
             currentCountry={countries}
             currentSort={sort}
             isLoggedIn={isLoggedIn}
+            initialSource={result.source}
+            initialApiError={result.apiError}
           />
         </Suspense>
       </div>

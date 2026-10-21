@@ -74,6 +74,7 @@ const AI_EN: Record<string, string> = {
   'ai.quick_all': 'All wines',
   'ai.quick_cheap': 'Best value',
   'ai.quick_recommend': 'Recommend',
+  'ai.quick_wineries': '🏰 Wineries',
   'ai.error_fetch': 'Sorry, I could not load products right now. Please try again in a moment.',
   'ai.cheapest_response':
     'Our best value right now is "{name}" at {price} ({stock} in stock). Would you like to know more?',
@@ -104,6 +105,7 @@ const AI_OVERRIDES: Partial<Record<Language, Record<string, string>>> = {
     'ai.quick_all': 'ไวน์ทั้งหมด',
     'ai.quick_cheap': 'ราคาดีที่สุด',
     'ai.quick_recommend': 'แนะนำไวน์',
+    'ai.quick_wineries': '🏰 โรงผลิตไวน์',
     'ai.error_fetch': 'ขออภัยค่ะ ตอนนี้ดึงข้อมูลสินค้าไม่ได้ กรุณาลองใหม่อีกครั้งนะคะ',
     'ai.cheapest_response':
       'ไวน์ที่คุ้มที่สุดตอนนี้คือ "{name}" ราคา {price} (คงเหลือ {stock} ขวด) สนใจไหมคะ?',
@@ -419,4 +421,4 @@ export function formatAiPrice(price: number, language: Language): string {
   }
 }
 
-export type AiQuickIntent = 'list' | 'cheap' | 'expensive' | 'recommend';
+export type AiQuickIntent = 'list' | 'cheap' | 'expensive' | 'recommend' | 'wineries';

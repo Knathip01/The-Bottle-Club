@@ -13,6 +13,62 @@ import {
   formatAiTemplate,
   type AiQuickIntent,
 } from '@/lib/ai-translations';
+import { matchWineryAIResponse } from '@/lib/wineryAiKnowledge';
+
+function FormattedMessageText({ text }: { text: string }) {
+  const lines = text.split('\n');
+
+  return (
+    <div className="space-y-1">
+      {lines.map((line, lineIdx) => {
+        if (!line.trim()) return <div key={lineIdx} className="h-1.5" />;
+
+        const tokens: React.ReactNode[] = [];
+        const regex = /\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*/g;
+        let lastIndex = 0;
+        let match;
+
+        while ((match = regex.exec(line)) !== null) {
+          if (match.index > lastIndex) {
+            tokens.push(line.substring(lastIndex, match.index));
+          }
+          if (match[1] && match[2]) {
+            const isExternal = match[2].startsWith('http');
+            tokens.push(
+              <a
+                key={`link-${lineIdx}-${match.index}`}
+                href={match[2]}
+                target={isExternal ? '_blank' : undefined}
+                rel={isExternal ? 'noopener noreferrer' : undefined}
+                className="underline font-semibold text-[#8b0000] hover:text-[#ba1628] transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {match[1]}
+              </a>
+            );
+          } else if (match[3]) {
+            tokens.push(
+              <strong key={`bold-${lineIdx}-${match.index}`} className="font-bold text-stone-900">
+                {match[3]}
+              </strong>
+            );
+          }
+          lastIndex = regex.lastIndex;
+        }
+
+        if (lastIndex < line.length) {
+          tokens.push(line.substring(lastIndex));
+        }
+
+        return (
+          <p key={lineIdx} className="leading-relaxed">
+            {tokens.length > 0 ? tokens : line}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
 
 interface Message {
   id: string;
@@ -47,6 +103,18 @@ export default function AIChat() {
 
   const generateAIResponse = useCallback(
     (query: string, productList: Product[], intent?: AiQuickIntent): string => {
+      // 1. Quick action for wineries
+      if (intent === 'wineries') {
+        const wineryResp = matchWineryAIResponse(language === 'th' ? 'โรงผลิตไวน์' : 'wineries', language);
+        if (wineryResp) return wineryResp;
+      }
+
+      // 2. Check winery, wine producing countries, and cities/regions knowledge
+      const wineryKnowledge = matchWineryAIResponse(query, language);
+      if (wineryKnowledge) {
+        return wineryKnowledge;
+      }
+
       if (productList.length === 0) {
         return t('ai.error_fetch');
       }
@@ -126,8 +194,9 @@ export default function AIChat() {
         return;
       }
 
-      window.speechSynthesis.cancel();
-      const cleanText = text.replace(/[*_~`#]/g, '');
+      const cleanText = text
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/[*_~`#]/g, '');
       const utterance = new SpeechSynthesisUtterance(cleanText);
       const targetLang = AI_SPEECH_LOCALES[lang] || 'en-US';
       const voices = window.speechSynthesis.getVoices();
@@ -253,11 +322,13 @@ export default function AIChat() {
 
   const handleQuickAction = async (intent: AiQuickIntent) => {
     const labelKey =
-      intent === 'list'
-        ? 'ai.quick_all'
-        : intent === 'cheap'
-          ? 'ai.quick_cheap'
-          : 'ai.quick_recommend';
+      intent === 'wineries'
+        ? 'ai.quick_wineries'
+        : intent === 'list'
+          ? 'ai.quick_all'
+          : intent === 'cheap'
+            ? 'ai.quick_cheap'
+            : 'ai.quick_recommend';
     await replyWithText(t(labelKey), intent);
   };
 
@@ -286,6 +357,10 @@ export default function AIChat() {
   };
 
   const quickActions: { intent: AiQuickIntent; label: string }[] = [
+    {
+      intent: 'wineries',
+      label: t('ai.quick_wineries') || (language === 'th' ? '🏰 โรงผลิตไวน์' : '🏰 Wineries'),
+    },
     { intent: 'list', label: t('ai.quick_all') },
     { intent: 'cheap', label: t('ai.quick_cheap') },
     { intent: 'recommend', label: t('ai.quick_recommend') },
@@ -393,13 +468,13 @@ export default function AIChat() {
                     )}
                   </div>
                   <div
-                    className={`p-3 rounded-2xl text-xs leading-relaxed whitespace-pre-wrap shadow-sm ${
+                    className={`p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${
                       msg.sender === 'user'
-                        ? 'bg-[#8b0000] text-white rounded-tr-none'
+                        ? 'bg-[#8b0000] text-white rounded-tr-none whitespace-pre-wrap'
                         : 'bg-white text-stone-800 border border-stone-100 rounded-tl-none'
                     }`}
                   >
-                    {msg.text}
+                    {msg.sender === 'user' ? msg.text : <FormattedMessageText text={msg.text} />}
                     <div
                       className={`text-[9px] mt-1 opacity-50 ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}
                     >

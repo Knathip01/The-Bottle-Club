@@ -67,6 +67,28 @@ export function setInMemPromotions(items: PromotionItem[]) {
  */
 export async function getPromotions(): Promise<PromotionItem[]> {
   try {
+    // 0. Attempt to fetch remote promotions from FastAPI per Section 16 (/api/promotions)
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(`${API_BASE_URL}/api/promotions`, {
+        signal: controller.signal,
+        headers: { Accept: 'application/json' },
+        cache: 'no-store',
+      });
+      clearTimeout(timeout);
+      if (res.ok) {
+        const body = await res.json();
+        const items = body.promotions || (Array.isArray(body) ? body : null);
+        if (Array.isArray(items) && items.length > 0) {
+          return items.map(normalizePromotion);
+        }
+      }
+    } catch {
+      // Remote API unavailable or database error; continue to local file fallback
+    }
+
     // 1. Check local file storage (promotions_data.json)
     const fileItems = readPromotionsFromFile();
     if (fileItems && fileItems.length > 0) {

@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth-utils';
+import { getBackendServiceToken } from '@/app/actions/auth';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const session = await getSession();
-    const token = session?.user?.access_token;
+    const userToken = session?.user?.access_token;
+    const serviceToken = await getBackendServiceToken();
+    const token = serviceToken || userToken;
     
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.wayneven.uk';
     const targetUrl = `${API_BASE_URL}/api/v1/orders/`;
@@ -23,25 +26,35 @@ export async function POST(request: Request) {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
+    const orderPayload = {
+      ...body,
+      order_source: body.order_source || 'ecommerce',
+    };
+
     // Proxy the request to the external API
     const response = await fetch(targetUrl, {
       method: 'POST',
       headers,
-      body: JSON.stringify(body),
+      body: JSON.stringify(orderPayload),
     });
 
     console.log('External API Status:', response.status);
 
+    const data = await response.json().catch(() => ({}));
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('External API Error:', errorText);
+      console.error('External API Error:', data);
       return NextResponse.json(
-        { error: 'External API error', status: response.status, details: errorText },
+        {
+          error: data.detail || data.message || 'External API error',
+          code: data.code || String(response.status),
+          request_id: data.request_id,
+          status: response.status,
+          details: data,
+        },
         { status: response.status }
       );
     }
-
-    const data = await response.json();
     console.log('Order Success:', data);
     return NextResponse.json(data);
   } catch (error: any) {

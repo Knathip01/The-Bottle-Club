@@ -7,9 +7,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Search, ShoppingBag, Menu, X, User, LogOut,
-  ChevronDown, MapPin, Wine, Sparkles, Grape,
-  MapPinned, ShieldCheck, BadgePercent, Globe,
+  ChevronDown, MapPin, Wine, Globe,
 } from 'lucide-react';
+import { WineriesShieldIcon } from '@/components/wineries/WineriesShieldIcon';
 import { logout } from '@/app/actions/auth';
 import { useLanguage } from '@/context/LanguageContext';
 import type { Language } from '@/context/LanguageContext';
@@ -150,13 +150,15 @@ export default function Header({ user }: HeaderProps) {
 
   const currentLang = languages.find(l => l.code === language) || languages[0];
 
-  const desktopNavItems = [
-    { href: '#wine-categories', label: t('nav.wine'),     icon: Wine },
-    { href: '#products',        label: t('nav.pairings'), icon: Sparkles },
-    { href: '#wine-categories', label: t('nav.grapes'),   icon: Grape },
-    { href: '#products',        label: t('nav.regions'),  icon: MapPinned },
-    { href: '#products',        label: t('nav.premium'),  icon: BadgePercent },
-    { href: '#products',        label: t('nav.wineries'), icon: ShieldCheck, badge: 'New' },
+  const desktopNavItems: {
+    href: string;
+    label: string;
+    icon?: any;
+    badge?: string;
+    isCustomIcon?: boolean;
+  }[] = [
+    { href: '/product',  label: t('nav.wine'),     icon: Wine },
+    { href: '/wineries', label: t('nav.wineries'), icon: WineriesShieldIcon, isCustomIcon: true },
   ];
 
   return (
@@ -519,8 +521,8 @@ export default function Header({ user }: HeaderProps) {
           </div>
 
           {/* ── DESKTOP NAV BAR ───────────────────────────────────── */}
-          <nav className={`hidden items-center justify-center gap-1 overflow-hidden transition-all duration-500 ease-in-out md:flex lg:gap-2 ${
-            scrolled ? 'h-0 opacity-0 pointer-events-none' : 'h-12 opacity-100'
+          <nav className={`hidden items-center justify-center gap-1 transition-all duration-500 ease-in-out md:flex lg:gap-2 ${
+            scrolled ? 'h-0 opacity-0 pointer-events-none overflow-hidden' : 'h-12 opacity-100 overflow-visible'
           }`}>
             {desktopNavItems.map(item => {
               const Icon = item.icon;
@@ -530,11 +532,17 @@ export default function Header({ user }: HeaderProps) {
                   href={item.href}
                   className="nav-link-line group flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-stone-600 transition-all duration-300 hover:bg-[#a11a1a]/5 hover:text-[#a11a1a]"
                 >
-                  <Icon
-                    size={15}
-                    strokeWidth={2}
-                    className="text-stone-400 transition-all duration-300 group-hover:text-[#a11a1a] group-hover:scale-110"
-                  />
+                  {Icon && (
+                    item.isCustomIcon ? (
+                      <Icon size={16} />
+                    ) : (
+                      <Icon
+                        size={15}
+                        strokeWidth={2}
+                        className="text-stone-400 transition-all duration-300 group-hover:text-[#a11a1a] group-hover:scale-110"
+                      />
+                    )
+                  )}
                   <span className="text-[0.78rem] font-bold tracking-wide">{item.label}</span>
                   {item.badge && (
                     <span className="rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-stone-900 shadow-sm">
@@ -601,7 +609,13 @@ export default function Header({ user }: HeaderProps) {
                   >
                     <div className="flex items-center gap-4">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm transition-all group-hover:shadow-md group-hover:bg-[#a11a1a]/5">
-                        <Icon size={18} strokeWidth={2} className="text-[#a11a1a]" />
+                        {Icon && (
+                          item.isCustomIcon ? (
+                            <Icon size={18} />
+                          ) : (
+                            <Icon size={18} strokeWidth={2} className="text-[#a11a1a]" />
+                          )
+                        )}
                       </div>
                       <span className="text-sm font-black uppercase tracking-wider text-stone-700 group-hover:text-[#a11a1a] transition-colors">
                         {item.label}

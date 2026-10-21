@@ -121,13 +121,67 @@ const SHIPMENT_CATALOG: Record<string, Shipment> = {
     customsStatus: 'none',
     deliveryAttempt: '1st Attempt in Progress',
     timeline: [
-      { key: 'tracking.status.order_received', time: '08:00' },
-      { key: 'tracking.status.processing', time: '08:30' },
-      { key: 'tracking.status.in_warehouse', time: '09:00' },
-      { key: 'tracking.status.departed_origin', time: '09:15' },
-      { key: 'tracking.status.in_transit', time: '10:00' },
-      { key: 'tracking.status.out_for_delivery', time: 'tracking.live' },
-      { key: 'tracking.status.delivered', time: '—' },
+      { key: 'order_received', time: '08:00' },
+      { key: 'processing', time: '08:30' },
+      { key: 'warehouse_pickup', time: '09:00' },
+      { key: 'departed_origin', time: '09:15' },
+      { key: 'in_transit', time: '10:00' },
+      { key: 'out_for_delivery', time: '10:45' },
+      { key: 'delivered', time: '11:15' },
+    ],
+  },
+  'TBC-DHL-DOM-001': {
+    id: 'TBC-DHL-DOM-001',
+    direction: 'domestic',
+    mode: 'local',
+    destinationCountry: 'th',
+    route: TH_LOCAL_ROUTE,
+    originName: 'ศูนย์คัดแยก The Bottle Club (กรุงเทพฯ)',
+    originNameEn: 'The Bottle Club Sorting Center (Bangkok)',
+    destinationName: 'ที่อยู่ผู้รับพัสดุ (DHL Express Thailand)',
+    destinationNameEn: 'Recipient Address (DHL Express Thailand)',
+    carrier: 'DHL Express',
+    carrierEn: 'DHL Express',
+    itemCount: 3,
+    etaUnit: 'hours',
+    etaTotal: 4,
+    progressSpeed: 0.02,
+    insuranceStatus: '฿50,000 Wine Cold-Chain Protected',
+    customsStatus: 'none',
+    deliveryAttempt: 'นำจ่ายรอบพิเศษ (Next-Day Air & Ground)',
+    timeline: [
+      { key: 'order_received', time: 'วันนี้ 09:00' },
+      { key: 'processing', time: 'วันนี้ 09:30 (บรรจุหีบห่อควบคุมอุณหภูมิ)' },
+      { key: 'in_transit', time: 'วันนี้ 10:30 (ส่งต่อศูนย์คัดแยก DHL Express)' },
+      { key: 'out_for_delivery', time: 'วันนี้ 11:15 (พนักงานกำลังนำจ่ายพัสดุ)' },
+      { key: 'delivered', time: 'ประมาณการ 12:30' },
+    ],
+  },
+  'TBC-LALAMOVE-001': {
+    id: 'TBC-LALAMOVE-001',
+    direction: 'domestic',
+    mode: 'local',
+    destinationCountry: 'th',
+    route: TH_LOCAL_ROUTE,
+    originName: 'The Bottle Club Flagship Store',
+    originNameEn: 'The Bottle Club Flagship Store',
+    destinationName: 'ปลายทางผู้รับ (บริการส่งด่วน Lalamove ภายใน 2 ชม.)',
+    destinationNameEn: 'Delivery Address (Lalamove 2-Hour Express)',
+    carrier: 'Lalamove Express',
+    carrierEn: 'Lalamove Express',
+    itemCount: 2,
+    etaUnit: 'minutes',
+    etaTotal: 30,
+    progressSpeed: 0.03,
+    insuranceStatus: '฿20,000 Lalamove Rider Guarantee',
+    customsStatus: 'none',
+    deliveryAttempt: 'ไรเดอร์ Lalamove กำลังเดินทางนำส่ง',
+    timeline: [
+      { key: 'order_received', time: '11:00 (ร้านค้ารับคำสั่งซื้อ)' },
+      { key: 'processing', time: '11:08 (จัดเตรียมไวน์และกล่องควบคุมความเย็น)' },
+      { key: 'in_transit', time: '11:15 (ไรเดอร์ Lalamove เข้ารับสินค้า)' },
+      { key: 'out_for_delivery', time: '11:22 (กำลังขับรถมุ่งหน้าไปยังปลายทาง)' },
+      { key: 'delivered', time: 'ประมาณการ 11:45' },
     ],
   },
   'TBC-EXP-AIR-US-002': {
@@ -351,6 +405,31 @@ export function resolveShipment(
     if (built) {
       return { ...built, id: normalized && normalized !== 'PREVIEW' ? normalized : built.id };
     }
+  }
+
+  // Fallback for custom DHL / Lalamove / any tracking number
+  if (normalized.includes('LALA') || normalized.includes('LLM')) {
+    const base = SHIPMENT_CATALOG['TBC-LALAMOVE-001'];
+    return {
+      ...base,
+      id: trackingId.trim(),
+    };
+  }
+
+  if (normalized.includes('DHL') || /^\d{8,14}$/.test(normalized)) {
+    const base = SHIPMENT_CATALOG['TBC-DHL-DOM-001'] || SHIPMENT_CATALOG['TBC-DOM-LOCAL-TH-001'];
+    return {
+      ...base,
+      id: trackingId.trim(),
+    };
+  }
+
+  if (normalized.length >= 3) {
+    const base = SHIPMENT_CATALOG['TBC-DOM-LOCAL-TH-001'];
+    return {
+      ...base,
+      id: trackingId.trim(),
+    };
   }
 
   return null;

@@ -23,7 +23,16 @@ export default function OrdersContent({ initialOrders, addresses = [] }: OrdersC
   };
 
   const formatAddress = (order: any) => {
-    const savedAddress = addresses.find(a => a.id === order.address_id);
+    if (order.shipping_address) {
+      const name = order.recipient_name ? `${order.recipient_name}` : '';
+      const phone = order.recipient_phone ? `(${order.recipient_phone})` : '';
+      return [name, phone, order.shipping_address].filter(Boolean).join(' ');
+    }
+    if (order.notes) {
+      const match = order.notes.match(/(?:ที่อยู่จัดส่ง|ที่อยู่|Shipping Address|Address):\s*([^|\n]+)/i);
+      if (match && match[1]) return match[1].trim();
+    }
+    const savedAddress = addresses.find(a => a.id === order.address_id) || addresses[0];
     if (savedAddress) {
       const parts = [
         savedAddress.first_name || savedAddress.firstName,

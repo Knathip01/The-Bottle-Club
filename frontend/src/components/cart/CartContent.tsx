@@ -1,6 +1,6 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
+import { useSyncExternalStore, useState, useEffect } from 'react';
 import type { CartItem } from '@/lib/cart';
 import { readCart, subscribeCart, writeCart, getEmptyCart } from '@/lib/cart';
 import Link from 'next/link';
@@ -10,6 +10,37 @@ import { useLanguage } from '@/context/LanguageContext';
 export default function CartContent() {
   const items = useSyncExternalStore(subscribeCart, readCart, getEmptyCart);
   const { t } = useLanguage();
+  const [storeSettings, setStoreSettings] = useState<{
+    vat_rate: number;
+    points_rate: number;
+  }>({
+    vat_rate: 7,
+    points_rate: 100,
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/settings', { cache: 'no-store' });
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.data && isMounted) {
+            setStoreSettings({
+              vat_rate: Number(json.data.vat_rate) || 7,
+              points_rate: Number(json.data.points_rate) || 100,
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load settings in cart:', e);
+      }
+    }
+    loadSettings();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const updateQuantity = (id: number, delta: number) => {
     const newItems = items.map(item => 
@@ -24,9 +55,11 @@ export default function CartContent() {
   };
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const vat = Math.round(subtotal * 0.07);
+  const vatRate = storeSettings.vat_rate;
+  const vat = Math.round(subtotal * (vatRate / 100));
   const total = subtotal + vat;
-  const points = Math.floor(subtotal / 25);
+  const pointsRate = storeSettings.points_rate || 100;
+  const points = Math.floor(subtotal / pointsRate);
 
   if (items.length === 0) {
     return (

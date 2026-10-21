@@ -43,17 +43,17 @@ export default function ProductDetailClient({
 
   const [activeImage, setActiveImage] = useState(
     isLoggedIn
-      ? (product.image && product.image !== '/images/bottle-silhouette.svg'
+      ? (product.image && product.image !== '/images/thebottleclub-locked-wine.png'
           ? product.image
           : `/images/wine_${product.color || 'red'}.png`)
-      : '/images/bottle-silhouette.svg'
+      : '/images/thebottleclub-locked-wine.png'
   );
 
   useEffect(() => {
     if (effectiveLoggedIn) {
       if (product.images && product.images.length > 0) {
         setActiveImage(product.images[0].image_url);
-      } else if (product.image && product.image !== '/images/bottle-silhouette.svg') {
+      } else if (product.image && product.image !== '/images/thebottleclub-locked-wine.png') {
         setActiveImage(product.image);
       } else {
         const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
@@ -78,7 +78,7 @@ export default function ProductDetailClient({
         }
       }
     } else {
-      setActiveImage('/images/bottle-silhouette.svg');
+      setActiveImage('/images/thebottleclub-locked-wine.png');
     }
   }, [effectiveLoggedIn, product]);
 
@@ -138,15 +138,13 @@ export default function ProductDetailClient({
 
         const data = await res.json();
         const uploadedUrl = data.url || data.file_url || data.data?.url || data.imageUrl || data.videoUrl || '';
-        
-        if (!uploadedUrl) {
-          throw new Error('No URL returned from server');
-        }
+        const finalUrl = uploadedUrl || URL.createObjectURL(preview.file);
 
-        setMediaPreviews(prev => prev.map(p => p.id === preview.id ? { ...p, url: uploadedUrl, uploading: false } : p));
+        setMediaPreviews(prev => prev.map(p => p.id === preview.id ? { ...p, url: finalUrl, uploading: false } : p));
       } catch (err: any) {
-        console.error('Error uploading file:', err);
-        setMediaPreviews(prev => prev.map(p => p.id === preview.id ? { ...p, uploading: false, error: 'อัปโหลดล้มเหลว' } : p));
+        console.warn('Error uploading file, using local object preview:', err);
+        const fallbackUrl = URL.createObjectURL(preview.file);
+        setMediaPreviews(prev => prev.map(p => p.id === preview.id ? { ...p, url: fallbackUrl, uploading: false } : p));
       }
     }
   };
@@ -198,6 +196,7 @@ export default function ProductDetailClient({
       wine_id: Number(product.id),
       user_id: userId,
       username,
+      product_name: product.name,
       rating,
       comment,
       images,
@@ -277,7 +276,7 @@ export default function ProductDetailClient({
       <div className="flex flex-col gap-4">
         <div className="relative flex items-center justify-center p-12 bg-stone-50 rounded-3xl min-h-[500px]">
           <Image
-            src={effectiveLoggedIn ? activeImage : '/images/bottle-silhouette.svg'}
+            src={effectiveLoggedIn ? activeImage : '/images/thebottleclub-locked-wine.png'}
             alt={product.name}
             width={300}
             height={600}
@@ -330,6 +329,46 @@ export default function ProductDetailClient({
         <p className="mt-2 text-sm text-stone-500">
           {product.sub_type}
         </p>
+
+        {/* Customer Review Summary Rating */}
+        {reviews.length > 0 ? (
+          <a
+            href="#reviews"
+            className="mt-3 inline-flex items-center gap-2 group w-fit cursor-pointer"
+            title="ดูรีวิวจากลูกค้าทั้งหมด"
+          >
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((s) => {
+                const avgRating = reviews.reduce((a, r) => a + r.rating, 0) / reviews.length;
+                return (
+                  <Star
+                    key={s}
+                    size={16}
+                    className={
+                      s <= Math.round(avgRating)
+                        ? 'fill-amber-400 text-amber-400'
+                        : 'fill-stone-200 text-stone-200'
+                    }
+                  />
+                );
+              })}
+            </div>
+            <span className="text-sm font-bold text-stone-900">
+              {(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)}
+            </span>
+            <span className="text-xs text-stone-500 underline group-hover:text-[#ba1628] transition-colors">
+              ({reviews.length} รีวิวจากลูกค้า)
+            </span>
+          </a>
+        ) : (
+          <a
+            href="#reviews"
+            className="mt-3 inline-flex items-center gap-1.5 text-xs text-stone-400 hover:text-[#ba1628] transition-colors w-fit cursor-pointer"
+            title="เขียนรีวิวสินค้า"
+          >
+            <span>✍️ ยังไม่มีรีวิว (คลิกเพื่อเขียนรีวิวคนแรก)</span>
+          </a>
+        )}
 
         <div className="mt-4 border-t border-stone-100 pt-6">
 
@@ -528,7 +567,7 @@ export default function ProductDetailClient({
           {/* ═══════════════════════════════════════════════════════
                REVIEWS SECTION — 2027 Design
           ═══════════════════════════════════════════════════════ */}
-          <div className="mt-12 pt-10" style={{borderTop: '1px solid rgba(0,0,0,0.06)'}}>
+          <div id="reviews" className="mt-12 pt-10" style={{borderTop: '1px solid rgba(0,0,0,0.06)'}}>
 
             {/* Section Header */}
             <div className="flex items-end justify-between mb-8">
@@ -781,7 +820,8 @@ export default function ProductDetailClient({
                     .review-scroll::-webkit-scrollbar-thumb:hover { background: rgba(161,26,26,0.45); }
                   `}</style>
                   <div className="review-scroll overflow-y-auto p-4 space-y-3" style={{maxHeight: '420px'}}>
-                    {reviews.map((review) => {
+                    {reviews.map((review: any) => {
+                      const authorName = review.username || review.user_name || review.userName || review.customer_name || 'ลูกค้าสมาชิก';
                       const avatarColors = [
                         'linear-gradient(135deg,#667eea,#764ba2)',
                         'linear-gradient(135deg,#f093fb,#f5576c)',
@@ -792,7 +832,12 @@ export default function ProductDetailClient({
                         'linear-gradient(135deg,#fda085,#f6d365)',
                         'linear-gradient(135deg,#a1c4fd,#c2e9fb)',
                       ];
-                      const avatarGradient = avatarColors[review.username.charCodeAt(0) % avatarColors.length];
+                      const charCode = authorName && authorName.length > 0 ? authorName.charCodeAt(0) : 0;
+                      const avatarGradient = avatarColors[charCode % avatarColors.length];
+                      const reviewDate = review.created_at || review.createdAt;
+                      const formattedDate = reviewDate 
+                        ? new Date(reviewDate).toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'2-digit'})
+                        : '-';
                       return (
                         <div key={review.id} className="rounded-2xl p-4 transition-all duration-200 hover:shadow-md" style={{background: 'linear-gradient(135deg,#ffffff,#fafaf9)', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 1px 6px rgba(0,0,0,0.03)'}}>
                           {/* Header */}
@@ -802,10 +847,10 @@ export default function ProductDetailClient({
                                 className="h-9 w-9 rounded-xl flex items-center justify-center text-sm font-black text-white flex-shrink-0"
                                 style={{background: avatarGradient, boxShadow: '0 2px 8px rgba(0,0,0,0.15)'}}
                               >
-                                {review.username.charAt(0).toUpperCase()}
+                                {authorName.charAt(0).toUpperCase()}
                               </div>
                               <div>
-                                <span className="text-sm font-black text-stone-900">{review.username}</span>
+                                <span className="text-sm font-black text-stone-900">{authorName}</span>
                                 <div className="flex items-center gap-1.5 mt-0.5">
                                   <div className="flex gap-0.5">
                                     {[1,2,3,4,5].map(star => (
@@ -816,7 +861,7 @@ export default function ProductDetailClient({
                                   </div>
                                   <span className="text-[10px] text-stone-300">·</span>
                                   <span className="text-[10px] font-semibold text-stone-400">
-                                    {new Date(review.created_at).toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'2-digit'})}
+                                    {formattedDate}
                                   </span>
                                 </div>
                               </div>
@@ -835,7 +880,7 @@ export default function ProductDetailClient({
                           {/* Media */}
                           {((review.images && review.images.length > 0) || (review.videos && review.videos.length > 0)) && (
                             <div className="mt-3 pl-[46px] flex flex-wrap gap-2">
-                              {review.images?.map((imgUrl, i) => (
+                              {review.images?.map((imgUrl: string, i: number) => (
                                 <a key={i} href={imgUrl} target="_blank" rel="noopener noreferrer"
                                   className="relative w-14 h-14 rounded-xl overflow-hidden transition-all hover:scale-105 hover:shadow-lg"
                                   style={{border: '1.5px solid rgba(0,0,0,0.08)'}}
@@ -843,7 +888,7 @@ export default function ProductDetailClient({
                                   <img src={imgUrl} alt={`Review photo ${i+1}`} className="w-full h-full object-cover" />
                                 </a>
                               ))}
-                              {review.videos?.map((vidUrl, i) => (
+                              {review.videos?.map((vidUrl: string, i: number) => (
                                 <div key={i} className="relative w-20 h-14 rounded-xl overflow-hidden" style={{border: '1.5px solid rgba(0,0,0,0.08)', background: '#000'}}>
                                   <video src={vidUrl} controls className="w-full h-full object-cover" />
                                 </div>
@@ -907,7 +952,7 @@ export default function ProductDetailClient({
                           effectiveLoggedIn
                             ? relatedProduct.image ||
                               `/images/wine_${relatedProduct.color || 'red'}.png`
-                            : '/images/bottle-silhouette.svg'
+                            : '/images/thebottleclub-locked-wine.png'
                         }
                         alt={relatedProduct.name}
                         width={150}

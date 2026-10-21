@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1791863205671,
+    "product_id": 1134337,
+    "productId": 1134337,
+    "product_name": "สินค้าไวน์ #1134337",
+    "productName": "สินค้าไวน์ #1134337",
+    "user_id": "guest",
+    "userId": "guest",
+    "user_name": "คุณสมชาย",
+    "userName": "คุณสมชาย",
+    "username": "คุณสมชาย",
+    "customer_name": "คุณสมชาย",
+    "customer_id": null,
+    "rating": 5,
+    "comment": "สุดยอดไวน์ รสชาตินุ่มละมุนมาก",
+    "images": [],
+    "videos": [],
+    "is_approved": true,
+    "isApproved": true,
+    "status": "pending",
+    "created_at": "2026-10-13T03:46:45.671Z",
+    "createdAt": "13/10/2569"
+  },
+  {
+    "id": 1791274739150,
+    "product_id": 5279,
+    "productId": 5279,
+    "product_name": "2010 Château Clarke - Baron Edmond De Rothschild",
+    "productName": "2010 Château Clarke - Baron Edmond De Rothschild",
+    "user_id": "7",
+    "userId": "7",
+    "user_name": "Customer",
+    "userName": "Customer",
+    "username": "Customer",
+    "customer_name": "Customer",
+    "customer_id": 7,
+    "rating": 5,
+    "comment": "good",
+    "images": [
+      "/uploads/reviews/review_1791274727714_kq4qpx.png"
+    ],
+    "videos": [],
+    "is_approved": true,
+    "isApproved": true,
+    "status": "approved",
+    "created_at": "2026-10-06T08:18:59.150Z",
+    "createdAt": "06/10/2569"
+  }
+]

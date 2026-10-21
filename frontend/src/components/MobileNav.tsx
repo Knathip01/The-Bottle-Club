@@ -248,11 +248,11 @@ export default function MobileNav() {
               >
                 <div className="relative">
                   <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-600 blur-md opacity-85 group-hover:opacity-100 transition-opacity animate-pulse" />
-                  <div className="relative w-15 h-15 bg-black rounded-full flex items-center justify-center shadow-[0_10px_25px_rgba(245,158,11,0.5),inset_0_1px_2px_rgba(255,255,255,0.5)] border-2 border-amber-400 active:scale-90 transition-all overflow-hidden p-2">
+                  <div className="relative w-15 h-15 bg-white rounded-full flex items-center justify-center shadow-[0_10px_25px_rgba(245,158,11,0.4),inset_0_1px_2px_rgba(255,255,255,0.8)] border-2 border-amber-400 active:scale-90 transition-all overflow-hidden p-1.5">
                     <img
                       src="/logos/bottle-walking-icon.png"
                       alt="AI Scan"
-                      className="w-full h-full object-contain filter drop-shadow-md"
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 </div>
@@ -690,11 +690,11 @@ export default function MobileNav() {
                 onClick={capture}
                 className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-600 via-yellow-400 to-amber-300 p-1 shadow-[0_0_35px_rgba(245,158,11,0.65),_0_0_70px_rgba(234,179,8,0.3)] active:scale-95 transition-all cursor-pointer flex items-center justify-center disabled:opacity-50"
               >
-                <div className="w-full h-full border-2 border-amber-300/80 rounded-full bg-black flex items-center justify-center shadow-[inset_0_2px_4px_rgba(255,255,255,0.4)] overflow-hidden p-2.5">
+                <div className="w-full h-full border-2 border-amber-300/80 rounded-full bg-white flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] overflow-hidden p-2">
                   <img
                     src="/logos/bottle-walking-icon.png"
                     alt="Scan Wine"
-                    className="w-full h-full object-contain filter drop-shadow"
+                    className="w-full h-full object-contain"
                   />
                 </div>
               </button>

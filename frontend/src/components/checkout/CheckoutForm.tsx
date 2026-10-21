@@ -156,6 +156,19 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
     taxAddress: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [storeSettings, setStoreSettings] = useState<{
+    shipping_fee: number;
+    vat_rate: number;
+    points_rate: number;
+    low_stock_threshold: number;
+    currency: string;
+  }>({
+    shipping_fee: 150,
+    vat_rate: 7,
+    points_rate: 100,
+    low_stock_threshold: 10,
+    currency: 'THB',
+  });
   const orderItems = useSyncExternalStore(subscribeCart, readCart, getEmptyCart);
 
   const redirectToLogin = () => {
@@ -214,7 +227,22 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
       }
     }
 
+    async function loadStoreSettings() {
+      try {
+        const response = await fetch('/api/settings', { cache: 'no-store' });
+        if (response.ok) {
+          const json = await response.json();
+          if (json?.data && isMounted) {
+            setStoreSettings(json.data);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load store settings:', err);
+      }
+    }
+
     loadSavedAddresses();
+    loadStoreSettings();
 
     return () => {
       isMounted = false;
@@ -223,19 +251,16 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
 
   const getShippingOptions = () => {
     const subtotalAmt = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const standardFee = storeSettings.shipping_fee ?? 150;
     if (formData.country === 'TH' || formData.country === 'OTHER') {
       return [
         {
           id: 'standard',
           name: language === 'th' ? 'จัดส่งแบบมาตรฐาน' : 'Standard Delivery',
-          price: subtotalAmt >= 2000 ? 0 : 100,
-          desc: language === 'th' ? '3-5 วันทำการ (จัดส่งฟรีเมื่อซื้อครบ 2,000 บาท)' : '3-5 business days (Free shipping on orders over ฿2,000)',
-        },
-        {
-          id: 'express',
-          name: language === 'th' ? 'จัดส่งด่วนพิเศษ 24 ชม.' : 'Express Delivery (24 hrs)',
-          price: 250,
-          desc: language === 'th' ? 'จัดส่งภายใน 24 ชั่วโมงเพื่อรักษาคุณภาพสินค้าสูงสุด' : 'Delivered within 24 hours with temperature protection',
+          price: subtotalAmt >= 2000 ? 0 : standardFee,
+          desc: language === 'th' 
+            ? `3-5 วันทำการ (จัดส่งฟรีเมื่อซื้อครบ 2,000 บาท ค่าจัดส่งปกติ ฿${standardFee})` 
+            : `3-5 business days (Free shipping on orders over ฿2,000, regular ฿${standardFee})`,
         }
       ];
     } else {
@@ -244,7 +269,7 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
           id: 'air',
           name: language === 'th' ? 'ขนส่งทางอากาศระหว่างประเทศ' : 'International Air Cargo',
           price: 950,
-          desc: language === 'th' ? '3-7 วันทำการ ผ่านสายการบินขนส่งสินค้าพρίเมียม' : '3-7 business days via premium air carrier',
+          desc: language === 'th' ? '3-7 วันทำการ ผ่านสายการบินขนส่งสินค้าพรีเมียม' : '3-7 business days via premium air carrier',
         },
         {
           id: 'sea',
@@ -256,15 +281,16 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
     }
   };
 
-
   const shippingOptions = getShippingOptions();
   const selectedShippingOption = shippingOptions.find(opt => opt.id === shippingMethod) || shippingOptions[0];
   const shippingFee = selectedShippingOption ? selectedShippingOption.price : 0;
 
   const subtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const tax = Math.round(subtotal * 0.07);
+  const vatRate = Number(storeSettings.vat_rate) || 7;
+  const tax = Math.round(subtotal * (vatRate / 100));
   const total = subtotal + shippingFee;
-  const points = Math.floor(subtotal / 25);
+  const pointsRate = Number(storeSettings.points_rate) || 100;
+  const points = Math.floor(subtotal / pointsRate);
   const priceBeforeTax = total - tax;
   const paymentOptions: Array<{ id: CheckoutPaymentMethod; label: string }> = [
     { id: 'credit_card', label: t('checkout.credit_card') },
@@ -384,6 +410,49 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
         throw new Error('Missing address id');
       }
 
+      // Format shipping address string and structured details
+      let shippingAddressString = '';
+      let shippingDetails: {
+        recipient_name?: string;
+        phone?: string;
+        address?: string;
+      } = {};
+
+      if (addressMode === 'saved') {
+        const saved = savedAddresses.find((item) => item.id === selectedAddressId) || savedAddresses[0];
+        if (saved) {
+          const recipientName = [saved.first_name || saved.firstName, saved.last_name || saved.lastName].filter(Boolean).join(' ') || (user?.display_name || user?.name || '');
+          const phone = String(saved.phone || formData.phone || '');
+          const formatted = formatSavedAddress(saved);
+          shippingAddressString = [recipientName, phone ? `(${phone})` : '', formatted].filter(Boolean).join(' ');
+          shippingDetails = {
+            recipient_name: recipientName,
+            phone: phone,
+            address: formatted,
+          };
+        }
+      }
+
+      if (!shippingAddressString) {
+        const recipientName = [formData.firstName, formData.lastName].filter(Boolean).join(' ') || (user?.display_name || user?.name || '');
+        const phone = formData.phone || '';
+        const countryName = formData.country === 'TH' ? (language === 'th' ? 'ไทย' : 'Thailand') : otherCountry;
+        const addrParts = [
+          formData.address,
+          formData.subDistrict,
+          formData.district,
+          formData.province,
+          formData.zipcode,
+          countryName
+        ].filter(Boolean).join(' ');
+        shippingAddressString = [recipientName, phone ? `(${phone})` : '', addrParts].filter(Boolean).join(' ').trim();
+        shippingDetails = {
+          recipient_name: recipientName,
+          phone: phone,
+          address: addrParts,
+        };
+      }
+
       // 2. Create order. A payment redirect URL is returned only when the provider is configured.
       console.log('Creating order with items:', validItems);
       const response = await fetch('/api/create-order', {
@@ -394,6 +463,8 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
         body: JSON.stringify({
           totalAmount: total,
           addressId: addressId,
+          shippingAddress: shippingAddressString,
+          shippingDetails: shippingDetails,
           paymentMethod: paymentMethod,
           shippingMethod: shippingMethod,
           shippingFee: shippingFee,
@@ -447,9 +518,10 @@ export default function CheckoutForm({ user }: CheckoutFormProps) {
         alert(t('checkout.success_alert'));
         window.location.href = '/account/orders';
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout error:', error);
-      alert(t('checkout.error_alert'));
+      const alertMsg = error?.message || t('checkout.error_alert');
+      alert(alertMsg);
     } finally {
       setIsSubmitting(false);
     }
