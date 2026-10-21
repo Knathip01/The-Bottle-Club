@@ -158,10 +158,7 @@ export default function Footer() {
             </h4>
             <ul className="flex flex-col gap-3 relative">
               {[
-                { label: t('footer.how_to_order'), href: '#' },
                 { label: t('footer.tracking'), href: '/tracking' },
-                { label: t('footer.returns'), href: '#' },
-                { label: t('footer.faq'), href: '#' },
               ].map((link, idx) => (
                 <li key={idx}>
                   <Link href={link.href} className="group/link flex items-center gap-2.5 text-xs sm:text-sm font-normal text-stone-300 hover:text-white transition-all duration-200">
