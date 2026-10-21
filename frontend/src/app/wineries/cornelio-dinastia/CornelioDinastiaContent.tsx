@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Compass, ExternalLink, Globe, Mail, Mountain, Phone, Star } from 'lucide-react';
+import { Compass, ExternalLink, Globe, Mail, Mountain, Phone } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/226418/logos/8z2cDlf1R6iVwK5uN6k-Ww_500x500.jpeg',
@@ -80,12 +80,6 @@ export default function CornelioDinastiaContent() {
 
             <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-stone-600 sm:text-xs">
               <span><strong>31</strong> Wines</span>
-              <span>•</span>
-              <span className="inline-flex items-center gap-1 font-semibold text-stone-900">
-                <Star className="h-3.5 w-3.5 fill-[#1e1e1e] text-[#1e1e1e]" />
-                3.9
-              </span>
-              <span className="text-stone-500">3,330 total ratings</span>
             </div>
 
             <Link

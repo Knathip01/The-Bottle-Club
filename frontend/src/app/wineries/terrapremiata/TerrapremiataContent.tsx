@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Mail, Star } from 'lucide-react';
+import { ExternalLink, Globe, Mountain, Mail } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/276633/logos/_QWVgPJoT2mR4zD42KSVSQ_500x500.jpeg',
@@ -68,13 +68,6 @@ export default function TerrapremiataContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>8</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>4.1</b>
-                </span>
-                <span className="hidden sm:inline">479 total ratings</span>
-                <span className="sm:hidden">479 ratings</span>
               </div>
             </div>
             <Link

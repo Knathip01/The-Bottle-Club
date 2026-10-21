@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Mail, Star, Phone } from 'lucide-react';
+import { ExternalLink, Globe, Mountain, Mail, Phone } from 'lucide-react';
 
 function Row({ label, value, icon }: { label: string; value: React.ReactNode; icon: React.ReactNode }) {
   return (
@@ -51,13 +51,6 @@ export default function FontezoppaContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>32</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>3.7</b>
-                </span>
-                <span className="hidden sm:inline">8,270 total ratings</span>
-                <span className="sm:hidden">8,270 ratings</span>
               </div>
             </div>
 

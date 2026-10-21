@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Landmark, Mail, Mountain, Phone, Star, Target } from 'lucide-react';
+import { ExternalLink, Globe, Landmark, Mail, Mountain, Phone, Target } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/6096/logos/5G66-9Y_QfWGXEJmaSzJ_A_500x500.jpeg',
@@ -67,13 +67,6 @@ export default function SenorioDeLosLlanosContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>18</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>3.2</b>
-                </span>
-                <span className="hidden sm:inline">35,456 total ratings</span>
-                <span className="sm:hidden">35,456 ratings</span>
               </div>
             </div>
             <Link

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Star } from 'lucide-react';
+import { ExternalLink, Globe, Mountain } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/318309/logos/9El50TRLS5CgpicU3HId-g_500x500.jpeg',
@@ -68,13 +68,6 @@ export default function TenutaMaryamadoContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>4</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>4.4</b>
-                </span>
-                <span className="hidden sm:inline">20 total ratings</span>
-                <span className="sm:hidden">20 ratings</span>
               </div>
             </div>
             <Link

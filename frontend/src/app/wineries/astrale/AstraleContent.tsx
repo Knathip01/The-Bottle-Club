@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Mail, Star } from 'lucide-react';
+import { ExternalLink, Globe, Mountain, Mail } from 'lucide-react';
 
 const images = {
   hero: 'https://thumbs.vivino.com/winery_backgrounds/ikhnpXP6Qd69Bb4_kCAjLA_2560x1520.jpeg',
@@ -66,13 +66,6 @@ export default function AstraleContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>22</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>4.1</b>
-                </span>
-                <span className="hidden sm:inline">79,094 total ratings</span>
-                <span className="sm:hidden">79,094 ratings</span>
               </div>
             </div>
             <Link

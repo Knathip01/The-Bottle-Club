@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, ExternalLink, Globe, Phone, Mail, Mountain } from 'lucide-react';
+import { ExternalLink, Globe, Phone, Mail, Mountain } from 'lucide-react';
 
 // Vivino Verified Partner Badge with gradient shield
 function VerifiedPartnerBadge() {
@@ -116,12 +116,6 @@ export default function VeuveClicquotWineryContent() {
                   <p className="font-semibold text-stone-700">
                     <strong className="text-stone-900 font-extrabold">41</strong> Wines
                   </p>
-                  <span className="text-stone-300">•</span>
-                  <div className="flex items-center gap-1.5">
-                    <Star size={16} className="fill-[#e1a100] text-[#e1a100]" />
-                    <strong className="font-extrabold text-[#1e1e1e]">4.3</strong>
-                    <span className="text-stone-500 text-xs">269,028 total ratings</span>
-                  </div>
                 </div>
               </div>
 

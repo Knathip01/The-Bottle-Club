@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Mountain, Star, User } from 'lucide-react';
+import { Mountain, User } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/319679/logos/Ih9X6gAiT2itRtFvLcJffg_500x500.jpeg',
@@ -67,13 +67,6 @@ export default function RetroterraContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>5</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>3.8</b>
-                </span>
-                <span className="hidden sm:inline">103 total ratings</span>
-                <span className="sm:hidden">103 ratings</span>
               </div>
             </div>
             <Link

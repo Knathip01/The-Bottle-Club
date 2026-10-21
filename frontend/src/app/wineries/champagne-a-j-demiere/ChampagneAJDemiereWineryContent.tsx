@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Star } from 'lucide-react';
+import { ExternalLink, Globe, Mountain } from 'lucide-react';
 
 function Row({ label, value, icon }: { label: string; value: React.ReactNode; icon: React.ReactNode }) {
   return <div className="flex min-w-0 items-center gap-2.5 px-3 py-2.5"><div className="w-5 shrink-0 text-[#262626]">{icon}</div><div className="min-w-0"><div className="text-[10px] leading-3 text-stone-500">{label}</div><div className="truncate text-[11px] font-semibold leading-4 text-[#1e1e1e]">{value}</div></div></div>;
@@ -17,7 +17,7 @@ export default function ChampagneAJDemiereWineryContent() {
         <aside className="sticky top-3 space-y-2">
           <section className="space-y-2 rounded-md border border-stone-200 bg-white p-2.5 sm:p-4">
             <div className="mx-auto flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-stone-200 sm:mx-0 sm:h-14 sm:w-14"><Image src="https://images.vivino.com/wineries/59241/logos/WXReRLP_R269HsMY71gzdw.png" alt="Champagne A&J Demière logo" width={56} height={56} unoptimized /></div>
-            <div><h1 className="text-sm font-bold leading-tight text-[#1e1e1e] sm:text-xl">Champagne A&amp;J Demière</h1><VerifiedBadge/><div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>47</b> Wines</span><span>•</span><span className="inline-flex items-center gap-1"><Star size={12} className="fill-amber-500 text-amber-500"/><b>4.1</b></span><span className="hidden sm:inline">3,147 total ratings</span><span className="sm:hidden">3,147 ratings</span></div></div>
+            <div><h1 className="text-sm font-bold leading-tight text-[#1e1e1e] sm:text-xl">Champagne A&amp;J Demière</h1><VerifiedBadge/><div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>47</b> Wines</span></div></div>
             <Link href="/search?q=Champagne%20A%26J%20Demiere" className="block rounded-full bg-[#1e1e1e] px-2 py-2 text-center text-[10px] font-bold text-white hover:bg-black sm:text-xs">View wines</Link>
             <div className="divide-y divide-stone-200 rounded-md border border-stone-200">
               <Row label="Country" value={<Link href="/product?country=France" className="hover:underline">France</Link>} icon={<span>🇫🇷</span>}/>

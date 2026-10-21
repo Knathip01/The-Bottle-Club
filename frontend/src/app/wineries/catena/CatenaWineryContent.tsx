@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Star, Search, MapPin } from 'lucide-react';
+import { Search, MapPin } from 'lucide-react';
 
 // Verified Partner Badge
 function VerifiedPartnerBadge() {
@@ -83,12 +83,6 @@ export default function CatenaWineryContent() {
                   <p className="font-semibold text-stone-700">
                     <strong className="text-stone-900 font-extrabold">88</strong> Wines
                   </p>
-                  <span className="text-stone-300">•</span>
-                  <div className="flex items-center gap-1.5">
-                    <Star size={16} className="fill-[#e1a100] text-[#e1a100]" />
-                    <strong className="font-extrabold text-[#1e1e1e]">4.2</strong>
-                    <span className="text-stone-500 text-xs">910,413 total ratings</span>
-                  </div>
                 </div>
               </div>
 

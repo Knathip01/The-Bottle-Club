@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Star } from 'lucide-react';
+import { ExternalLink, Globe, Mountain } from 'lucide-react';
 
 const storyBase = 'https://vivino.s3.amazonaws.com/misc/sponsorships/42136_Ch%C3%A2teaudeMille/42136_Chateau+de+Mille_';
 const intro = 'In 2018, French-American couple Constance and Lawrence Slaughter took over Château de Mille, a historic estate ready for renewal. They have devoted their energy to restoring the château and revitalising its vineyards, with cover crops, biodiversity projects, new plantings and careful, natural winemaking.';
@@ -47,7 +47,7 @@ export default function ChateauDeMilleWineryContent() {
         <aside className="sticky top-3 space-y-2">
           <section className="space-y-2 rounded-md border border-stone-200 bg-white p-2.5 sm:p-4">
             <div className="mx-auto flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-stone-200 sm:mx-0 sm:h-14 sm:w-14"><Image src="https://images.vivino.com/wineries/42136/logos/svjmewATS96zwEOYZti1Qw.jpeg" alt="Château de Mille logo" width={56} height={56} unoptimized /></div>
-            <div><h1 className="text-sm font-bold leading-tight text-[#1e1e1e] sm:text-xl">Château de Mille</h1><VerifiedBadge/><div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>24</b> Wines</span><span>•</span><span className="inline-flex items-center gap-1"><Star size={12} className="fill-amber-500 text-amber-500"/><b>3.9</b></span><span className="hidden sm:inline">1,314 total ratings</span><span className="sm:hidden">1,314 ratings</span></div></div>
+            <div><h1 className="text-sm font-bold leading-tight text-[#1e1e1e] sm:text-xl">Château de Mille</h1><VerifiedBadge/><div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>24</b> Wines</span></div></div>
             <Link href="/search?q=Ch%C3%A2teau%20de%20Mille" className="block rounded-full bg-[#1e1e1e] px-2 py-2 text-center text-[10px] font-bold text-white hover:bg-black sm:text-xs">View wines</Link>
             <div className="divide-y divide-stone-200 rounded-md border border-stone-200">
               <Row label="Country" value={<Link href="/product?country=France" className="hover:underline">France</Link>} icon={<span>🇫🇷</span>}/>

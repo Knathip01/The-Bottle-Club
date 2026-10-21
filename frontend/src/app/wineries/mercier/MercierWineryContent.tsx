@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Star } from 'lucide-react';
+import { ExternalLink, Globe, Mountain } from 'lucide-react';
 
 function Row({ label, value, icon }: { label: string; value: React.ReactNode; icon: React.ReactNode }) {
   return <div className="flex min-w-0 items-center gap-2.5 px-3 py-2.5"><div className="w-5 shrink-0 text-[#262626]">{icon}</div><div className="min-w-0"><div className="text-[10px] leading-3 text-stone-500">{label}</div><div className="truncate text-[11px] font-semibold leading-4 text-[#1e1e1e]">{value}</div></div></div>;
@@ -13,7 +13,7 @@ export default function MercierWineryContent() {
         <aside className="sticky top-3 space-y-2">
           <section className="space-y-2 rounded-md border border-stone-200 bg-white p-2.5 sm:p-4">
             <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 text-stone-500 sm:mx-0 sm:h-14 sm:w-14"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 20 7v6c0 4.3-3.8 7.5-8 9-4.2-1.5-8-4.7-8-9V7l8-4Z" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.5"/></svg></div>
-            <div><h1 className="text-sm font-bold leading-tight text-[#1e1e1e] sm:text-xl">Mercier</h1><div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#1e1e1e]"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5 14 4v4c0 3.2-3.2 5.7-6 6.5C5.2 13.7 2 11.2 2 8V4l6-2.5Z" fill="#BA1628"/><path d="m5.3 8 1.8 1.8 3.7-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>Verified Partner Winery</div><div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>14</b> Wines</span><span className="inline-flex items-center gap-1"><Star size={12} className="fill-amber-500 text-amber-500"/><b>3.8</b></span><span className="hidden sm:inline">13,821 total ratings</span><span className="sm:hidden">13,821 ratings</span></div></div>
+            <div><h1 className="text-sm font-bold leading-tight text-[#1e1e1e] sm:text-xl">Mercier</h1><div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#1e1e1e]"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5 14 4v4c0 3.2-3.2 5.7-6 6.5C5.2 13.7 2 11.2 2 8V4l6-2.5Z" fill="#BA1628"/><path d="m5.3 8 1.8 1.8 3.7-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>Verified Partner Winery</div><div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>14</b> Wines</span></div></div>
             <Link href="/search?q=Mercier" className="block rounded-full bg-[#1e1e1e] px-2 py-2 text-center text-[10px] font-bold text-white hover:bg-black sm:text-xs">View wines</Link>
             <div className="divide-y divide-stone-200 rounded-md border border-stone-200">
               <Row label="Country" value={<Link href="/product?country=France" className="hover:underline">France</Link>} icon={<span>🇫🇷</span>}/>

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Mail, Star, Phone } from 'lucide-react';
+import { ExternalLink, Globe, Mountain, Mail, Phone } from 'lucide-react';
 
 const images = {
   hero: 'https://thumbs.vivino.com/wineries/sponsorship_cards/hEXMcp93So2eFv1vwHX5oA_2560x1520.jpeg',
@@ -67,13 +67,6 @@ export default function MicheleSattaContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>14</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>4.0</b>
-                </span>
-                <span className="hidden sm:inline">28,596 total ratings</span>
-                <span className="sm:hidden">28,596 ratings</span>
               </div>
             </div>
             <Link

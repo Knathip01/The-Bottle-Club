@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Phone, Mail, Star } from 'lucide-react';
+import { ExternalLink, Globe, Mountain, Phone, Mail } from 'lucide-react';
 
 const storyBase = 'https://vivino.s3.amazonaws.com/misc/sponsorships/95487_ch%C3%A2teaucampdelsaltre/';
 const intro = 'At the edge of Prayssac in the Lot, close to the Dordogne border, Château Camp del Saltre is a centuries-old château with space to welcome up to 60 guests. The family has produced wine here for generations.';
@@ -42,7 +42,7 @@ export default function ChateauCampDelSaltreWineryContent() {
         <aside className="sticky top-3 space-y-2">
           <section className="space-y-2 rounded-md border border-stone-200 bg-white p-2.5 sm:p-4">
             <div className="mx-auto flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-stone-200 sm:mx-0 sm:h-14 sm:w-14"><Image src="https://images.vivino.com/wineries/95487/logos/9pQObz6ZSSa2TSoqf64m2A.jpeg" alt="Château Camp del Saltre logo" width={56} height={56} unoptimized /></div>
-            <div><h1 className="text-sm font-bold leading-tight text-[#1e1e1e] sm:text-xl">Château Camp del Saltre</h1><VerifiedBadge/><div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>9</b> Wines</span><span>•</span><span className="inline-flex items-center gap-1"><Star size={12} className="fill-amber-500 text-amber-500"/><b>4.0</b></span><span className="hidden sm:inline">409 total ratings</span><span className="sm:hidden">409 ratings</span></div></div>
+            <div><h1 className="text-sm font-bold leading-tight text-[#1e1e1e] sm:text-xl">Château Camp del Saltre</h1><VerifiedBadge/><div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>9</b> Wines</span></div></div>
             <Link href="/search?q=Ch%C3%A2teau%20Camp%20del%20Saltre" className="block rounded-full bg-[#1e1e1e] px-2 py-2 text-center text-[10px] font-bold text-white hover:bg-black sm:text-xs">View wines</Link>
             <div className="divide-y divide-stone-200 rounded-md border border-stone-200">
               <Row label="Country" value={<Link href="/product?country=France" className="hover:underline">France</Link>} icon={<span>🇫🇷</span>}/>

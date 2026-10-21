@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Mail, Star, Phone } from 'lucide-react';
+import { ExternalLink, Globe, Mountain, Mail, Phone } from 'lucide-react';
 
 const images = {
   hero: 'https://thumbs.vivino.com/wineries/sponsorship_cards/auFYUvpqSumE05Faprx9vg_2560x1520.jpeg',
@@ -66,13 +66,6 @@ export default function TenutaCastiglioniContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>9</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>3.8</b>
-                </span>
-                <span className="hidden sm:inline">51,161 total ratings</span>
-                <span className="sm:hidden">51,161 ratings</span>
               </div>
             </div>
             <Link

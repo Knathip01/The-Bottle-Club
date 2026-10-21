@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Mail, Star, Phone } from 'lucide-react';
+import { ExternalLink, Globe, Mountain, Mail, Phone } from 'lucide-react';
 
 const images = {
   hero: 'https://thumbs.vivino.com/wineries/sponsorship_cards/2f9m-mAATfuMqi6Atg3cbw_2560x1520.jpeg',
@@ -68,13 +68,6 @@ export default function CaBolaniContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>38</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>3.7</b>
-                </span>
-                <span className="hidden sm:inline">17,336 total ratings</span>
-                <span className="sm:hidden">17,336 ratings</span>
               </div>
             </div>
             <Link

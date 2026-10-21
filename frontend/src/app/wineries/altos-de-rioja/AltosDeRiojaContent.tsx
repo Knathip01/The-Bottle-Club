@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Compass, ExternalLink, Globe, Mountain, Phone, Mail, Star } from 'lucide-react';
+import { Compass, ExternalLink, Globe, Mountain, Phone, Mail } from 'lucide-react';
 
 const images = {
   logo: 'https://images.vivino.com/wineries/34406/logos/immS7NRNTta0JsYDHcCi-A.jpeg',
@@ -55,12 +55,6 @@ export default function AltosDeRiojaContent() {
 
             <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-stone-600 sm:text-xs">
               <span><strong>18</strong> Wines</span>
-              <span>•</span>
-              <span className="inline-flex items-center gap-1 font-semibold text-stone-900">
-                <Star className="h-3.5 w-3.5 fill-[#1e1e1e] text-[#1e1e1e]" />
-                3.8
-              </span>
-              <span className="text-stone-500">10,904 total ratings</span>
             </div>
 
             <Link

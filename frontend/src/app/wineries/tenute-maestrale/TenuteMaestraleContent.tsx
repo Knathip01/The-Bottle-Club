@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Star } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 import { WineriesShieldIcon } from '@/components/wineries/WineriesShieldIcon';
 
 function Row({ label, value, icon }: { label: string; value: React.ReactNode; icon: React.ReactNode }) {
@@ -36,13 +36,6 @@ export default function TenuteMaestraleContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>6</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>4.0</b>
-                </span>
-                <span className="hidden sm:inline">226 total ratings</span>
-                <span className="sm:hidden">226 ratings</span>
               </div>
             </div>
             <Link

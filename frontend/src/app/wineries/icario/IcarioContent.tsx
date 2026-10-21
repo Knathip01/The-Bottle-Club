@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Mail, Star, Phone } from 'lucide-react';
+import { ExternalLink, Globe, Mountain, Mail, Phone } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/16387/logos/2_Lu2n0gRuevSsMpPiuabA_500x500.jpeg',
@@ -77,13 +77,6 @@ export default function IcarioContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>12</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>4.0</b>
-                </span>
-                <span className="hidden sm:inline">6,757 total ratings</span>
-                <span className="sm:hidden">6,757 ratings</span>
               </div>
             </div>
             <Link

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Star } from 'lucide-react';
+import { ExternalLink, Globe, Mountain } from 'lucide-react';
 
 const storyImages = [
   { src: 'https://images.vivino.com/misc/sponsorships/3471_SieurdArques/3471_SieurdArques_1.jpg', alt: "Sieur d'Arques winery cellar and tasting room" },
@@ -28,7 +28,7 @@ export default function SieurDArquesWineryContent() {
             <div>
               <h1 className="text-xs font-bold leading-tight text-[#1e1e1e] sm:text-xl">Sieur d&apos;Arques</h1>
               <VerifiedBadge/>
-              <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>347</b> Wines</span><span>•</span><span className="inline-flex items-center gap-1"><Star size={12} className="fill-amber-500 text-amber-500"/><b>3.8</b></span><span className="hidden sm:inline">72,388 total ratings</span><span className="sm:hidden">72,388 ratings</span></div>
+              <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>347</b> Wines</span></div>
             </div>
             <Link href="/search?q=Sieur+d%27Arques" className="block rounded-full bg-[#1e1e1e] px-2 py-2 text-center text-[10px] font-bold text-white hover:bg-black sm:text-xs">View wines</Link>
             <div className="divide-y divide-stone-200 rounded-md border border-stone-200">

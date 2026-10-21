@@ -3,7 +3,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Metadata } from 'next';
 import {
-  Star,
   MapPin,
   Globe,
   Phone,
@@ -171,26 +170,6 @@ export default async function WineryDetailPage({ params }: PageProps) {
                   <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight drop-shadow-md">
                     {winery.name}
                   </h1>
-
-                  <div className="flex items-center gap-3 pt-1 text-sm text-stone-200">
-                    <div className="flex items-center text-amber-400">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <Star
-                          key={i}
-                          size={16}
-                          className={
-                            i <= Math.round(winery.ratings_average)
-                              ? 'fill-amber-400 text-amber-400'
-                              : 'text-stone-500'
-                          }
-                        />
-                      ))}
-                    </div>
-                    <strong className="text-base text-white font-black">{winery.ratings_average.toFixed(1)}</strong>
-                    <span className="text-stone-300">
-                      ({winery.ratings_count.toLocaleString()} total ratings on Vivino)
-                    </span>
-                  </div>
                 </div>
 
               </div>
@@ -225,27 +204,8 @@ export default async function WineryDetailPage({ params }: PageProps) {
         {/* ── Key Metrics Bar ───────────────────────────────────────────── */}
         <div className="bg-white border-b border-stone-200 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center divide-x divide-stone-100">
+            <div className="grid grid-cols-2 max-w-xl mx-auto gap-6 text-center divide-x divide-stone-100">
               
-              <div>
-                <div className="text-2xl sm:text-3xl font-black text-stone-900 flex items-center justify-center gap-1.5">
-                  <Star size={22} className="fill-amber-400 text-amber-400" />
-                  <span>{winery.ratings_average.toFixed(1)}</span>
-                </div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 mt-1">
-                  Vivino Rating Score
-                </p>
-              </div>
-
-              <div>
-                <div className="text-2xl sm:text-3xl font-black text-stone-900">
-                  {winery.ratings_count.toLocaleString()}
-                </div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 mt-1">
-                  Total Reviews
-                </p>
-              </div>
-
               <div>
                 <div className="text-2xl sm:text-3xl font-black text-[#a11a1a]">
                   {winery.wines_count}
@@ -290,7 +250,7 @@ export default async function WineryDetailPage({ params }: PageProps) {
                     `${winery.name} is one of the premier producers in ${winery.region_name}, crafting exceptional terroir-driven wines with uncompromising dedication to quality and craftsmanship.`}
                 </p>
                 <p>
-                  Nestled in the heart of {winery.region_name}, the estate benefits from ideal microclimates and ancient soils that impart distinctive elegance, depth, and age-worthiness to every vintage. With over {winery.ratings_count.toLocaleString()} enthusiastic reviews from wine lovers across the globe, {winery.name} continues to stand among the most respected icons in world viticulture.
+                  Nestled in the heart of {winery.region_name}, the estate benefits from ideal microclimates and ancient soils that impart distinctive elegance, depth, and age-worthiness to every vintage. {winery.name} continues to stand among the most respected icons in world viticulture.
                 </p>
               </div>
 

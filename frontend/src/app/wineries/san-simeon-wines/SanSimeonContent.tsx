@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Phone, Star } from 'lucide-react';
+import { ExternalLink, Globe, Mountain, Phone } from 'lucide-react';
 
 const images = {
   logo: 'https://images.vivino.com/wineries/5854/logos/-p_FCSxBSQ6GnDykVZwFbQ.png',
@@ -83,12 +83,6 @@ export default function SanSimeonContent() {
 
             <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-stone-600 sm:text-xs">
               <span><strong>15</strong> Wines</span>
-              <span>•</span>
-              <span className="inline-flex items-center gap-1 font-semibold text-stone-900">
-                <Star className="h-3.5 w-3.5 fill-[#1e1e1e] text-[#1e1e1e]" />
-                4.0
-              </span>
-              <span className="text-stone-500">12,289 total ratings</span>
             </div>
 
             <Link

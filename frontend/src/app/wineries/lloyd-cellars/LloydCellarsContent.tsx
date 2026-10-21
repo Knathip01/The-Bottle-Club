@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mail, Mountain, Phone, Star, User } from 'lucide-react';
+import { ExternalLink, Globe, Mail, Mountain, Phone, User } from 'lucide-react';
 
 const images = {
   logo: 'https://images.vivino.com/wineries/36013/logos/QzQxsBqFR52y3k79npGz7w.jpeg',
@@ -83,12 +83,6 @@ export default function LloydCellarsContent() {
 
             <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-stone-600 sm:text-xs">
               <span><strong>9</strong> Wines</span>
-              <span>•</span>
-              <span className="inline-flex items-center gap-1 font-semibold text-stone-900">
-                <Star className="h-3.5 w-3.5 fill-[#1e1e1e] text-[#1e1e1e]" />
-                4.2
-              </span>
-              <span className="text-stone-500">5,702 total ratings</span>
             </div>
 
             <Link

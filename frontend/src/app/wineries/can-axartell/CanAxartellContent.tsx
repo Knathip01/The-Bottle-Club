@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mail, Mountain, Phone, Star } from 'lucide-react';
+import { ExternalLink, Globe, Mail, Mountain, Phone } from 'lucide-react';
 
 const images = {
   logo: 'https://images.vivino.com/wineries/219363/logos/DI6G8wWfT_aLohrMcVE7cg.jpeg',
@@ -80,12 +80,6 @@ export default function CanAxartellContent() {
 
             <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-stone-600 sm:text-xs">
               <span><strong>25</strong> Wines</span>
-              <span>•</span>
-              <span className="inline-flex items-center gap-1 font-semibold text-stone-900">
-                <Star className="h-3.5 w-3.5 fill-[#1e1e1e] text-[#1e1e1e]" />
-                4.0
-              </span>
-              <span className="text-stone-500">7,723 total ratings</span>
             </div>
 
             <Link

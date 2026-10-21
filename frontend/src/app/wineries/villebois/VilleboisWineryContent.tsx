@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Star } from 'lucide-react';
+import { ExternalLink, Globe, Mountain } from 'lucide-react';
 
 const storyBase = 'https://images.vivino.com/misc/sponsorships/204832_jdevillebois/204832_jdevillebois_';
 const stories = [
@@ -68,7 +68,7 @@ export default function VilleboisWineryContent() {
         <aside className="sticky top-3 space-y-2">
           <section className="space-y-2 rounded-md border border-stone-200 bg-white p-2.5 sm:p-4">
             <div className="mx-auto flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-stone-200 sm:mx-0 sm:h-14 sm:w-14"><Image src="https://images.vivino.com/wineries/16123/logos/b8sEtk8RT6WC82CmlJko4A.jpeg" alt="Villebois logo" width={56} height={56} unoptimized /></div>
-            <div><h1 className="text-sm font-bold leading-tight text-[#1e1e1e] sm:text-xl">Villebois</h1><VerifiedBadge/><div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>30</b> Wines</span><span>•</span><span className="inline-flex items-center gap-1"><Star size={12} className="fill-amber-500 text-amber-500"/><b>3.8</b></span><span className="hidden sm:inline">15,590 total ratings</span><span className="sm:hidden">15,590 ratings</span></div></div>
+            <div><h1 className="text-sm font-bold leading-tight text-[#1e1e1e] sm:text-xl">Villebois</h1><VerifiedBadge/><div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>30</b> Wines</span></div></div>
             <Link href="/search?q=Villebois" className="block rounded-full bg-[#1e1e1e] px-2 py-2 text-center text-[10px] font-bold text-white hover:bg-black sm:text-xs">View wines</Link>
             <div className="divide-y divide-stone-200 rounded-md border border-stone-200">
               <Row label="Country" value={<Link href="/product?country=France" className="hover:underline">France</Link>} icon={<span>🇫🇷</span>}/>

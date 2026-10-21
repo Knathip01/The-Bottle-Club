@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Landmark, Mail, Mountain, Phone, Star } from 'lucide-react';
+import { ExternalLink, Globe, Landmark, Mail, Mountain, Phone } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/163142/logos/ZpmLRq59RleWKGtB1A44mw_500x500.jpeg',
@@ -68,13 +68,6 @@ export default function MayorDeCastillaContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>14</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>3.5</b>
-                </span>
-                <span className="hidden sm:inline">24,048 total ratings</span>
-                <span className="sm:hidden">24,048 ratings</span>
               </div>
             </div>
             <Link

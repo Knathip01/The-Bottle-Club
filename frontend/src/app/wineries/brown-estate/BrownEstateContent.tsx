@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Landmark, Mail, Mountain, Phone, Star, User } from 'lucide-react';
+import { ExternalLink, Globe, Landmark, Mail, Mountain, Phone, User } from 'lucide-react';
 
 const images = {
   logo: 'https://images.vivino.com/wineries/11306/logos/HdDYM5J7SimDv3fDWZwhow.png',
@@ -82,12 +82,6 @@ export default function BrownEstateContent() {
 
             <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-stone-600 sm:text-xs">
               <span><strong>45</strong> Wines</span>
-              <span>•</span>
-              <span className="inline-flex items-center gap-1 font-semibold text-stone-900">
-                <Star className="h-3.5 w-3.5 fill-[#1e1e1e] text-[#1e1e1e]" />
-                4.3
-              </span>
-              <span className="text-stone-500">10,720 total ratings</span>
             </div>
 
             <Link

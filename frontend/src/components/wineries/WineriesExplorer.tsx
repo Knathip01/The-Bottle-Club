@@ -36,41 +36,6 @@ function VivinoPartnerBadge() {
   );
 }
 
-// Vivino Star Rating Icons Component
-function FilterStars({ score }: { score: number }) {
-  // score is 4.2, 3.8, or 3.6
-  const stars = [1, 2, 3, 4, 5];
-  return (
-    <div
-      role="img"
-      aria-label={`Rated ${score} stars`}
-      className="rating-module__rating--1E0Fn filterByRating__rating--1B51-"
-      style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}
-    >
-      {stars.map((starIdx) => {
-        const fillAmount = Math.max(0, Math.min(1, score - (starIdx - 1)));
-        const gradId = `starGrad_${score}_${starIdx}`;
-
-        return (
-          <svg key={starIdx} width="17" height="17" viewBox="0 0 24 24" fill={`url(#${gradId})`} stroke="#e6a100" strokeWidth="0.5">
-            <defs>
-              <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset={`${fillAmount * 100}%`} stopColor="#e6a100" />
-                <stop offset={`${fillAmount * 100}%`} stopColor="#d1d5db" />
-              </linearGradient>
-            </defs>
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="m11 1 3.09 6.26L21 8.27l-5 4.87 1.18 6.88L11 16.77l-6.18 3.25L6 13.14 1 8.27l6.91-1.01L11 1Z"
-            />
-          </svg>
-        );
-      })}
-    </div>
-  );
-}
-
 const ALLOWED_COUNTRY_CODES = ['fr', 'it', 'es', 'us', 'au', 'de'];
 const addedCountryListings = [...SPANISH_WINERY_LISTINGS, ...UNITED_STATES_WINERY_LISTINGS, ...AUSTRALIAN_WINERY_LISTINGS];
 const addedListingsBySlug = new Map(addedCountryListings.map((winery) => [winery.seo_name, winery]));
@@ -107,7 +72,6 @@ export default function WineriesExplorer() {
   const initialPage = pageParam ? parseInt(pageParam, 10) || 1 : 1;
 
   // Filter States
-  const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [selectedCountries, setSelectedCountries] = useState<string[]>(
     initialCountry ? [initialCountry.toLowerCase()] : []
   );
@@ -116,7 +80,6 @@ export default function WineriesExplorer() {
 
   // Expand / collapse section states
   const [expandedSections, setExpandedSections] = useState({
-    rating: true,
     countries: true,
   });
 
@@ -175,11 +138,6 @@ export default function WineriesExplorer() {
     const list = WINERIES_EXPLORER_DATA.filter((winery) => {
       // Must belong to one of the 6 allowed countries
       if (!ALLOWED_COUNTRY_CODES.includes(winery.country_code.toLowerCase())) {
-        return false;
-      }
-
-      // Rating filter
-      if (selectedRating !== null && winery.ratings_average < selectedRating) {
         return false;
       }
 
@@ -316,7 +274,6 @@ export default function WineriesExplorer() {
 
     return list;
   }, [
-    selectedRating,
     selectedCountries,
   ]);
 
@@ -343,181 +300,8 @@ export default function WineriesExplorer() {
         {/* ========================================================= */}
         <div className="MuiGrid2-root MuiGrid2-direction-xs-row MuiGrid2-grid-xs-12 MuiGrid2-grid-lg-4 vivino-mui-12z04l9">
           <div className="filters-module__filters--172A0">
-            {/* Results count */}
-            {/* Vivino average rating filter */}
-            <div className="filterByRating__filterByRating--3ah2K filters-module__filterFirst--2uW4C">
-              <fieldset className="filterByRating__inner--1bMg8" data-qa="filterByRating">
-                <legend
-                  className="filterByRating__header--2zOvS filterByRating__toggleHeader--1cREv"
-                  role="button"
-                  tabIndex={0}
-                  aria-controls="filter-content"
-                  aria-expanded={expandedSections.rating}
-                  data-testid="filter-toggle-button"
-                  onClick={() => toggleSection('rating')}
-                >
-                  <div className="filterByRating__headingContainer--3zRzs">
-                    <h5 className="MuiTypography-root MuiTypography-body1 filterByRating__heading--lW1CC vivino-mui-1g0v4f0-titleExtraLarge">
-                      TheBottleClub average rating
-                    </h5>
-                    <svg
-                      className={`MuiSvgIcon-root MuiSvgIcon-fontSizeMedium _3sn-K filterByRating__chevron--2l9y1 ${
-                        expandedSections.rating ? 'filterByRating__expanded--2AUDj' : ''
-                      } vivino-mui-vubbuv`}
-                      focusable="false"
-                      aria-hidden="true"
-                      viewBox="0 0 24 24"
-                      width="24"
-                      height="24"
-                    >
-                      <path
-                        fill="currentColor"
-                        fillRule="evenodd"
-                        stroke="currentColor"
-                        strokeWidth="1"
-                        strokeLinecap="round"
-                        strokeLinejoin="bevel"
-                        d="M12 16.209a.502.502 0 0 1-.354-.146l-7-7a.502.502 0 0 1 .708-.709L12 15.002l6.646-6.648a.502.502 0 0 1 .708.709l-7 7a.502.502 0 0 1-.354.146"
-                      ></path>
-                    </svg>
-                  </div>
-                </legend>
-
-                <div
-                  id="filter-content"
-                  className={`filterByRating__toggleContainer--3t9RO ${
-                    expandedSections.rating ? '' : 'filterByRating__hidden--2arlm'
-                  }`}
-                  aria-hidden={!expandedSections.rating}
-                >
-                    {/* 4.2+ */}
-                    <label
-                      className="filterByRating__item--acHhz"
-                      onClick={() => {
-                        setSelectedRating(selectedRating === 4.2 ? null : 4.2);
-                        setCurrentPage(1);
-                      }}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <label className="MuiFormControlLabel-root MuiFormControlLabel-labelPlacementEnd vivino-mui-1dglx7f-root">
-                        <span
-                          className={`MuiButtonBase-root PrivateSwitchBase-root MuiRadio-root MuiRadio-colorDefault ${
-                            selectedRating === 4.2 ? 'Mui-checked vivino-mui-1tbcd9h-root-root-checked-root' : 'vivino-mui-dimxrt-root-root-root'
-                          }`}
-                        >
-                          <input
-                            className="PrivateSwitchBase-input vivino-mui-1m9pwf3"
-                            id="4.2"
-                            name="rating"
-                            type="radio"
-                            checked={selectedRating === 4.2}
-                            readOnly
-                            value="4.2"
-                          />
-                        </span>
-                        <span className="MuiTypography-root MuiTypography-body1 MuiFormControlLabel-label vivino-mui-22-label-ref vivino-mui-kpdhrk-label"></span>
-                      </label>
-                      <FilterStars score={4.2} />
-                      <div className="filterByRating__ratingText--3XmLz">4.2+</div>
-                    </label>
-
-                    {/* 3.8+ */}
-                    <label
-                      className="filterByRating__item--acHhz"
-                      onClick={() => {
-                        setSelectedRating(selectedRating === 3.8 ? null : 3.8);
-                        setCurrentPage(1);
-                      }}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <label className="MuiFormControlLabel-root MuiFormControlLabel-labelPlacementEnd vivino-mui-1dglx7f-root">
-                        <span
-                          className={`MuiButtonBase-root PrivateSwitchBase-root MuiRadio-root MuiRadio-colorDefault ${
-                            selectedRating === 3.8 ? 'Mui-checked vivino-mui-1tbcd9h-root-root-checked-root' : 'vivino-mui-dimxrt-root-root-root'
-                          }`}
-                        >
-                          <input
-                            className="PrivateSwitchBase-input vivino-mui-1m9pwf3"
-                            id="3.8"
-                            name="rating"
-                            type="radio"
-                            checked={selectedRating === 3.8}
-                            readOnly
-                            value="3.8"
-                          />
-                        </span>
-                        <span className="MuiTypography-root MuiTypography-body1 MuiFormControlLabel-label vivino-mui-22-label-ref vivino-mui-kpdhrk-label"></span>
-                      </label>
-                      <FilterStars score={3.8} />
-                      <div className="filterByRating__ratingText--3XmLz">3.8+</div>
-                    </label>
-
-                    {/* 3.6+ */}
-                    <label
-                      className="filterByRating__item--acHhz"
-                      onClick={() => {
-                        setSelectedRating(selectedRating === 3.6 ? null : 3.6);
-                        setCurrentPage(1);
-                      }}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <label className="MuiFormControlLabel-root MuiFormControlLabel-labelPlacementEnd vivino-mui-1dglx7f-root">
-                        <span
-                          className={`MuiButtonBase-root PrivateSwitchBase-root MuiRadio-root MuiRadio-colorDefault ${
-                            selectedRating === 3.6 ? 'Mui-checked vivino-mui-1tbcd9h-root-root-checked-root' : 'vivino-mui-dimxrt-root-root-root'
-                          }`}
-                        >
-                          <input
-                            className="PrivateSwitchBase-input vivino-mui-1m9pwf3"
-                            id="3.6"
-                            name="rating"
-                            type="radio"
-                            checked={selectedRating === 3.6}
-                            readOnly
-                            value="3.6"
-                          />
-                        </span>
-                        <span className="MuiTypography-root MuiTypography-body1 MuiFormControlLabel-label vivino-mui-22-label-ref vivino-mui-kpdhrk-label"></span>
-                      </label>
-                      <FilterStars score={3.6} />
-                      <div className="filterByRating__ratingText--3XmLz">3.6+</div>
-                    </label>
-
-                    {/* Any rating */}
-                    <label
-                      className="filterByRating__item--acHhz"
-                      onClick={() => {
-                        setSelectedRating(null);
-                        setCurrentPage(1);
-                      }}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <label className="MuiFormControlLabel-root MuiFormControlLabel-labelPlacementEnd vivino-mui-1dglx7f-root">
-                        <span
-                          className={`MuiButtonBase-root PrivateSwitchBase-root MuiRadio-root MuiRadio-colorDefault ${
-                            selectedRating === null ? 'Mui-checked vivino-mui-1tbcd9h-root-root-checked-root' : 'vivino-mui-dimxrt-root-root-root'
-                          }`}
-                        >
-                          <input
-                            className="PrivateSwitchBase-input vivino-mui-1m9pwf3"
-                            id="1"
-                            name="rating"
-                            type="radio"
-                            checked={selectedRating === null}
-                            readOnly
-                            value="1"
-                          />
-                        </span>
-                        <span className="MuiTypography-root MuiTypography-body1 MuiFormControlLabel-label vivino-mui-22-label-ref vivino-mui-kpdhrk-label"></span>
-                      </label>
-                      <div className="filterByRating__superlative--2vla9">Any rating</div>
-                    </label>
-                  </div>
-              </fieldset>
-            </div>
-
-            {/* 3. Countries filter */}
-            <div className="FilterCheckboxes__filterCheckboxes--1-QUm filters-module__filter--xDduJ">
+            {/* Countries filter */}
+            <div className="FilterCheckboxes__filterCheckboxes--1-QUm filters-module__filterFirst--2uW4C">
               <fieldset className="FilterCheckboxes__inner--39kxz" name="countries">
                 <legend
                   className="FilterCheckboxes__header--2XC75 FilterCheckboxes__toggleHeader--3gtdF"
@@ -790,32 +574,7 @@ export default function WineriesExplorer() {
                             </div>
                           </div>
                         </div>
-                        <div>
-                          <div className="wineryStats-module__wineryStats--FK76u wineryStats-module__horizontal--3TNDO">
-                            <div className="wineryStats-module__ratingWrapper--18bfQ">
-                              <svg
-                                className="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium vivino-mui-vubbuv"
-                                focusable="false"
-                                aria-hidden="true"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                              >
-                                <path
-                                  fill="#BA1628"
-                                  stroke="#BA1628"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="1.5"
-                                  d="m11 1 3.09 6.26L21 8.27l-5 4.87 1.18 6.88L11 16.77l-6.18 3.25L6 13.14 1 8.27l6.91-1.01L11 1Z"
-                                ></path>
-                              </svg>
-                              <p className="MuiTypography-root MuiTypography-body1 wineryStats-module__ratingText--teYL1 vivino-mui-dd3lp3-bodyMedium">
-                                <strong>{winery.ratings_average.toFixed(1)}</strong>{' '}
-                                {winery.ratings_count.toLocaleString()} total ratings
-                              </p>
-                            </div>
-                          </div>
-                        </div>
+
                       </div>
                       <div className="wineryCard-module__ctas--3_0U8">
                         <button

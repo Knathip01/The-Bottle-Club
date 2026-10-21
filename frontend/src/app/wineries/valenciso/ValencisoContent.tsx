@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mail, Mountain, Phone, Star, Target } from 'lucide-react';
+import { ExternalLink, Globe, Mail, Mountain, Phone, Target } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/5415/logos/G6AAn1adSLShTyV62qAaJA_500x500.jpeg',
@@ -70,13 +70,6 @@ export default function ValencisoContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>8</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>4.1</b>
-                </span>
-                <span className="hidden sm:inline">24,755 total ratings</span>
-                <span className="sm:hidden">24,755 ratings</span>
               </div>
             </div>
             <Link

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Phone, Mail, Star } from 'lucide-react';
+import { ExternalLink, Globe, Mountain, Phone, Mail } from 'lucide-react';
 
 const storyBase = 'https://images.vivino.com/misc/sponsorships/79743_BB/79743_BB_';
 const intro = 'Domaine de la Borie Blanche is one of six family estates in Maison Lorgeril, an independent Languedoc wine family with more than 400 years of history. Nicolas and Miren de Lorgeril acquired the estate in 1999. It sits in the heart of the La Livinière appellation, on the foothills of the Montagne Noire.';
@@ -46,7 +46,7 @@ export default function DomaineBorieBlancheWineryContent() {
         <aside className="sticky top-3 space-y-2">
           <section className="space-y-2 rounded-md border border-stone-200 bg-white p-2.5 sm:p-4">
             <div className="mx-auto flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-stone-200 sm:mx-0 sm:h-14 sm:w-14"><Image src="https://images.vivino.com/wineries/79743/logos/avaF4Es6ReeMjeNNVBvMjg.jpeg" alt="Domaine de la Borie Blanche logo" width={56} height={56} unoptimized /></div>
-            <div><h1 className="text-sm font-bold leading-tight text-[#1e1e1e] sm:text-xl">Domaine de la Borie Blanche</h1><VerifiedBadge/><div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>5</b> Wines</span><span>•</span><span className="inline-flex items-center gap-1"><Star size={12} className="fill-amber-500 text-amber-500"/><b>3.8</b></span><span className="hidden sm:inline">1,632 total ratings</span><span className="sm:hidden">1,632 ratings</span></div></div>
+            <div><h1 className="text-sm font-bold leading-tight text-[#1e1e1e] sm:text-xl">Domaine de la Borie Blanche</h1><VerifiedBadge/><div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>5</b> Wines</span></div></div>
             <Link href="/search?q=Domaine%20de%20la%20Borie%20Blanche" className="block rounded-full bg-[#1e1e1e] px-2 py-2 text-center text-[10px] font-bold text-white hover:bg-black sm:text-xs">View wines</Link>
             <div className="divide-y divide-stone-200 rounded-md border border-stone-200">
               <Row label="Country" value={<Link href="/product?country=France" className="hover:underline">France</Link>} icon={<span>🇫🇷</span>}/>

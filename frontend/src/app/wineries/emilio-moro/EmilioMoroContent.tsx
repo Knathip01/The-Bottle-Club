@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Landmark, Mail, Mountain, Phone, Star } from 'lucide-react';
+import { ExternalLink, Globe, Landmark, Mail, Mountain, Phone } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/1757/logos/Gj_dfpP2TgKZkmgL9d-mtQ_500x500.jpeg',
@@ -68,13 +68,6 @@ export default function EmilioMoroContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>17</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>4.1</b>
-                </span>
-                <span className="hidden sm:inline">241,910 total ratings</span>
-                <span className="sm:hidden">241,910 ratings</span>
               </div>
             </div>
             <Link

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mail, Mountain, Phone, Star, Target } from 'lucide-react';
+import { ExternalLink, Globe, Mail, Mountain, Phone, Target } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/12086/logos/sZAwW6_nRSmaGdcWGPJ1kg_500x500.jpeg',
@@ -68,13 +68,6 @@ export default function AltoMoncayoContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>10</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>4.3</b>
-                </span>
-                <span className="hidden sm:inline">42,895 total ratings</span>
-                <span className="sm:hidden">42,895 ratings</span>
               </div>
             </div>
             <Link

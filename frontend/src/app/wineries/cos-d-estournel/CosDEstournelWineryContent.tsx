@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Star } from 'lucide-react';
+import { ExternalLink, Globe, Mountain } from 'lucide-react';
 
 const image1 = 'https://images.vivino.com/misc/sponsorships/10864_CosdEstournel/cos-destournel1_1200x750.jpg';
 const image2 = 'https://images.vivino.com/misc/sponsorships/10864_CosdEstournel/cos-destournel2_1500x1001.jpg';
@@ -25,7 +25,7 @@ export default function CosDEstournelWineryContent() {
             <div>
               <h1 className="text-xs font-bold leading-tight text-[#1e1e1e] sm:text-xl">Cos d&apos;Estournel</h1>
               <VerifiedBadge/>
-              <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>10</b> Wines</span><span>•</span><span className="inline-flex items-center gap-1"><Star size={12} className="fill-amber-500 text-amber-500"/><b>4.3</b></span><span className="hidden sm:inline">88,968 total ratings</span><span className="sm:hidden">88,968 ratings</span></div>
+              <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>10</b> Wines</span></div>
             </div>
             <Link href="/search?q=Cos+d%27Estournel" className="block rounded-full bg-[#1e1e1e] px-2 py-2 text-center text-[10px] font-bold text-white hover:bg-black sm:text-xs">View wines</Link>
             <div className="divide-y divide-stone-200 rounded-md border border-stone-200">

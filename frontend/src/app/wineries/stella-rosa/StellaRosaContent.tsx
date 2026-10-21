@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Star, Phone } from 'lucide-react';
+import { ExternalLink, Globe, Mountain, Phone } from 'lucide-react';
 
 const images = {
   hero: 'https://thumbs.vivino.com/wineries/sponsorship_cards/-3V9wM5GQ7uvODN_nVsKOw_2560x1520.jpeg',
@@ -67,13 +67,6 @@ export default function StellaRosaContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>61</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>4.0</b>
-                </span>
-                <span className="hidden sm:inline">48,689 total ratings</span>
-                <span className="sm:hidden">48,689 ratings</span>
               </div>
             </div>
             <Link

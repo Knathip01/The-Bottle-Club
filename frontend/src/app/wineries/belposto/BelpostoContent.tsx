@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Star } from 'lucide-react';
+import { ExternalLink, Globe, Mountain } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/231863/logos/350Ppbb1TsizH82wKSbWAA_500x500.jpeg',
@@ -68,13 +68,6 @@ export default function BelpostoContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>6</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>3.8</b>
-                </span>
-                <span className="hidden sm:inline">4,570 total ratings</span>
-                <span className="sm:hidden">4,570 ratings</span>
               </div>
             </div>
             <Link

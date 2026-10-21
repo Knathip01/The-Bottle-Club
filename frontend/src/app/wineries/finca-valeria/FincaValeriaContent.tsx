@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Landmark, Mail, Mountain, Phone, Star } from 'lucide-react';
+import { ExternalLink, Globe, Landmark, Mail, Mountain, Phone } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/322432/logos/CbQvctRqSE-SfU3zuVnvzw_500x500.png',
@@ -79,12 +79,6 @@ export default function FincaValeriaContent() {
 
             <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-stone-600 sm:text-xs">
               <span><strong>2</strong> Wines</span>
-              <span>•</span>
-              <span className="inline-flex items-center gap-1 font-semibold text-stone-900">
-                <Star className="h-3.5 w-3.5 fill-[#1e1e1e] text-[#1e1e1e]" />
-                4.1
-              </span>
-              <span className="text-stone-500">119 total ratings</span>
             </div>
 
             <Link

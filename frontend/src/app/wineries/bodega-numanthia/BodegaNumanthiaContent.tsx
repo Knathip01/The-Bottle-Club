@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Landmark, Mail, Mountain, Phone, Star } from 'lucide-react';
+import { ExternalLink, Globe, Landmark, Mail, Mountain, Phone } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/20866/logos/rPPQQXz8QkKXv4pBVX2gdw_500x500.jpeg',
@@ -72,13 +72,6 @@ export default function BodegaNumanthiaContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>4</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>4.2</b>
-                </span>
-                <span className="hidden sm:inline">53,507 total ratings</span>
-                <span className="sm:hidden">53,507 ratings</span>
               </div>
             </div>
             <Link

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Shield, Star } from 'lucide-react';
+import { ExternalLink, Globe, Mountain, Shield } from 'lucide-react';
 
 const heroImage = 'https://www.vivino.com/images/wineries/wineglasses.webp';
 
@@ -37,13 +37,6 @@ export default function LaPiemontinaContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>13</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>3.9</b>
-                </span>
-                <span className="hidden sm:inline">857 total ratings</span>
-                <span className="sm:hidden">857 ratings</span>
               </div>
             </div>
             <Link

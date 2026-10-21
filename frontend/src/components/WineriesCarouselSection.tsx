@@ -3,7 +3,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight, Shield, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Shield } from 'lucide-react';
 import { WINERIES_DATA, type Winery } from '@/data/wineriesData';
 
 // Featured Wineries matching user's requested order and premier global estates
@@ -207,16 +207,7 @@ export default function WineriesCarouselSection() {
                           {winery.wines_count} Wines
                         </p>
 
-                        {/* Rating & Ratings count */}
-                        <div className="mt-1 flex items-center gap-1.5 text-xs text-stone-700">
-                          <span className="inline-flex items-center gap-0.5 font-bold text-stone-900">
-                            <Star className="w-3.5 h-3.5 fill-stone-900 text-stone-900" />
-                            {winery.ratings_average.toFixed(1)}
-                          </span>
-                          <span className="text-stone-500">
-                            {winery.ratings_count.toLocaleString()} total ratings
-                          </span>
-                        </div>
+
                       </div>
 
                       {/* CTA Button: Discover the Winery */}

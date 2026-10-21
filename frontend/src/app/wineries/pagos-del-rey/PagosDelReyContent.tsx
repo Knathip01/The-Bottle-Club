@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Landmark, Mail, Mountain, Star, Target } from 'lucide-react';
+import { ExternalLink, Globe, Landmark, Mail, Mountain, Target } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/12833/logos/BAO_he-zSFC37tCSTOf4Zg_500x500.jpeg',
@@ -68,13 +68,6 @@ export default function PagosDelReyContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>143</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>3.8</b>
-                </span>
-                <span className="hidden sm:inline">190,037 total ratings</span>
-                <span className="sm:hidden">190,037 ratings</span>
               </div>
             </div>
             <Link

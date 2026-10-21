@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Phone, Star, Target } from 'lucide-react';
+import { ExternalLink, Globe, Mountain, Phone, Target } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/4848/logos/j9jG9DAbSZylcbSYQKVsQA_500x500.jpeg',
@@ -69,13 +69,6 @@ export default function ProtosContent() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs">
                 <span><b>25</b> Wines</span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1">
-                  <Star size={12} className="fill-amber-500 text-amber-500" />
-                  <b>4.0</b>
-                </span>
-                <span className="hidden sm:inline">201,343 total ratings</span>
-                <span className="sm:hidden">201,343 ratings</span>
               </div>
             </div>
             <Link
