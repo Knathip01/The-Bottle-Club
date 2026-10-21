@@ -4,14 +4,15 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const MODEL = 'gemini-2.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
-const WINE_SCAN_PROMPT = `You are a professional sommelier and wine expert. Analyze this wine bottle label image and extract information from it.
+const WINE_SCAN_PROMPT = `You are a professional sommelier and wine authentication expert. Analyze this wine bottle label image and extract information from it.
 
-If the image does NOT show a wine bottle label, or you cannot identify it as wine, respond ONLY with this exact JSON:
+CRITICAL AUTHENTICITY REQUIREMENT: The image MUST clearly depict a genuine wine bottle or wine label (grape wine, champagne, prosecco, sparkling wine, dessert wine, fortified wine). If the image does NOT show a genuine wine bottle (e.g. beer, soda, soft drink, liquor/whiskey, tea, water, food, or non-wine object), or you cannot identify it as genuine wine, respond ONLY with this exact JSON:
 {"error":"not_wine"}
 
 If it IS a wine bottle, respond ONLY with a valid JSON object (no markdown, no code block, no explanation) with EXACTLY these fields:
 {
   "name": "full wine name including producer and label",
+  "producer": "name of the winery / producer / estate / chateau / bodega, e.g. \"Dom Pérignon\" or \"Viña Loriente\"",
   "vintage": "year as string, e.g. \\"2018\\"",
   "country": "country of origin in English, e.g. \\"France\\"",
   "country_th": "country of origin in Thai, e.g. \\"ฝรั่งเศส\\"",
