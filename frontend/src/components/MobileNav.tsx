@@ -62,8 +62,9 @@ export default function MobileNav() {
             return (
               <button
                 key={idx}
+                type="button"
                 onClick={handleScanInit}
-                className="relative -top-7 flex flex-col items-center justify-center cursor-pointer group"
+                className="relative -top-7 z-50 flex flex-col items-center justify-center cursor-pointer group"
                 aria-label="AI Wine Scanner"
               >
                 <div className="relative">

@@ -7,7 +7,7 @@ import Webcam from 'react-webcam';
 import {
   Camera, Upload, Sparkles, X, RotateCcw, Wine, ShieldCheck,
   AlertTriangle, ExternalLink, MapPin, CalendarDays, Globe, Star,
-  CheckCircle2, ArrowRight, ShieldAlert, Award, Zap, Compass, RefreshCw
+  CheckCircle2, ShieldAlert, RefreshCw, FileUp
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import type { Winery } from '@/data/wineriesData';
@@ -69,12 +69,12 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const [telemetryText, setTelemetryText] = useState('READY TO SCAN');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [cityImageUrl, setCityImageUrl] = useState<string | null>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const webcamRef = useRef<Webcam>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Switch camera between front / back
+  // Switch camera facing mode
   const toggleCamera = () => {
     setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
   };
@@ -84,7 +84,6 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
     setScanResult(null);
     setScanError(null);
     setPreviewImage(null);
-    setCityImageUrl(null);
     setIsScanning(false);
     setTelemetryText('READY TO SCAN');
   };
@@ -139,10 +138,6 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
       const result = data as WineScanApiResponse;
       setScanResult(result);
       setTelemetryText('NEURAL SCAN COMPLETE ✓');
-
-      if (result.city_image_query) {
-        setCityImageUrl(`https://images.unsplash.com/photo-1506354666786-959d6d497f1a?w=800&h=450&fit=crop&q=80`);
-      }
     } catch {
       setScanError({
         title: 'การเชื่อมต่อขัดข้อง',
@@ -154,25 +149,26 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
     }
   }, []);
 
-  // Capture frame from webcam
+  // Capture frame from webcam OR trigger file upload fallback
   const handleCapture = useCallback(() => {
+    if (isScanning) return;
+
     if (webcamRef.current) {
-      const imageSrc = webcamRef.current.getScreenshot();
-      if (imageSrc) {
-        runScan(imageSrc);
-      } else {
-        setScanError({
-          title: 'ไม่สามารถเปิดกล้องได้',
-          message: 'กรุณาอนุญาตการเข้าถึงกล้องบนอุปกรณ์ของคุณ หรือใช้วิธีอัปโหลดรูปภาพ',
-        });
+      try {
+        const imageSrc = webcamRef.current.getScreenshot();
+        if (imageSrc) {
+          runScan(imageSrc);
+          return;
+        }
+      } catch (err) {
+        console.warn('Webcam getScreenshot failed:', err);
       }
-    } else {
-      setScanError({
-        title: 'ไม่พบกล้อง',
-        message: 'กรุณาอัปโหลดรูปภาพฉลากขวดไวน์แทนการถ่ายรูป',
-      });
     }
-  }, [webcamRef, runScan]);
+
+    // Fallback: If webcam is not ready, has no stream, or is disabled,
+    // immediately trigger native photo / file selector!
+    fileInputRef.current?.click();
+  }, [webcamRef, runScan, isScanning]);
 
   // Upload file from camera roll / files
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -185,11 +181,27 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
       };
       reader.readAsDataURL(file);
     }
+    // reset input so same file can be re-selected if desired
+    e.target.value = '';
+  };
+
+  // Drag and drop image file directly
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const imageSrc = reader.result as string;
+        runScan(imageSrc);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Quick 1-click test samples (Demonstration)
   const handleSampleTest = async (sampleType: 'vina_loriente' | 'chateau_margaux' | 'non_wine') => {
-    // Generate a quick base64 sample representation or simulate prompt
     const canvas = document.createElement('canvas');
     canvas.width = 600;
     canvas.height = 800;
@@ -197,16 +209,14 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
     if (!ctx) return;
 
     if (sampleType === 'non_wine') {
-      // Draw a fake soda can / orange drink
-      ctx.fillStyle = '#f97316';
+      ctx.fillStyle = '#ea580c';
       ctx.fillRect(0, 0, 600, 800);
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 48px sans-serif';
-      ctx.fillText('ORANGE SODA CAN', 80, 400);
-      ctx.font = '24px sans-serif';
-      ctx.fillText('Non-Alcoholic Soft Drink 330ml', 110, 460);
+      ctx.font = 'bold 44px sans-serif';
+      ctx.fillText('ORANGE SPARKLING SODA', 40, 380);
+      ctx.font = '22px sans-serif';
+      ctx.fillText('Soft Drink / Carbonated Beverage 330ml', 80, 440);
     } else if (sampleType === 'vina_loriente') {
-      // Draw Viña Loriente Tempranillo label
       ctx.fillStyle = '#1c1917';
       ctx.fillRect(0, 0, 600, 800);
       ctx.fillStyle = '#d4af37';
@@ -220,7 +230,6 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
       ctx.fillText('Santa Ynez Valley, California', 170, 430);
       ctx.fillText('Estate Bottled - 14.2% Vol', 185, 470);
     } else {
-      // Draw Château Margaux label
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(0, 0, 600, 800);
       ctx.fillStyle = '#fbbf24';
@@ -238,14 +247,19 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
     runScan(dataUrl);
   };
 
+  // Robust video constraints using 'ideal' to prevent OverconstrainedError on PC/Mac webcams
   const videoConstraints = {
-    width: 720,
-    height: 1280,
-    facingMode,
+    facingMode: facingMode === 'environment' ? { ideal: 'environment' } : 'user',
+    width: { ideal: 1280 },
+    height: { ideal: 720 },
   };
 
   return (
-    <div className={`relative w-full ${isModal ? 'fixed inset-0 z-50 overflow-y-auto' : 'min-h-[85vh]'} bg-[#0a0806] text-white flex flex-col items-center justify-start select-none`}>
+    <div
+      className={`relative w-full ${
+        isModal ? 'fixed inset-0 z-[70] overflow-y-auto' : 'min-h-[85vh]'
+      } bg-[#0a0806] text-white flex flex-col items-center justify-start select-none`}
+    >
       {/* Background Graphic Pattern Layer */}
       <div
         className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-20 mix-blend-screen"
@@ -277,13 +291,14 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
               </span>
             </div>
             <p className="text-[11px] text-amber-200/70 font-medium">
-              สแกนขวดไวน์แท้ และเชื่อมโยงข้อมูลโรงไวน์พันธมิตรจาก /wineries
+              สแกนฉลากขวดไวน์แท้ และดึงข้อมูลโรงไวน์ที่ตรงกันจาก /wineries
             </p>
           </div>
         </div>
 
         {onClose && (
           <button
+            type="button"
             onClick={onClose}
             className="p-2.5 bg-stone-900/80 hover:bg-stone-800 text-amber-300 hover:text-white rounded-2xl border border-amber-400/30 backdrop-blur-2xl transition cursor-pointer active:scale-95 shadow-lg"
             aria-label="Close Scanner"
@@ -292,6 +307,16 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
           </button>
         )}
       </div>
+
+      {/* Hidden file input for native camera / gallery upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleFileUpload}
+      />
 
       {/* Main Content Area */}
       <div className="relative z-10 w-full max-w-4xl px-4 sm:px-6 py-4 flex-1 flex flex-col items-center justify-center">
@@ -326,16 +351,18 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
+                type="button"
                 onClick={resetScan}
                 className="px-8 py-4 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-stone-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-[0_10px_25px_rgba(245,158,11,0.4)] flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition"
               >
                 <RotateCcw size={16} /> สแกนใหม่อีกครั้ง
               </button>
               <button
-                onClick={() => router.push('/wineries')}
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
                 className="px-6 py-4 bg-stone-900 border border-amber-400/30 text-amber-200 font-bold text-xs uppercase tracking-wider rounded-2xl hover:bg-stone-800 flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition"
               >
-                <Compass size={16} /> ดูโรงไวน์ที่รองรับทั้งหมด
+                <FileUp size={16} /> เลือกรูปภาพจากเครื่อง
               </button>
             </div>
           </div>
@@ -555,12 +582,14 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
             {/* Bottom Actions */}
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <button
+                type="button"
                 onClick={() => router.push('/product')}
                 className="flex-1 py-4 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-stone-950 font-black uppercase tracking-wider text-xs rounded-2xl shadow-lg flex items-center justify-center gap-2 cursor-pointer transition active:scale-95"
               >
                 <Wine size={16} /> สั่งซื้อไวน์ในคลังสินค้า The Bottle Club
               </button>
               <button
+                type="button"
                 onClick={resetScan}
                 className="py-4 px-6 bg-stone-900 border border-amber-400/30 text-amber-200 hover:text-white font-bold text-xs uppercase tracking-wider rounded-2xl hover:bg-stone-800 flex items-center justify-center gap-2 cursor-pointer transition active:scale-95"
               >
@@ -573,8 +602,14 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
           <div className="w-full flex flex-col items-center space-y-5 my-auto">
 
             {/* Viewfinder Card */}
-            <div className="relative w-full max-w-sm sm:max-w-md aspect-[3/4] rounded-[2.5rem] overflow-hidden border-2 border-amber-400/40 bg-stone-950 shadow-[0_25px_70px_rgba(0,0,0,0.95),0_0_50px_rgba(245,158,11,0.2)]">
-
+            <div
+              onDragOver={(e) => { e.preventDefault(); setIsDraggingOver(true); }}
+              onDragLeave={() => setIsDraggingOver(false)}
+              onDrop={handleDrop}
+              className={`relative w-full max-w-sm sm:max-w-md aspect-[3/4] rounded-[2.5rem] overflow-hidden border-2 ${
+                isDraggingOver ? 'border-amber-400 scale-[1.02] shadow-[0_0_50px_rgba(245,158,11,0.6)]' : 'border-amber-400/40'
+              } bg-stone-950 shadow-[0_25px_70px_rgba(0,0,0,0.95),0_0_50px_rgba(245,158,11,0.2)] transition-all`}
+            >
               {!cameraError ? (
                 <Webcam
                   audio={false}
@@ -591,20 +626,20 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
                   </div>
                   <p className="text-sm text-white font-bold mb-1">กล้องไม่พร้อมใช้งาน</p>
                   <p className="text-xs text-stone-400 leading-relaxed mb-4">
-                    กรุณาอนุญาตการเข้าถึงกล้อง หรืออัปโหลดรูปภาพฉลากขวดไวน์โดยตรง
+                    กดปุ่มเลือกรูปภาพ หรือลากไฟล์ภาพฉลากขวดไวน์มาวางที่นี่ได้ทันที
                   </p>
                   <button
+                    type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-6 py-3 bg-amber-500/20 border border-amber-400/40 text-amber-300 rounded-xl text-xs font-black uppercase tracking-wider hover:bg-amber-500/30 transition cursor-pointer"
+                    className="px-6 py-3.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-stone-950 font-black rounded-xl text-xs uppercase tracking-wider shadow-lg hover:brightness-110 transition cursor-pointer active:scale-95 flex items-center gap-2"
                   >
-                    เลือกรูปภาพจากเครื่อง
+                    <Upload size={16} /> เลือกรูปภาพจากเครื่อง
                   </button>
                 </div>
               )}
 
               {/* Viewfinder HUD Overlays */}
               <div className="absolute inset-0 pointer-events-none z-20">
-                {/* Vignette border */}
                 <div className="absolute inset-0 border-[28px] sm:border-[36px] border-black/55 backdrop-blur-[0.5px]" />
 
                 {/* Top Logo */}
@@ -630,7 +665,7 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
                   </span>
                   <div className={`w-28 h-28 rounded-full border border-amber-400/40 transition-all duration-700 ${isScanning ? 'scale-125 opacity-30' : 'scale-100 opacity-80 animate-pulse shadow-[0_0_20px_rgba(245,158,11,0.25)]'}`} />
                   <span className="text-[9px] font-mono text-amber-300/60 uppercase tracking-widest">
-                    VERIFYING VINTAGE
+                    AUTHENTIC SEAL
                   </span>
                 </div>
 
@@ -648,7 +683,7 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
               </div>
             </div>
 
-            {/* Scan Controls */}
+            {/* Scan Controls Bar */}
             <div className="flex items-center justify-center gap-4 pt-1">
               {/* Camera Flip Button */}
               <button
@@ -666,9 +701,10 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
                 type="button"
                 disabled={isScanning}
                 onClick={handleCapture}
-                className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-600 via-yellow-400 to-amber-300 p-1 shadow-[0_0_40px_rgba(245,158,11,0.65)] active:scale-95 transition cursor-pointer flex items-center justify-center disabled:opacity-50"
+                className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-600 via-yellow-400 to-amber-300 p-1 shadow-[0_0_40px_rgba(245,158,11,0.65)] active:scale-95 transition cursor-pointer flex items-center justify-center disabled:opacity-50 group"
+                aria-label="ถ่ายรูปฉลาก หรือเลือกภาพ"
               >
-                <div className="w-full h-full border-2 border-amber-300/80 rounded-full bg-white flex items-center justify-center shadow-inner overflow-hidden p-2">
+                <div className="w-full h-full border-2 border-amber-300/80 rounded-full bg-white flex items-center justify-center shadow-inner overflow-hidden p-2 group-hover:scale-105 transition-transform">
                   <img
                     src="/logos/bottle-walking-icon.png"
                     alt="Scan Wine"
@@ -687,14 +723,17 @@ export default function WineScannerView({ onClose, isModal = false }: WineScanne
               >
                 <Upload size={20} />
               </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileUpload}
-              />
             </div>
+
+            {/* Clear Text Upload Trigger Button */}
+            <button
+              type="button"
+              disabled={isScanning}
+              onClick={() => fileInputRef.current?.click()}
+              className="text-xs text-amber-300/90 hover:text-white font-bold flex items-center gap-1.5 transition underline cursor-pointer"
+            >
+              <FileUp size={14} /> หรือกดตรงนี้เพื่อเลือกรูปภาพจากเครื่อง
+            </button>
 
             {/* Quick Demonstration Samples for User / Tester */}
             <div className="w-full max-w-md pt-3 border-t border-white/10 flex flex-col items-center">
