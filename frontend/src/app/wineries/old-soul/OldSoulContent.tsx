@@ -102,19 +102,14 @@ export default function OldSoulContent() {
             <Row
               label="Country"
               value={
-                <span className="inline-flex items-center gap-1.5">
+                <Link href="/product?country=United%20States" className="inline-flex items-center gap-1.5 hover:underline">
                   <span className="inline-block h-3.5 w-3.5 overflow-hidden rounded-full border border-stone-200">
                     <span className="block h-full w-full bg-[#3c3b6e] text-center text-[7px] leading-3 text-white">🇺🇸</span>
                   </span>
                   United States
-                </span>
+                </Link>
               }
               icon={<Globe className="h-4 w-4" />}
-            />
-            <Row
-              label="Region"
-              value="Lodi"
-              icon={<Mountain className="h-4 w-4" />}
             />
             <Row
               label="Owned by"

@@ -32,8 +32,7 @@ export default function DeBortoliContent() {
             <div><h1 className="text-sm font-bold leading-tight text-[#1e1e1e] sm:text-xl">De Bortoli</h1><div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#1e1e1e]"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5 14 4v4c0 3.2-3.2 5.7-6 6.5C5.2 13.7 2 11.2 2 8V4l6-2.5Z" fill="#BA1628"/><path d="m5.3 8 1.8 1.8 3.7-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>Verified Partner Winery</div><div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>585</b> Wines</span><span>•</span><span className="inline-flex items-center gap-1"><Star size={12} className="fill-amber-500 text-amber-500"/><b>3.5</b></span><span className="hidden sm:inline">107,041 total ratings</span><span className="sm:hidden">107,041 ratings</span></div></div>
             <Link href="/search?q=De%20Bortoli" className="block rounded-full bg-[#1e1e1e] px-2 py-2 text-center text-[10px] font-bold text-white hover:bg-black sm:text-xs">View wines</Link>
             <div className="divide-y divide-stone-200 rounded-md border border-stone-200">
-              <Row label="Country" value={<a href="https://www.vivino.com/en/explore/countries/australia" className="hover:underline">Australia</a>} icon={<span>🇦🇺</span>} />
-              <Row label="Region" value={<a href="https://www.vivino.com/en/explore/regions/new-south-wales" className="hover:underline">New South Wales</a>} icon={<Mountain size={17} />} />
+              <Row label="Country" value={<Link href="/product?country=Australia" className="hover:underline">Australia</Link>} icon={<span>🇦🇺</span>} />
               <Row label="Owned by" value="De Bortoli Wines" icon={<span className="text-base">◉</span>} />
             </div>
           </section>

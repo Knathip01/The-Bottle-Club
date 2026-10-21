@@ -88,20 +88,9 @@ export default function PlanetaContent() {
               <Row
                 label="Country"
                 value={
-                  <a href="https://www.vivino.com/en/explore/countries/italy" className="hover:underline">
-                    Italy
-                  </a>
+                  <Link href="/product?country=Italy" className="hover:underline">Italy</Link>
                 }
                 icon={<span>🇮🇹</span>}
-              />
-              <Row
-                label="Region"
-                value={
-                  <a href="https://www.vivino.com/en/explore/regions/terre-siciliane" className="hover:underline">
-                    Terre Siciliane
-                  </a>
-                }
-                icon={<Mountain size={17} />}
               />
               <Row label="Winemaker" value="Planeta" icon={<span className="text-base">◉</span>} />
             </div>

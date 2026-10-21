@@ -87,20 +87,9 @@ export default function LuigiBaudanaContent() {
               <Row
                 label="Country"
                 value={
-                  <a href="https://www.vivino.com/en/explore/countries/italy" className="hover:underline">
-                    Italy
-                  </a>
+                  <Link href="/product?country=Italy" className="hover:underline">Italy</Link>
                 }
                 icon={<span>🇮🇹</span>}
-              />
-              <Row
-                label="Region"
-                value={
-                  <a href="https://www.vivino.com/en/explore/regions/langhe" className="hover:underline">
-                    Langhe
-                  </a>
-                }
-                icon={<Mountain size={17} />}
               />
               <Row
                 label="Winemaker"

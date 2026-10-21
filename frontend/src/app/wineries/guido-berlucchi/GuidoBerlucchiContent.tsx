@@ -88,20 +88,9 @@ export default function GuidoBerlucchiContent() {
               <Row
                 label="Country"
                 value={
-                  <a href="https://www.vivino.com/en/explore/countries/italy" className="hover:underline">
-                    Italy
-                  </a>
+                  <Link href="/product?country=Italy" className="hover:underline">Italy</Link>
                 }
                 icon={<span>🇮🇹</span>}
-              />
-              <Row
-                label="Region"
-                value={
-                  <a href="https://www.vivino.com/en/explore/regions/franciacorta" className="hover:underline">
-                    Franciacorta
-                  </a>
-                }
-                icon={<Mountain size={17} />}
               />
               <Row label="Winemaker" value="Berlucchi" icon={<span className="text-base">◉</span>} />
               <Row label="Owned by" value="Berlucchi" icon={<span className="text-base">◉</span>} />

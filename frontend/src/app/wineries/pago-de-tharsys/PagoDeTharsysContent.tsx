@@ -100,19 +100,14 @@ export default function PagoDeTharsysContent() {
             <Row
               label="Country"
               value={
-                <span className="inline-flex items-center gap-1.5">
+                <Link href="/product?country=Spain" className="inline-flex items-center gap-1.5 hover:underline">
                   <span className="inline-block h-3.5 w-3.5 overflow-hidden rounded-full border border-stone-200">
                     <span className="block h-full w-full bg-[#c60b1e] text-center text-[7px] leading-3 text-yellow-300">🇪🇸</span>
                   </span>
                   Spain
-                </span>
+                </Link>
               }
               icon={<Globe className="h-4 w-4" />}
-            />
-            <Row
-              label="Region"
-              value="Valencia"
-              icon={<Mountain className="h-4 w-4" />}
             />
             <Row
               label="Owned by"

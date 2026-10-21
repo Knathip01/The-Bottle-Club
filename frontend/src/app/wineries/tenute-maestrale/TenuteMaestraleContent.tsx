@@ -55,30 +55,9 @@ export default function TenuteMaestraleContent() {
               <Row
                 label="Country"
                 value={
-                  <a href="https://www.vivino.com/en/explore/countries/italy" className="hover:underline">
-                    Italy
-                  </a>
+                  <Link href="/product?country=Italy" className="hover:underline">Italy</Link>
                 }
                 icon={<span>🇮🇹</span>}
-              />
-              <Row
-                label="Region"
-                value={
-                  <a href="https://www.vivino.com/en/explore/regions/isola-dei-nuraghi" className="hover:underline">
-                    Isola dei Nuraghi
-                  </a>
-                }
-                icon={
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2v2" />
-                    <path d="m4.93 4.93 1.41 1.41" />
-                    <path d="M20 12h2" />
-                    <path d="m19.07 4.93-1.41 1.41" />
-                    <path d="M16 12a4 4 0 0 0-8 0" />
-                    <path d="M2 16c2 1 4 1 6 0s4-1 6 0 4 1 6 0" />
-                    <path d="M2 20c2 1 4 1 6 0s4-1 6 0 4 1 6 0" />
-                  </svg>
-                }
               />
             </div>
           </section>

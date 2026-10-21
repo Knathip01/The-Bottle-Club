@@ -32,8 +32,7 @@ export default function LaPerriereWineryContent() {
             </div>
             <Link href="/search?q=La+Perriere" className="block rounded-full bg-[#1e1e1e] px-2 py-2 text-center text-[10px] font-bold text-white hover:bg-black sm:text-xs">View wines</Link>
             <div className="divide-y divide-stone-200 rounded-md border border-stone-200">
-              <Row label="Country" value={<a href="https://www.vivino.com/en/explore/countries/france" className="hover:underline">France</a>} icon={<span>🇫🇷</span>}/>
-              <Row label="Region" value={<a href="https://www.vivino.com/en/explore/regions/loire-valley" className="hover:underline">Loire Valley</a>} icon={<Mountain size={17}/>}/>
+              <Row label="Country" value={<Link href="/product?country=France" className="hover:underline">France</Link>} icon={<span>🇫🇷</span>}/>
               <Row label="Owned by" value="Saget la Perriere" icon={<span className="text-base">⌂</span>}/>
             </div>
           </section>

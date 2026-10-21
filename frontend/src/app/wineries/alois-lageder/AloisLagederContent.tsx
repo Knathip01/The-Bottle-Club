@@ -86,20 +86,9 @@ export default function AloisLagederContent() {
               <Row
                 label="Country"
                 value={
-                  <a href="https://www.vivino.com/en/explore/countries/italy" className="hover:underline">
-                    Italy
-                  </a>
+                  <Link href="/product?country=Italy" className="hover:underline">Italy</Link>
                 }
                 icon={<span>🇮🇹</span>}
-              />
-              <Row
-                label="Region"
-                value={
-                  <a href="https://www.vivino.com/en/explore/regions/alto-adige" className="hover:underline">
-                    Südtirol - Alto Adige
-                  </a>
-                }
-                icon={<Mountain size={17} />}
               />
               <Row label="Winemaker" value="Jo Pfisterer, Paola Tenaglia, Marion Pedron" icon={<span className="text-base">◉</span>} />
               <Row label="Owned by" value="Alois Lageder" icon={<span className="text-base">◉</span>} />

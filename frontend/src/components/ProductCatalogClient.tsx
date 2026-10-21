@@ -234,6 +234,8 @@ export default function ProductCatalogClient({
         if (ratingVal > 0) q.set('min_rating', String(ratingVal));
         if (naturalVal) q.set('natural_only', 'true');
         if (discountVal) q.set('discount_only', 'true');
+        const countryParam = searchParams?.get('countries') || searchParams?.get('country') || (currentCountry && currentCountry !== 'all' ? currentCountry : undefined);
+        if (countryParam) q.set('countries', countryParam);
 
         const res = await fetch(`/api/products?${q.toString()}`);
         if (res.ok) {
@@ -693,9 +695,29 @@ export default function ProductCatalogClient({
             )}
 
             {/* Top Bar: Results Count + Sort Selector */}
-            <div className="flex items-center justify-between mb-4 sm:mb-6">
-              <div className="text-xs sm:text-sm text-stone-600 font-normal">
-                Showing {totalCount === 0 ? 0 : (activePage - 1) * perPage + 1}-{Math.min(activePage * perPage, totalCount)} of {totalCount.toLocaleString()} wines
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4 sm:mb-6">
+              <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm text-stone-600 font-normal">
+                <span>
+                  Showing {totalCount === 0 ? 0 : (activePage - 1) * perPage + 1}-{Math.min(activePage * perPage, totalCount)} of {totalCount.toLocaleString()} wines
+                </span>
+                {(searchParams?.get('country') || searchParams?.get('countries') || (currentCountry && currentCountry !== 'all')) && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-900 border border-stone-200 text-xs font-semibold">
+                    <span>Country: {searchParams?.get('country') || searchParams?.get('countries') || currentCountry}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextSp = new URLSearchParams(searchParams?.toString() || '');
+                        nextSp.delete('country');
+                        nextSp.delete('countries');
+                        const queryStr = nextSp.toString();
+                        router.push(queryStr ? `/product?${queryStr}` : '/product');
+                      }}
+                      className="text-stone-400 hover:text-stone-800 ml-0.5"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
               </div>
 
               {/* Sort Selector Dropdown */}

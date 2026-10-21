@@ -85,20 +85,9 @@ export default function AstraleContent() {
               <Row
                 label="Country"
                 value={
-                  <a href="https://www.vivino.com/en/explore/countries/italy" className="hover:underline">
-                    Italy
-                  </a>
+                  <Link href="/product?country=Italy" className="hover:underline">Italy</Link>
                 }
                 icon={<span>🇮🇹</span>}
-              />
-              <Row
-                label="Region"
-                value={
-                  <a href="https://www.vivino.com/en/explore/regions/chianti" className="hover:underline">
-                    Chianti
-                  </a>
-                }
-                icon={<Mountain size={17} />}
               />
               <Row label="Owned by" value="Astrale" icon={<span className="text-base">◉</span>} />
             </div>

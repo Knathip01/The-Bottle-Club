@@ -189,10 +189,17 @@ export default function WineriesCarouselSection() {
                           <PartnerVerifiedBadge />
                         </div>
 
-                        {/* Country Flag & Region */}
-                        <div className="mt-1 flex items-center gap-1.5 text-xs text-stone-500 font-medium">
+                        {/* Country Flag & Link */}
+                        <div
+                          className="mt-1 flex items-center gap-1.5 text-xs text-stone-500 font-medium hover:underline hover:text-[#ba1628] cursor-pointer"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.location.href = `/product?country=${encodeURIComponent(winery.country_name)}`;
+                          }}
+                        >
                           <span className="text-sm leading-none">{flag}</span>
-                          <span className="truncate">Winery in {displayLocation}</span>
+                          <span className="truncate">{winery.country_name}</span>
                         </div>
 
                         {/* Wines count */}

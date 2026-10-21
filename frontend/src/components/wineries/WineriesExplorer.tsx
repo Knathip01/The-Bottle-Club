@@ -767,7 +767,14 @@ export default function WineriesExplorer() {
                             </div>
                             <VivinoPartnerBadge />
                           </div>
-                          <div className="wineryCard-module__region--gZMbF">
+                          <div
+                            className="wineryCard-module__region--gZMbF group/country hover:underline cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              window.location.href = `/product?country=${encodeURIComponent(winery.country_name)}`;
+                            }}
+                          >
                             <span id="" data-testid="sentinel"></span>
                             <span
                               className="countryFlag-module__flag--_m0bm wineryCard-module__countryIcon--QP14T"
@@ -777,8 +784,8 @@ export default function WineriesExplorer() {
                               }}
                             ></span>
                             <div className="truncatedText-module__truncatedText--iw6IH truncatedText-module__large--1uIAc truncatedText-module__truncatedText-2--vkCmk wineryCard-module__regionName--mC4Bi">
-                              <p className="MuiTypography-root MuiTypography-body1 vivino-mui-dd3lp3-bodyMedium">
-                                Winery in {displayRegion}
+                              <p className="MuiTypography-root MuiTypography-body1 vivino-mui-dd3lp3-bodyMedium group-hover/country:text-[#ba1628]">
+                                {winery.country_name}
                               </p>
                             </div>
                           </div>

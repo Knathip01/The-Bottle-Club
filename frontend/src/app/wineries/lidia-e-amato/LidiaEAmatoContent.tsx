@@ -86,20 +86,9 @@ export default function LidiaEAmatoContent() {
               <Row
                 label="Country"
                 value={
-                  <a href="https://www.vivino.com/en/explore/countries/italy" className="hover:underline">
-                    Italy
-                  </a>
+                  <Link href="/product?country=Italy" className="hover:underline">Italy</Link>
                 }
                 icon={<span>🇮🇹</span>}
-              />
-              <Row
-                label="Region"
-                value={
-                  <a href="https://www.vivino.com/en/explore/regions/abruzzo" className="hover:underline">
-                    Abruzzo
-                  </a>
-                }
-                icon={<Mountain size={17} />}
               />
               <Row
                 label="Winemaker"

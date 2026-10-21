@@ -35,8 +35,7 @@ export default function FlyingWhaleWineContent() {
             <div><h1 className="text-sm font-bold leading-tight text-[#1e1e1e] sm:text-xl">Flying Whale Wine</h1><VerifiedBadge/><div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-stone-700 sm:text-xs"><span><b>2</b> Wines</span><span>•</span><span className="inline-flex items-center gap-1"><Star size={12} className="fill-amber-500 text-amber-500"/><b>4.8</b></span><span className="hidden sm:inline">20 total ratings</span><span className="sm:hidden">20 ratings</span></div></div>
             <Link href="/search?q=Flying%20Whale%20Wine" className="block rounded-full bg-[#1e1e1e] px-2 py-2 text-center text-[10px] font-bold text-white hover:bg-black sm:text-xs">View wines</Link>
             <div className="divide-y divide-stone-200 rounded-md border border-stone-200">
-              <Row label="Country" value={<a href="https://www.vivino.com/en/explore/countries/france" className="hover:underline">France</a>} icon={<span>🇫🇷</span>} />
-              <Row label="Region" value={<a href="https://www.vivino.com/en/explore/regions/languedoc-roussillon" className="hover:underline">Languedoc-Roussillon</a>} icon={<Mountain size={17} />} />
+              <Row label="Country" value={<Link href="/product?country=France" className="hover:underline">France</Link>} icon={<span>🇫🇷</span>} />
               <Row label="Winemaker" value="Maba Ba and Didier Rodriguez" icon={<span className="text-base">◉</span>} />
             </div>
           </section>

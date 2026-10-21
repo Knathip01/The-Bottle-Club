@@ -87,20 +87,9 @@ export default function AntanoContent() {
               <Row
                 label="Country"
                 value={
-                  <a href="https://www.vivino.com/en/explore/countries/spain" className="hover:underline">
-                    Spain
-                  </a>
+                  <Link href="/product?country=Spain" className="hover:underline">Spain</Link>
                 }
                 icon={<span>🇪🇸</span>}
-              />
-              <Row
-                label="Region"
-                value={
-                  <a href="https://www.vivino.com/en/explore/regions/castilla-and-leon" className="hover:underline">
-                    Castilla y León
-                  </a>
-                }
-                icon={<Mountain size={14} />}
               />
               <Row
                 label="Owned by"

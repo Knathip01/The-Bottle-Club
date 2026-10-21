@@ -33,8 +33,7 @@ export default function ChevalBlancWineryContent() {
             </div>
             <Link href="/search?q=Ch%C3%A2teau+Cheval+Blanc" className="block rounded-full bg-[#1e1e1e] px-2 py-2 text-center text-[10px] font-bold text-white hover:bg-black sm:text-xs">View wines</Link>
             <div className="divide-y divide-stone-200 rounded-md border border-stone-200">
-              <Row label="Country" value={<a href="https://www.vivino.com/en/explore/countries/france" className="hover:underline">France</a>} icon={<span>🇫🇷</span>}/>
-              <Row label="Region" value={<a href="https://www.vivino.com/en/explore/regions/saint-emilion-grand-cru" className="hover:underline">Saint-Émilion Grand Cru</a>} icon={<Mountain size={17}/>}/>
+              <Row label="Country" value={<Link href="/product?country=France" className="hover:underline">France</Link>} icon={<span>🇫🇷</span>}/>
               <Row label="Winemaker" value="Pierre Lurton" icon={<span className="text-base">◉</span>}/>
               <Row label="Owned by" value="Moët Hennessy" icon={<span className="text-base">⌂</span>}/>
             </div>

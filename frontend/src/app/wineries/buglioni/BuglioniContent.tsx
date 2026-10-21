@@ -85,20 +85,9 @@ export default function BuglioniContent() {
               <Row
                 label="Country"
                 value={
-                  <a href="https://www.vivino.com/en/explore/countries/italy" className="hover:underline">
-                    Italy
-                  </a>
+                  <Link href="/product?country=Italy" className="hover:underline">Italy</Link>
                 }
                 icon={<span>🇮🇹</span>}
-              />
-              <Row
-                label="Region"
-                value={
-                  <a href="https://www.vivino.com/en/explore/regions/valpolicella" className="hover:underline">
-                    Valpolicella
-                  </a>
-                }
-                icon={<Mountain size={17} />}
               />
               <Row label="Winemaker" value="Diego Bertoni" icon={<span className="text-base">◉</span>} />
             </div>

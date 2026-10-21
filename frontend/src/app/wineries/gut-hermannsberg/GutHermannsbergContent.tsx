@@ -85,20 +85,9 @@ export default function GutHermannsbergContent() {
               <Row
                 label="Country"
                 value={
-                  <a href="https://www.vivino.com/en/explore/countries/germany" className="hover:underline">
-                    Germany
-                  </a>
+                  <Link href="/product?country=Germany" className="hover:underline">Germany</Link>
                 }
                 icon={<span>🇩🇪</span>}
-              />
-              <Row
-                label="Region"
-                value={
-                  <a href="https://www.vivino.com/en/explore/regions/nahe" className="hover:underline">
-                    Nahe
-                  </a>
-                }
-                icon={<Mountain size={17} />}
               />
               <Row label="Winemaker" value="Hermannsberg" icon={<span className="text-base">◉</span>} />
             </div>

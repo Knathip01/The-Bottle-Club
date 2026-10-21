@@ -61,7 +61,7 @@ function ProfileRow({ children, label }: { children: React.ReactNode; label: str
       <div className="w-5 shrink-0 text-[#262626]">{children}</div>
       <div className="min-w-0">
         <div className="text-[10px] leading-3 text-stone-500">{label}</div>
-        <div className="truncate text-[11px] font-semibold leading-4 text-[#1e1e1e]">{label === 'Country' ? <a href="https://www.vivino.com/en/explore/countries/france" className="hover:underline">France</a> : label === 'Region' ? <a href="https://www.vivino.com/en/explore/regions/champagne" className="hover:underline">Champagne</a> : label === 'Winemaker' ? 'Ruinart' : 'Moët Hennessy'}</div>
+        <div className="truncate text-[11px] font-semibold leading-4 text-[#1e1e1e]">{label === 'Country' ? <Link href="/product?country=France" className="hover:underline">France</Link> : label === 'Region' ? <Link href="/product?country=Champagne" className="hover:underline">Champagne</Link> : label === 'Winemaker' ? 'Ruinart' : 'Moët Hennessy'}</div>
       </div>
     </div>
   );
@@ -89,7 +89,6 @@ export default function RuinartWineryContent() {
             <Link href="/search?q=Ruinart" className="block rounded-full bg-[#1e1e1e] px-2 py-2 text-center text-[10px] font-bold text-white hover:bg-black sm:text-xs">View wines</Link>
             <div className="divide-y divide-stone-200 rounded-md border border-stone-200">
               <ProfileRow label="Country"><span>🇫🇷</span></ProfileRow>
-              <ProfileRow label="Region"><Mountain size={17} /></ProfileRow>
               <ProfileRow label="Winemaker"><span className="text-base">◉</span></ProfileRow>
               <ProfileRow label="Owned by"><span className="text-base">⌂</span></ProfileRow>
             </div>

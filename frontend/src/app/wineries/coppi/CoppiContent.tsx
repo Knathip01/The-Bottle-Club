@@ -89,20 +89,9 @@ export default function CoppiContent() {
               <Row
                 label="Country"
                 value={
-                  <a href="https://www.vivino.com/en/explore/countries/italy" className="hover:underline">
-                    Italy
-                  </a>
+                  <Link href="/product?country=Italy" className="hover:underline">Italy</Link>
                 }
                 icon={<span>🇮🇹</span>}
-              />
-              <Row
-                label="Region"
-                value={
-                  <a href="https://www.vivino.com/en/explore/regions/puglia" className="hover:underline">
-                    Puglia
-                  </a>
-                }
-                icon={<Mountain size={17} />}
               />
             </div>
           </section>

@@ -76,8 +76,7 @@ export default function ChateauEsclansWineryContent() {
             </div>
             <Link href="/search?q=Ch%C3%A2teau+d%27Esclans" className="block rounded-full bg-[#1e1e1e] px-2 py-2 text-center text-[10px] font-bold text-white hover:bg-black sm:text-xs">View wines</Link>
             <div className="divide-y divide-stone-200 rounded-md border border-stone-200">
-              <ProfileRow label="Country" value={<a href="https://www.vivino.com/en/explore/countries/france" className="hover:underline">France</a>} icon={<span>🇫🇷</span>} />
-              <ProfileRow label="Region" value={<a href="https://www.vivino.com/en/explore/regions/cotes-de-provence" className="hover:underline">Côtes de Provence</a>} icon={<Mountain size={17} />} />
+              <ProfileRow label="Country" value={<Link href="/product?country=France" className="hover:underline">France</Link>} icon={<span>🇫🇷</span>} />
               <ProfileRow label="Owned by" value="Sacha Lichine" icon={<span className="text-base">⌂</span>} />
             </div>
           </section>

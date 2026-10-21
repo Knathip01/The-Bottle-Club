@@ -87,20 +87,9 @@ export default function DreissigackerContent() {
               <Row
                 label="Country"
                 value={
-                  <a href="https://www.vivino.com/en/explore/countries/germany" className="hover:underline">
-                    Germany
-                  </a>
+                  <Link href="/product?country=Germany" className="hover:underline">Germany</Link>
                 }
                 icon={<span>🇩🇪</span>}
-              />
-              <Row
-                label="Region"
-                value={
-                  <a href="https://www.vivino.com/en/explore/regions/rheinhessen" className="hover:underline">
-                    Rheinhessen
-                  </a>
-                }
-                icon={<Mountain size={14} />}
               />
               <Row
                 label="Winemaker"

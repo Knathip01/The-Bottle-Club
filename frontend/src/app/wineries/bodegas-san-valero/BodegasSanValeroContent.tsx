@@ -87,20 +87,9 @@ export default function BodegasSanValeroContent() {
               <Row
                 label="Country"
                 value={
-                  <a href="https://www.vivino.com/en/explore/countries/spain" className="hover:underline">
-                    Spain
-                  </a>
+                  <Link href="/product?country=Spain" className="hover:underline">Spain</Link>
                 }
                 icon={<span>🇪🇸</span>}
-              />
-              <Row
-                label="Region"
-                value={
-                  <a href="https://www.vivino.com/en/explore/regions/carinena" className="hover:underline">
-                    Cariñena
-                  </a>
-                }
-                icon={<Mountain size={14} />}
               />
               <Row
                 label="Winemaker"

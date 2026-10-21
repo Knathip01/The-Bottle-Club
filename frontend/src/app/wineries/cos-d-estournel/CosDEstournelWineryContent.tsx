@@ -29,8 +29,7 @@ export default function CosDEstournelWineryContent() {
             </div>
             <Link href="/search?q=Cos+d%27Estournel" className="block rounded-full bg-[#1e1e1e] px-2 py-2 text-center text-[10px] font-bold text-white hover:bg-black sm:text-xs">View wines</Link>
             <div className="divide-y divide-stone-200 rounded-md border border-stone-200">
-              <Row label="Country" value={<a href="https://www.vivino.com/en/explore/countries/france" className="hover:underline">France</a>} icon={<span>🇫🇷</span>}/>
-              <Row label="Region" value={<a href="https://www.vivino.com/en/explore/regions/saint-estephe" className="hover:underline">Saint-Estèphe</a>} icon={<Mountain size={17}/>}/>
+              <Row label="Country" value={<Link href="/product?country=France" className="hover:underline">France</Link>} icon={<span>🇫🇷</span>}/>
               <Row label="Owned by" value="Michel Reybier" icon={<span className="text-base">⌂</span>}/>
             </div>
           </section>

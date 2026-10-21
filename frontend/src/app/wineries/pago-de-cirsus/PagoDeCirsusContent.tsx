@@ -65,20 +65,9 @@ export default function PagoDeCirsusContent() {
               <Row
                 label="Country"
                 value={
-                  <a href="https://www.vivino.com/en/explore/countries/spain" className="hover:underline">
-                    Spain
-                  </a>
+                  <Link href="/product?country=Spain" className="hover:underline">Spain</Link>
                 }
                 icon={<span>🇪🇸</span>}
-              />
-              <Row
-                label="Region"
-                value={
-                  <a href="https://www.vivino.com/en/explore/regions/comunidad-foral-de-navarra" className="hover:underline">
-                    Navarra
-                  </a>
-                }
-                icon={<Mountain size={14} />}
               />
               <Row
                 label="Winemaker"

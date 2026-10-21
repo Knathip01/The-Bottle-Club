@@ -90,20 +90,9 @@ export default function AvignonesiContent() {
               <Row
                 label="Country"
                 value={
-                  <a href="https://www.vivino.com/en/explore/countries/italy" className="hover:underline">
-                    Italy
-                  </a>
+                  <Link href="/product?country=Italy" className="hover:underline">Italy</Link>
                 }
                 icon={<span>🇮🇹</span>}
-              />
-              <Row
-                label="Region"
-                value={
-                  <a href="https://www.vivino.com/en/explore/regions/vino-nobile-di-montepulciano" className="hover:underline">
-                    Vino Nobile di Montepulciano
-                  </a>
-                }
-                icon={<Mountain size={17} />}
               />
               <Row label="Winemaker" value="Avignonesi" icon={<span className="text-base">◉</span>} />
             </div>
