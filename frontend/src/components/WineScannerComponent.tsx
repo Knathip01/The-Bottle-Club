@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   Camera, Sparkles, X, RotateCcw, Upload, Wine, ShieldCheck,
   CheckCircle2, MapPin, CalendarDays, Globe, Star, ExternalLink,
-  AlertTriangle, ImageIcon, ShoppingBag
+  AlertTriangle, ImageIcon
 } from 'lucide-react';
 import Webcam from 'react-webcam';
 import { type Winery } from '@/data/wineriesData';
@@ -16,8 +16,8 @@ export interface WineAIScanResult {
   name: string;
   producer?: string;
   vintage: string;
-  country: string;
-  country_th: string;
+  country?: string;
+  country_th?: string;
   region: string;
   region_th: string;
   city: string;
@@ -27,7 +27,7 @@ export interface WineAIScanResult {
   grape: string;
   alcohol: string;
   description_th: string;
-  price_estimate: number;
+  price_estimate?: number;
   rating: number;
   confidence: number;
   notes: string[];
@@ -46,14 +46,6 @@ export interface SampleBottle {
   result?: WineAIScanResult;
 }
 
-const COUNTRY_FLAG_MAP: Record<string, string> = {
-  'France': '🇫🇷', 'Italy': '🇮🇹', 'Spain': '🇪🇸', 'Australia': '🇦🇺',
-  'USA': '🇺🇸', 'United States': '🇺🇸', 'Chile': '🇨🇱', 'Argentina': '🇦🇷',
-  'Germany': '🇩🇪', 'New Zealand': '🇳🇿', 'Portugal': '🇵🇹', 'South Africa': '🇿🇦',
-  'Austria': '🇦🇹', 'Greece': '🇬🇷', 'Hungary': '🇭🇺', 'Japan': '🇯🇵',
-  'Thailand': '🇹🇭', 'China': '🇨🇳',
-};
-
 export const SAMPLE_BOTTLES: SampleBottle[] = [
   {
     id: 'vina-loriente',
@@ -67,8 +59,6 @@ export const SAMPLE_BOTTLES: SampleBottle[] = [
       name: 'Viña Loriente Tempranillo',
       producer: 'Viña Loriente',
       vintage: '2018',
-      country: 'USA',
-      country_th: 'สหรัฐอเมริกา',
       region: 'California',
       region_th: 'แคลิฟอร์เนีย',
       city: 'Santa Ynez',
@@ -78,7 +68,6 @@ export const SAMPLE_BOTTLES: SampleBottle[] = [
       grape: 'Tempranillo',
       alcohol: '14.2%',
       description_th: 'ไวน์แดงสไตล์สเปนแท้ที่เพาะบ่มใน Santa Ynez Valley รสชาติเข้มข้น หอมกลิ่นเชอร์รีสุก ไม้โอ๊คฝรั่งเศส และแทนนินที่นุ่มนวลยาวนาน',
-      price_estimate: 3200,
       rating: 4.6,
       confidence: 98.2,
       notes: ['Dark Cherry', 'French Oak', 'Vanilla', 'Leather'],
@@ -97,8 +86,6 @@ export const SAMPLE_BOTTLES: SampleBottle[] = [
       name: 'Dom Pérignon Vintage Champagne',
       producer: 'Dom Pérignon',
       vintage: '2012',
-      country: 'France',
-      country_th: 'ฝรั่งเศส',
       region: 'Champagne',
       region_th: 'ชองปาญ',
       city: 'Épernay',
@@ -108,7 +95,6 @@ export const SAMPLE_BOTTLES: SampleBottle[] = [
       grape: 'Chardonnay & Pinot Noir',
       alcohol: '12.5%',
       description_th: 'แชมเปญระดับไอคอนจากค่าย Moët & Chandon ฟองละเอียดนุ่มนวล กลิ่นหอมของผลไม้ขาว อัลมอนด์คั่ว และขนมปังสด สดชื่นและหรูหรา',
-      price_estimate: 13900,
       rating: 4.8,
       confidence: 97.4,
       notes: ['White Peach', 'Brioche', 'Roasted Almond', 'Minerals'],
@@ -127,8 +113,6 @@ export const SAMPLE_BOTTLES: SampleBottle[] = [
       name: 'Veuve Clicquot Brut Yellow Label Champagne',
       producer: 'Veuve Clicquot',
       vintage: 'NV',
-      country: 'France',
-      country_th: 'ฝรั่งเศส',
       region: 'Champagne',
       region_th: 'ชองปาญ',
       city: 'Reims',
@@ -138,7 +122,6 @@ export const SAMPLE_BOTTLES: SampleBottle[] = [
       grape: 'Pinot Noir & Chardonnay & Meunier',
       alcohol: '12.0%',
       description_th: 'แชมเปญชื่อดังระดับตำนาน สีทองอร่าม ฟองพรายละเอียด กลิ่นหอมของลูกแพร์ แอปเปิลเขียว วานิลลา และบริออช รสสัมผัสสดชื่นลงตัว',
-      price_estimate: 3450,
       rating: 4.5,
       confidence: 96.5,
       notes: ['Apple', 'Brioche', 'Pear', 'Vanilla'],
@@ -157,8 +140,6 @@ export const SAMPLE_BOTTLES: SampleBottle[] = [
       name: 'Cloudy Bay Sauvignon Blanc',
       producer: 'Cloudy Bay',
       vintage: '2022',
-      country: 'New Zealand',
-      country_th: 'นิวซีแลนด์',
       region: 'Marlborough',
       region_th: 'มาร์ลโบโรห์',
       city: 'Blenheim',
@@ -168,7 +149,6 @@ export const SAMPLE_BOTTLES: SampleBottle[] = [
       grape: 'Sauvignon Blanc',
       alcohol: '13.0%',
       description_th: 'ไวน์ขาวชื่อดังจากนิวซีแลนด์ กลิ่นหอมสดชื่นของเสาวรสและส้มเลมอน แอซิดิตี้จัดจ้านดีเยี่ยม ดื่มง่ายทุกโอกาส',
-      price_estimate: 2190,
       rating: 4.7,
       confidence: 96.8,
       notes: ['Passionfruit', 'Lime Zest', 'Grapefruit', 'Herbal'],
@@ -206,6 +186,12 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
 
   const webcamRef = useRef<Webcam>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Navigate to winery details page and close modal if in overlay mode
+  const navigateToWinery = (seoName: string) => {
+    if (onClose) onClose();
+    router.push(`/wineries/${seoName}`);
+  };
 
   const startAnalysisSequence = async (imageSrc?: string, sample?: SampleBottle) => {
     setIsScanning(true);
@@ -416,7 +402,10 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
           /* LUXURY SCAN RESULT VIEW */
           <div className="absolute inset-0 bg-gradient-to-b from-[#120c05]/95 via-[#0b0805]/95 to-[#080603]/98 backdrop-blur-3xl overflow-y-auto animate-in zoom-in-95 duration-300 z-40 text-stone-100">
             {matchedWinery ? (
-              /* CASE A: MATCHED WINERY (ชื่อตรงกับใน /wineries -> แสดงข้อมูลเต็ม) */
+              /* ══════════════════════════════════════════════════════════════
+                 CASE A: WINERY MATCHED IN /wineries -> แสดงข้อมูลโรงไวน์และไวน์เต็มรูปแบบ
+                 (เอาราคาและประเทศออกตามคำสั่ง)
+                 ══════════════════════════════════════════════════════════════ */
               <div className="divide-y divide-amber-400/15">
                 {/* Top Authenticity Bar */}
                 <div className="px-4 pt-3.5 pb-2.5 flex items-center justify-between sticky top-0 bg-[#0c0905]/95 backdrop-blur-xl z-20 border-b border-amber-400/20">
@@ -457,25 +446,32 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
                         <img
                           src={matchedWinery.logo_image}
                           alt={matchedWinery.name}
-                          className="w-14 h-14 rounded-2xl object-cover border-2 border-amber-400/50 bg-stone-900 shadow-md flex-shrink-0"
+                          onClick={() => navigateToWinery(matchedWinery.seo_name)}
+                          className="w-14 h-14 rounded-2xl object-cover border-2 border-amber-400/50 bg-stone-900 shadow-md flex-shrink-0 cursor-pointer hover:scale-105 transition"
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                         />
                       ) : (
-                        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border-2 border-amber-400/50 flex items-center justify-center flex-shrink-0 text-amber-400">
+                        <div 
+                          onClick={() => navigateToWinery(matchedWinery.seo_name)}
+                          className="w-14 h-14 rounded-2xl bg-amber-500/10 border-2 border-amber-400/50 flex items-center justify-center flex-shrink-0 text-amber-400 cursor-pointer hover:scale-105 transition"
+                        >
                           <Wine size={26} />
                         </div>
                       )}
 
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-base font-black text-white font-serif leading-tight truncate">
+                        <h4 
+                          onClick={() => navigateToWinery(matchedWinery.seo_name)}
+                          className="text-base font-black text-white font-serif leading-tight truncate cursor-pointer hover:text-amber-300 transition"
+                        >
                           {matchedWinery.name}
                         </h4>
-                        <p className="text-[10px] text-amber-200/90 font-semibold mt-0.5 flex items-center gap-1">
-                          <span>{COUNTRY_FLAG_MAP[matchedWinery.country_name] || '🌍'}</span>
-                          <span>{matchedWinery.country_name}</span>
-                          <span>·</span>
-                          <span className="text-stone-300">{matchedWinery.region_name}</span>
-                        </p>
+                        {matchedWinery.region_name && (
+                          <p className="text-[10px] text-amber-200/90 font-semibold mt-0.5 flex items-center gap-1">
+                            <MapPin size={10} className="text-amber-400 flex-shrink-0" />
+                            <span className="text-stone-300">{matchedWinery.region_name}</span>
+                          </p>
+                        )}
                         {matchedWinery.description && (
                           <p className="text-[9px] text-stone-400 line-clamp-2 mt-1 leading-snug">
                             {matchedWinery.description}
@@ -487,7 +483,7 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
                       </div>
                     </div>
 
-                    {/* Featured Wines */}
+                    {/* Featured Wines (เอาราคาออกตามคำสั่ง) */}
                     {matchedWinery.wines && matchedWinery.wines.length > 0 && (
                       <div className="pt-2 border-t border-amber-400/15">
                         <span className="text-[8px] font-black uppercase tracking-wider text-amber-300/80 block mb-1.5 flex items-center gap-1">
@@ -495,42 +491,42 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
                         </span>
                         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                           {matchedWinery.wines.slice(0, 4).map((w) => (
-                            <div
+                            <button
                               key={w.id}
-                              className="flex-shrink-0 w-24 bg-black/60 border border-amber-400/20 rounded-xl p-1.5 flex flex-col items-center gap-1 text-center"
+                              type="button"
+                              onClick={() => navigateToWinery(matchedWinery.seo_name)}
+                              className="flex-shrink-0 w-24 bg-black/60 hover:bg-stone-900 border border-amber-400/20 hover:border-amber-400/50 rounded-xl p-2 flex flex-col items-center gap-1 text-center cursor-pointer transition active:scale-95"
                             >
                               {w.image ? (
-                                <img src={w.image} alt={w.name} className="h-12 object-contain" />
+                                <img src={w.image} alt={w.name} className="h-14 object-contain" />
                               ) : (
-                                <div className="h-12 flex items-center justify-center text-amber-500/50">
-                                  <Wine size={16} />
+                                <div className="h-14 flex items-center justify-center text-amber-500/50">
+                                  <Wine size={18} />
                                 </div>
                               )}
-                              <p className="text-[8px] font-bold text-stone-200 line-clamp-2 leading-tight">
+                              <p className="text-[9px] font-bold text-stone-200 line-clamp-2 leading-tight">
                                 {w.name}
                               </p>
-                              <span className="text-[8px] font-black font-serif text-amber-300">
-                                ฿{w.price?.toLocaleString()}
-                              </span>
-                            </div>
+                            </button>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {/* Link to Winery Page */}
-                    <Link
-                      href={`/wineries/${matchedWinery.seo_name}`}
-                      className="w-full py-2.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-stone-950 font-black uppercase tracking-wider text-[10px] rounded-xl shadow-md flex items-center justify-center gap-1.5 cursor-pointer transition active:scale-95"
+                    {/* Direct Link to Winery Page (ลิงก์ไปยัง wineries/ ที่ให้กดดูข้อมูลทันที) */}
+                    <button
+                      type="button"
+                      onClick={() => navigateToWinery(matchedWinery.seo_name)}
+                      className="w-full py-3 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-stone-950 font-black uppercase tracking-wider text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 cursor-pointer transition active:scale-95"
                     >
-                      <ExternalLink size={12} /> ดูข้อมูลโรงไวน์ {matchedWinery.name} ฉบับเต็ม
-                    </Link>
+                      <ExternalLink size={14} /> ดูข้อมูลโรงไวน์ {matchedWinery.name} ฉบับเต็ม
+                    </button>
                   </div>
                 </div>
 
-                {/* Scanned Wine Profile */}
+                {/* Scanned Wine Profile (เอาราคาและประเทศออกตามคำสั่ง) */}
                 <div className="p-3.5">
-                  <div className="bg-gradient-to-b from-stone-900/80 via-stone-950/90 to-[#0c0905]/95 rounded-2xl p-3 border border-amber-400/35 shadow-md grid grid-cols-12 gap-3 items-stretch">
+                  <div className="bg-gradient-to-b from-stone-900/80 via-stone-950/90 to-[#0c0905]/95 rounded-2xl p-3.5 border border-amber-400/35 shadow-md grid grid-cols-12 gap-3 items-center">
                     <div className="col-span-5 relative rounded-xl overflow-hidden border border-amber-400/40 bg-stone-900 flex flex-col justify-end min-h-[170px]">
                       {uploadedImage ? (
                         <img
@@ -559,8 +555,8 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
                       </div>
                     </div>
 
-                    <div className="col-span-7 flex flex-col justify-between py-0.5">
-                      <div className="space-y-1">
+                    <div className="col-span-7 flex flex-col justify-center py-1">
+                      <div className="space-y-1.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-[8px] font-black px-2 py-0.5 rounded-full bg-amber-500/25 border border-amber-400/40 text-amber-300 uppercase">
                             {scanResult.type_th || scanResult.type}
@@ -570,57 +566,39 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
                           </span>
                         </div>
 
-                        <h3 className="text-sm font-black font-serif text-white leading-snug tracking-tight line-clamp-3">
+                        <h3 className="text-sm font-black font-serif text-white leading-snug tracking-tight">
                           {scanResult.name}
                         </h3>
 
                         {scanResult.grape && (
-                          <div className="text-[9px] font-medium text-stone-300 flex items-center gap-1 truncate">
+                          <div className="text-[10px] font-medium text-stone-300 flex items-center gap-1">
                             <span>🍇</span>
-                            <span className="truncate">{scanResult.grape}</span>
+                            <span>{scanResult.grape}</span>
                             <span className="text-amber-400 font-bold">· {scanResult.alcohol}</span>
                           </div>
                         )}
-
-                        <div className="text-[9px] font-semibold text-amber-200/90 flex items-center gap-1">
-                          <span>{COUNTRY_FLAG_MAP[scanResult.country] || '🌍'}</span>
-                          <span>{scanResult.country_th || scanResult.country}</span>
-                        </div>
-                      </div>
-
-                      <div className="mt-2 pt-1.5 border-t border-amber-400/20 flex items-baseline justify-between">
-                        <span className="text-[8px] text-amber-300/70 font-bold uppercase">ราคาประเมิน</span>
-                        <span className="text-sm font-black font-serif text-amber-300 drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]">
-                          ฿{scanResult.price_estimate.toLocaleString()}
-                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* 3-Pod Stats */}
+                {/* 2-Pod Stats (เอารายการประเทศออกตามคำสั่ง) */}
                 <div className="p-3.5 space-y-3">
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-gradient-to-b from-amber-500/10 to-stone-950/80 rounded-xl p-2 border border-amber-400/25 flex flex-col items-center text-center">
-                      <span className="text-xl leading-none">{COUNTRY_FLAG_MAP[scanResult.country] || '🌍'}</span>
-                      <p className="text-[8px] font-black text-amber-300/80 uppercase mt-0.5">ประเทศ</p>
-                      <p className="text-[10px] font-black text-white">{scanResult.country_th || scanResult.country}</p>
-                    </div>
-
-                    <div className="bg-gradient-to-b from-amber-500/10 to-stone-950/80 rounded-xl p-2 border border-amber-400/25 flex flex-col items-center text-center">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gradient-to-b from-amber-500/10 to-stone-950/80 rounded-xl p-2.5 border border-amber-400/25 flex flex-col items-center text-center">
                       <CalendarDays size={18} className="text-amber-400" />
-                      <p className="text-[8px] font-black text-amber-300/80 uppercase mt-0.5">ปีผลิต</p>
+                      <p className="text-[8px] font-black text-amber-300/80 uppercase mt-0.5">ปีผลิต (VINTAGE)</p>
                       <p className="text-sm font-black text-amber-300 font-serif">{scanResult.vintage}</p>
                     </div>
 
-                    <div className="bg-gradient-to-b from-amber-500/10 to-stone-950/80 rounded-xl p-2 border border-amber-400/25 flex flex-col items-center text-center">
+                    <div className="bg-gradient-to-b from-amber-500/10 to-stone-950/80 rounded-xl p-2.5 border border-amber-400/25 flex flex-col items-center text-center">
                       <Star size={18} className="text-amber-400 fill-amber-400" />
-                      <p className="text-[8px] font-black text-amber-300/80 uppercase mt-0.5">คะแนน</p>
+                      <p className="text-[8px] font-black text-amber-300/80 uppercase mt-0.5">คะแนน (RATING)</p>
                       <p className="text-sm font-black text-amber-300 font-serif">{scanResult.rating.toFixed(1)}</p>
                     </div>
                   </div>
 
-                  {/* Terroir */}
+                  {/* Terroir (เอารายการประเทศออก) */}
                   <div className="flex items-center gap-2.5 bg-stone-900/60 rounded-xl p-2.5 border border-amber-400/20 text-stone-200">
                     <div className="w-7 h-7 rounded-lg bg-amber-400/10 border border-amber-400/30 flex items-center justify-center flex-shrink-0 text-amber-400">
                       <Globe size={14} />
@@ -628,7 +606,7 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
                     <div>
                       <p className="text-[8px] text-amber-400/80 uppercase font-black">แหล่งกำเนิดและไร่องุ่น (TERROIR)</p>
                       <p className="text-[11px] font-bold text-stone-200 mt-0.5">
-                        {scanResult.city_th || scanResult.city} · {scanResult.region_th || scanResult.region} · {scanResult.country_th || scanResult.country}
+                        {scanResult.city_th || scanResult.city} · {scanResult.region_th || scanResult.region}
                       </p>
                     </div>
                   </div>
@@ -667,10 +645,10 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
                   <div className="space-y-2 pt-1 pb-2">
                     <button
                       type="button"
-                      onClick={() => router.push('/product')}
+                      onClick={() => navigateToWinery(matchedWinery.seo_name)}
                       className="w-full py-3.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-stone-950 font-black uppercase tracking-wider text-xs rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-pointer transition active:scale-95"
                     >
-                      <ShoppingBag size={14} /> สั่งซื้อไวน์ขวดนี้
+                      <ExternalLink size={14} /> ดูข้อมูลโรงไวน์ {matchedWinery.name} ฉบับเต็ม
                     </button>
                     <button
                       type="button"
@@ -744,12 +722,16 @@ export default function WineScannerComponent({ onClose, isStandalonePage = false
                       <RotateCcw size={15} /> สแกนขวดไวน์อื่น
                     </button>
 
-                    <Link
-                      href="/wineries"
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onClose) onClose();
+                        router.push('/wineries');
+                      }}
                       className="w-full py-3 bg-stone-900/90 hover:bg-stone-800 text-amber-200 hover:text-white font-black text-xs uppercase tracking-wider rounded-xl border border-amber-400/35 flex items-center justify-center gap-2 cursor-pointer transition active:scale-95"
                     >
                       <ExternalLink size={14} /> ดูรายชื่อโรงไวน์ทั้งหมดในระบบ /wineries
-                    </Link>
+                    </button>
                   </div>
 
                 </div>
