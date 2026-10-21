@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Search, ShoppingBag, Menu, X, User, LogOut,
-  ChevronDown, MapPin, Wine, Globe, Camera,
+  ChevronDown, MapPin, Wine, Globe,
 } from 'lucide-react';
 import { WineriesShieldIcon } from '@/components/wineries/WineriesShieldIcon';
 import { logout } from '@/app/actions/auth';
@@ -159,7 +159,6 @@ export default function Header({ user }: HeaderProps) {
   }[] = [
     { href: '/product',  label: t('nav.wine'),     icon: Wine },
     { href: '/wineries', label: t('nav.wineries'), icon: WineriesShieldIcon, isCustomIcon: true },
-    { href: '/scan',     label: 'AI Scanner',      icon: Camera, badge: 'AI' },
   ];
 
   return (
