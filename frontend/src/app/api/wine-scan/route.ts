@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { lookupProductReviewForWine } from '@/lib/products';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const MODEL = 'gemini-2.5-flash';
@@ -127,6 +128,25 @@ export async function POST(request: NextRequest) {
         { error: 'not_wine', message: 'ไม่พบข้อมูลไวน์จากรูปภาพนี้' },
         { status: 422 },
       );
+    }
+
+    // ดึงข้อมูลรีวิวจริงจาก /product (แทนที่คะแนนสุ่มจาก AI ด้วยคะแนนรีวิวจากระบบจริง)
+    try {
+      const reviewData = await lookupProductReviewForWine(
+        String(parsed.name || ''),
+        String(parsed.producer || '')
+      );
+
+      if (reviewData.found) {
+        parsed.rating = reviewData.rating;
+        parsed.ratings_count = reviewData.ratingsCount;
+        parsed.product_id = reviewData.productId;
+        parsed.product_name = reviewData.productName;
+        parsed.rating_source = 'product_reviews';
+        parsed.has_customer_reviews = reviewData.hasCustomerReviews;
+      }
+    } catch (lookupErr) {
+      console.warn('[wine-scan] lookupProductReviewForWine error:', lookupErr);
     }
 
     return NextResponse.json(parsed);

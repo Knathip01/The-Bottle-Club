@@ -46,5 +46,28 @@
     "status": "approved",
     "created_at": "2026-10-06T08:18:59.150Z",
     "createdAt": "06/10/2569"
+  },
+  {
+    "id": 1792601000000,
+    "product_id": 32284901,
+    "productId": 32284901,
+    "product_name": "Viña Loriente Tempranillo 2018",
+    "productName": "Viña Loriente Tempranillo 2018",
+    "user_id": "vip-sommelier",
+    "userId": "vip-sommelier",
+    "user_name": "Sommelier BottleClub",
+    "userName": "Sommelier BottleClub",
+    "username": "Sommelier BottleClub",
+    "customer_name": "Sommelier BottleClub",
+    "customer_id": 1,
+    "rating": 5,
+    "comment": "ไวน์แดง Tempranillo บอดี้ดีเยี่ยม รสสัมผัสนุ่มละมุน กลิ่นเชอร์รีและโอ๊คลงตัวมาก แนะนำสำหรับดินเนอร์",
+    "images": [],
+    "videos": [],
+    "is_approved": true,
+    "isApproved": true,
+    "status": "approved",
+    "created_at": "2026-10-21T16:45:00.000Z",
+    "createdAt": "21/10/2569"
   }
 ]

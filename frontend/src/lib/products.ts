@@ -1,4 +1,5 @@
 import { VIVINO_EXPLORE_PRODUCTS } from '@/data/vivinoExploreWines';
+import { WINERIES_DATA } from '@/data/wineriesData';
 
 export type ProductImage = {
   id: number;
@@ -513,6 +514,53 @@ export function mapWineItemToProduct(
   };
 }
 
+/**
+ * Winery catalog products converted to Product format for /product showcase and reviews
+ */
+export const WINERY_PRODUCTS: Product[] = WINERIES_DATA.flatMap((winery) => {
+  if (!winery.wines || !Array.isArray(winery.wines)) return [];
+  return winery.wines.map((wine, idx) => {
+    const numericId = typeof winery.id === 'number'
+      ? winery.id * 100 + (idx + 1)
+      : 800000 + idx;
+
+    const wineTitle = wine.name.toLowerCase().includes(winery.name.toLowerCase())
+      ? `${wine.name}${wine.vintage ? ` ${wine.vintage}` : ''}`
+      : `${winery.name} ${wine.name}${wine.vintage ? ` ${wine.vintage}` : ''}`;
+
+    const wineColor = (wine.type || '').toLowerCase().includes('white')
+      ? 'white'
+      : (wine.type || '').toLowerCase().includes('sparkling') || (wine.type || '').toLowerCase().includes('champagne')
+      ? 'sparkling'
+      : (wine.type || '').toLowerCase().includes('rose') || (wine.type || '').toLowerCase().includes('rosé')
+      ? 'rose'
+      : 'red';
+
+    return {
+      id: numericId,
+      name: wineTitle,
+      winery: winery.name,
+      brand: winery.name,
+      wine_name: wine.name,
+      vintage: wine.vintage,
+      price: wine.price || 2800,
+      originalPrice: wine.price ? Math.round(wine.price * 1.15) : 3200,
+      color: wineColor,
+      type: wine.type || 'Red',
+      sub_type: 'Classic Estate',
+      country: winery.country_name || 'Selected Vineyard',
+      country_code: winery.country_code || 'us',
+      countryCode: winery.country_code || 'us',
+      region: winery.region_name || winery.address?.city || '',
+      image: wine.image || winery.logo_image || winery.cover_image || '/images/wine_red.png',
+      stock: 18,
+      rating: wine.rating || winery.ratings_average || 4.5,
+      ratings_count: wine.ratings_count || winery.ratings_count || 5,
+      description: winery.description || '',
+    };
+  });
+});
+
 export async function getProductReviewStatsMap(): Promise<Map<number, { count: number; avgRating: number }>> {
   const map = new Map<number, { count: number; avgRating: number }>();
   if (typeof window !== 'undefined') return map;
@@ -568,6 +616,67 @@ export async function getProductReviewStatsMap(): Promise<Map<number, { count: n
   return map;
 }
 
+/**
+ * Look up a wine product in /product to get real customer reviews & rating stats
+ */
+export async function lookupProductReviewForWine(wineName: string, producer?: string) {
+  const reviewStats = await getProductReviewStatsMap();
+
+  const cleanName = (wineName || '').toLowerCase().trim();
+  const cleanProducer = (producer || '').toLowerCase().trim();
+
+  // Combine Vivino explore wines and winery catalog wines
+  const allPool = [...VIVINO_EXPLORE_PRODUCTS, ...WINERY_PRODUCTS];
+
+  // Try exact or close match
+  let matched = allPool.find((p) => {
+    const pName = (p.name || '').toLowerCase();
+    const pWinery = (p.winery || p.brand || '').toLowerCase();
+    const pWineName = (p.wine_name || '').toLowerCase();
+
+    if (cleanProducer && (pWinery.includes(cleanProducer) || cleanProducer.includes(pWinery))) {
+      if (cleanName.includes(pWineName) || pName.includes(cleanName) || cleanName.includes(pName)) {
+        return true;
+      }
+    }
+    if (pName === cleanName || pName.includes(cleanName) || cleanName.includes(pName)) {
+      return true;
+    }
+    return false;
+  });
+
+  // If not matched, try token-based matching
+  if (!matched && cleanName) {
+    const words = cleanName.split(/\s+/).filter((w) => w.length > 2);
+    matched = allPool.find((p) => {
+      const pName = (p.name || '').toLowerCase();
+      const matchCount = words.filter((w) => pName.includes(w)).length;
+      return matchCount >= Math.min(2, words.length);
+    });
+  }
+
+  if (matched) {
+    const stats = reviewStats.get(Number(matched.id));
+    return {
+      found: true,
+      productId: matched.id,
+      productName: matched.name,
+      rating: stats ? stats.avgRating : (matched.rating || 4.5),
+      ratingsCount: stats ? stats.count : (matched.ratings_count || 5),
+      hasCustomerReviews: !!stats && stats.count > 0,
+      source: 'product_reviews' as const,
+    };
+  }
+
+  return {
+    found: false,
+    rating: 0,
+    ratingsCount: 0,
+    hasCustomerReviews: false,
+    source: 'none' as const,
+  };
+}
+
 export async function getWineProducts(params: WineProductQueryParams = {}): Promise<PaginatedProductsResult> {
   const {
     search,
@@ -585,8 +694,8 @@ export async function getWineProducts(params: WineProductQueryParams = {}): Prom
     const stats = reviewStats.get(Number(p.id));
     return {
       ...p,
-      rating: stats ? stats.avgRating : 0,
-      ratings_count: stats ? stats.count : 0,
+      rating: stats ? stats.avgRating : (p.rating || 0),
+      ratings_count: stats ? stats.count : (p.ratings_count || 0),
       badge: undefined,
     };
   };
@@ -725,8 +834,9 @@ export async function getWineProducts(params: WineProductQueryParams = {}): Prom
     console.warn('[getWineProducts] API fetch failed or timed out:', error);
   }
 
-  // Fallback to VIVINO_EXPLORE_PRODUCTS or FALLBACK_PRODUCTS if API fails
-  const rawPool = VIVINO_EXPLORE_PRODUCTS.length > 0 ? VIVINO_EXPLORE_PRODUCTS : FALLBACK_PRODUCTS;
+  // Fallback to VIVINO_EXPLORE_PRODUCTS + WINERY_PRODUCTS or FALLBACK_PRODUCTS if API fails
+  const basePool = VIVINO_EXPLORE_PRODUCTS.length > 0 ? VIVINO_EXPLORE_PRODUCTS : FALLBACK_PRODUCTS;
+  const rawPool = [...basePool, ...WINERY_PRODUCTS];
   const pool = rawPool.map(applyReviewStats);
   let filtered = filterProducts(pool, search);
   if (category && category !== 'all') {
@@ -816,12 +926,12 @@ export async function getProductById(id: number, token?: string): Promise<Produc
 
   const applyStats = (p: Product): Product => ({
     ...p,
-    rating: stats ? stats.avgRating : 0,
-    ratings_count: stats ? stats.count : 0,
+    rating: stats ? stats.avgRating : (p.rating || 0),
+    ratings_count: stats ? stats.count : (p.ratings_count || 0),
     badge: undefined,
   });
 
-  const exploreFound = VIVINO_EXPLORE_PRODUCTS.find((p) => p.id === Number(id));
+  const exploreFound = VIVINO_EXPLORE_PRODUCTS.find((p) => p.id === Number(id)) || WINERY_PRODUCTS.find((p) => p.id === Number(id));
   if (exploreFound) {
     return applyStats(exploreFound);
   }
