@@ -742,3 +742,22 @@ backend/src/
 | **Phase 4** | Tax Invoice PDF Export | ⬜ TODO |
 | **Phase 5** | POS Terminal | ⬜ TODO |
 | **Phase 5** | Sales Reports + CSV Export | ⬜ TODO |
+
+
+---
+
+## 🍷 The Wine Cellar POS & Restaurant System (ระบบขายหน้าร้าน สาขา และบาร์)
+
+ระบบขายหน้าร้าน (POS) พัฒนาขึ้นเพื่อรองรับการขายหน้าร้าน, คิวแคชเชียร์, หน้าจอห้องครัว (KDS), บาร์เครื่องดื่ม, สโตร์สินค้า และการสั่งอาหารด้วย QR Code:
+- **Production URL**: [pos-thebottleclub-web-eta.vercel.app/pos](https://pos-thebottleclub-web-eta.vercel.app/pos)
+- **Repository โค้ด**: PosTHEBOTTLECLUB (C:\project pos)
+- **เทคโนโลยีหลัก**: Next.js 16 (App Router + Turbopack), React 19, Supabase (PostgreSQL 15+), PromptPay Dynamic QR, Tailwind CSS v4 (Cream & Cobalt Theme)
+- **โมดูลที่พัฒนาแล้ว**:
+  - /pos: จุดขายหน้าร้าน, สแกนบาร์โค้ด, ตะกร้าสินค้า, สมาชิก, พักบิล, ชำระเงินสด/PromptPay/บัตร
+  - /pos/history: ประวัติใบเสร็จ, พิมพ์ซ้ำ, คืนเงิน
+  - /cashier: จัดการคิวออเดอร์หน้าร้านและโต๊ะ
+  - /kitchen & /bar: Kitchen Display System (KDS) & Bar Display รับออเดอร์ Realtime
+  - /stockstaff: รับเข้าสินค้า (PO) และปรับปรุงสต็อก (แตกหัก/ชำรุด/นับจริง) พร้อมรูปถ่าย
+  - /manager: แดชบอร์ดสรุปยอดขายตามวันเดือนปี, วิเคราะห์ช่องทางชำระเงิน, รายงานสต็อก
+  - /menu: เมนูดิจิทัลสำหรับลูกค้าสแกน QR ประจำโต๊ะ
+- **คู่มือการติดตั้งฐานข้อมูล Supabase และการพัฒนาต่อฉบับสมบูรณ์**: ดูได้ที่ไฟล์ README.md ภายในโปรเจกต์ POS (C:\project pos\README.md)
