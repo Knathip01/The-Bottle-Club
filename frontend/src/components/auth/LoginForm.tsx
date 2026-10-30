@@ -18,13 +18,13 @@ export default function LoginForm() {
   const { t } = useLanguage();
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setError(null);
     setLoading(true);
     
     try {
-      const result = await login({ email, password });
+      const result = await login({ email: email || 'demo@thebottleclub.com', password: password || 'demo1234' });
       
       if (result?.error) {
         setError(result.error);
@@ -193,6 +193,21 @@ export default function LoginForm() {
                   <Loader2 className="w-8 h-8 animate-spin text-white/80" />
                 </div>
               )}
+            </button>
+
+            {/* Quick Instant Demo Access */}
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => {
+                setEmail('demo@thebottleclub.com');
+                setPassword('demo1234');
+                handleLogin();
+              }}
+              className="w-full py-4 px-6 rounded-[2rem] bg-gradient-to-r from-amber-500/10 via-amber-600/20 to-amber-500/10 hover:from-amber-500/20 hover:to-amber-600/30 border border-amber-400/40 text-stone-900 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow active:scale-95"
+            >
+              <span className="text-amber-600 text-sm">⚡</span>
+              <span>เข้าสู่ระบบทันที (Instant Demo Login)</span>
             </button>
           </form>
 
