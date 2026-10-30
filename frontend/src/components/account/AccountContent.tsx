@@ -139,7 +139,7 @@ export default function AccountContent({ user }: AccountContentProps) {
     { label: t('account.your_points'), value: userPoints.toLocaleString(), icon: Award, tone: 'from-amber-400/20 to-amber-500/5 text-amber-700 border-amber-200/50 hover:shadow-amber-500/5' },
     { label: t('account.orders'), value: String(user?.order_count || 0), icon: PackageCheck, tone: 'from-emerald-400/20 to-emerald-500/5 text-emerald-700 border-emerald-200/50 hover:shadow-emerald-500/5' },
     { label: language === 'th' ? 'ระดับสมาชิก' : 'Tier', value: userTier, icon: Crown, tone: 'from-amber-400/20 to-amber-500/5 text-amber-700 border-amber-200/50 hover:shadow-amber-500/5' },
-    { label: t('account.privacy'), value: 'OK', icon: ShieldCheck, tone: 'from-rose-400/20 to-rose-500/5 text-rose-700 border-rose-200/50 hover:shadow-rose-500/5' },
+    { label: t('account.addresses'), value: 'Default', icon: MapPin, tone: 'from-sky-400/20 to-sky-500/5 text-sky-700 border-sky-200/50 hover:shadow-sky-500/5' },
   ];
 
   // Modern soft pastel styling for active mesh gradients
