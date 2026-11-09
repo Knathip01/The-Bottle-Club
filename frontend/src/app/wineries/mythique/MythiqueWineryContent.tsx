@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const official = 'https://www.mythique-wine.com/wp-content/uploads/';
 const stories = [

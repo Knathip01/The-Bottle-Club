@@ -11,7 +11,6 @@ const SERVICE_KEY =
 
 // Memory cache fallback
 const memoryAddresses: any[] = [];
-let memoryIdCounter = 1;
 
 /** Fetch all stored customer addresses from shared Supabase settings table */
 async function getStoredCustomerAddresses(): Promise<{ rowId: string | null; map: Record<string, any[]> }> {

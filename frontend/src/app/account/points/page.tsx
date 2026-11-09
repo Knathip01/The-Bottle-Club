@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth-utils';
 import MainHeader from '@/components/MainHeader';
 import Footer from '@/components/Footer';
 import AccountSidebar from '@/components/account/AccountSidebar';

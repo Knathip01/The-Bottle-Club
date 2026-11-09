@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const storyImages = [
   { src: 'https://images.vivino.com/misc/sponsorships/26164_Miraval/26164_Miraval_1.jpg', alt: 'Miraval rosé wine among the vines' },

@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
 import WineriesHeader from './components/WineriesHeader'
 import WineriesSidebar from './components/WineriesSidebar'
 import WineriesStory from './components/WineriesStory'
@@ -16,14 +15,6 @@ export default function WineriesContent() {
   const [searchTerm, setSearchTerm] = useState(initialSearch)
   const [cartCount, setCartCount] = useState(0)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
-
-  const handleAddToCart = (wineName: string) => {
-    setCartCount((prev) => prev + 1)
-    setToastMessage(`Added "${wineName}" to your shopping cart!`)
-    setTimeout(() => {
-      setToastMessage(null)
-    }, 3500)
-  }
 
   const handleScrollToWines = () => {
     router.push('/search?q=San%20Marzano')

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Phone, Mail } from 'lucide-react';
+import { ExternalLink, Globe, Phone, Mail } from 'lucide-react';
 
 const storyBase = 'https://images.vivino.com/misc/sponsorships/79743_BB/79743_BB_';
 const intro = 'Domaine de la Borie Blanche is one of six family estates in Maison Lorgeril, an independent Languedoc wine family with more than 400 years of history. Nicolas and Miren de Lorgeril acquired the estate in 1999. It sits in the heart of the La Livinière appellation, on the foothills of the Montagne Noire.';

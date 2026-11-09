@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const imageBase = 'https://images.vivino.com/misc/sponsorships/3404_ChaateaudelaDauphine/3404_Cha%CC%82teaudeLaDauphine_';
 const stories = [

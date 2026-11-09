@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Phone, Mail } from 'lucide-react';
+import { ExternalLink, Globe, Phone, Mail } from 'lucide-react';
 
 const storyBase = 'https://vivino.s3.amazonaws.com/misc/sponsorships/320300_brownestate/320300_AgrapartAvize_';
 const intro = 'The Agrapart family has made Champagne in Avize for four generations. Arthur founded the original house in 1894. In 2020, Fabrice Agrapart began a new chapter with partners Emmanuel Turpin and Johanna Bergsborn Bertilsson. The village and chalky slopes of the Côte des Blancs remain the same; the vision is new.';

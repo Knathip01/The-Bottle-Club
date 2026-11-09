@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mail, Mountain, Phone, User } from 'lucide-react';
+import { ExternalLink, Globe, Mail, Phone, User } from 'lucide-react';
 
 const images = {
   logo: 'https://images.vivino.com/wineries/1193/logos/RFVbD9VgTAOx6S6CYLysSQ.jpeg',
@@ -189,7 +189,7 @@ export default function DelDottoContent() {
           </div>
 
           <Paragraph>
-            In the heart of Napa Valley, Del Dotto Family Wineries &amp; Caves exemplifies the art of small-production, luxury winemaking. For over three decades, founder Dave Del Dotto has carefully acquired vineyards across California’s most celebrated appellations—including Rutherford, Oakville, St. Helena, Howell Mountain, and Fort Ross-Seaview on the Sonoma Coast.
+            In the heart of Napa Valley, Del Dotto Family Wineries &amp; Caves exemplifies the art of small-production, luxury winemaking. For over three decades, founder Dave Del Dotto has carefully acquired vineyards across California’s most celebrated appellations—including Rutherford, Oakville, St. Helena, Howell and Fort Ross-Seaview on the Sonoma Coast.
           </Paragraph>
 
           <hr className="border-stone-100" />

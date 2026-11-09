@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const storyImages = [
   { src: 'https://images.vivino.com/misc/sponsorships/3471_SieurdArques/3471_SieurdArques_1.jpg', alt: "Sieur d'Arques winery cellar and tasting room" },

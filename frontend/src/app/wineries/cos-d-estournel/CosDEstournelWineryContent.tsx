@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const image1 = 'https://images.vivino.com/misc/sponsorships/10864_CosdEstournel/cos-destournel1_1200x750.jpg';
 const image2 = 'https://images.vivino.com/misc/sponsorships/10864_CosdEstournel/cos-destournel2_1500x1001.jpg';

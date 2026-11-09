@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const storyBase = 'https://vivino.s3.amazonaws.com/misc/sponsorships/32006_chateaufavori/32006_chateaufavori_';
 const stories = [

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Mail, Phone } from 'lucide-react';
+import { ExternalLink, Globe, Mail, Phone } from 'lucide-react';
 
 const images = {
   hero: 'https://thumbs.vivino.com/winery_backgrounds/J9z0IC0pQeaNHPjL_EaE7g_2560x1520.jpeg',

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useSyncExternalStore } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { getAiString } from '@/lib/ai-translations';
 import { getAccountString } from '@/lib/account-translations';
 import { getCheckoutString } from '@/lib/checkout-translations';
@@ -2829,32 +2829,6 @@ function isLanguage(value: string | null): value is Language {
   return Boolean(value && value in translations);
 }
 
-function getLanguageSnapshot(): Language {
-  if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
-  const savedLang = window.localStorage.getItem('language');
-  return isLanguage(savedLang) ? savedLang : DEFAULT_LANGUAGE;
-}
-
-function getServerLanguageSnapshot(): Language {
-  return DEFAULT_LANGUAGE;
-}
-
-function subscribeLanguageChange(onStoreChange: () => void) {
-  if (typeof window === 'undefined') return () => {};
-
-  const handleStorage = (event: StorageEvent) => {
-    if (event.key === 'language') onStoreChange();
-  };
-
-  window.addEventListener('storage', handleStorage);
-  window.addEventListener(LANGUAGE_CHANGE_EVENT, onStoreChange);
-
-  return () => {
-    window.removeEventListener('storage', handleStorage);
-    window.removeEventListener(LANGUAGE_CHANGE_EVENT, onStoreChange);
-  };
-}
-
 function syncDocumentLanguage(lang: Language) {
   if (typeof document === 'undefined') return;
   document.documentElement.lang = lang;
@@ -2872,7 +2846,7 @@ export function LanguageProvider({
 }) {
   const [mounted, setMounted] = React.useState(false);
   const [languageState, setLanguageState] = React.useState<Language>(
-    initialLanguage ?? getServerLanguageSnapshot()
+    initialLanguage ?? DEFAULT_LANGUAGE
   );
 
   useEffect(() => {
@@ -2914,7 +2888,7 @@ export function LanguageProvider({
 
   // During hydration, strictly use initialLanguage to match the server HTML.
   // After hydration (mounted is true), use the state value.
-  const language = mounted ? languageState : (initialLanguage ?? getServerLanguageSnapshot());
+  const language = mounted ? languageState : (initialLanguage ?? DEFAULT_LANGUAGE);
 
   useEffect(() => {
     syncDocumentLanguage(language);
@@ -2929,7 +2903,7 @@ export function LanguageProvider({
     syncDocumentLanguage(lang);
   };
 
-  const serverLang = initialLanguage ?? getServerLanguageSnapshot();
+  const serverLang = initialLanguage ?? DEFAULT_LANGUAGE;
 
   const serverT = (key: string) => {
     if (key.startsWith('ai.')) {
@@ -2953,7 +2927,7 @@ export function LanguageProvider({
         return promoStr;
       }
     }
-    const langData = (translations[serverLang] || translations['en']) as Record<string, string>;
+    const langData = ((translations as Record<string, Record<string, string>>)[serverLang] || translations['en']) as Record<string, string>;
     return langData[key] || (translations['en'] as Record<string, string>)[key] || key;
   };
 
@@ -2979,7 +2953,7 @@ export function LanguageProvider({
         return promoStr;
       }
     }
-    const langData = (translations[language] || translations['en']) as Record<string, string>;
+    const langData = ((translations as Record<string, Record<string, string>>)[language] || translations['en']) as Record<string, string>;
     return langData[key] || (translations['en'] as Record<string, string>)[key] || key;
   };
 

@@ -76,24 +76,6 @@ export type ProductReview = {
   created_at: string;
 };
 
-function extractWineArray(rawData: unknown): unknown[] {
-  if (Array.isArray(rawData)) return rawData;
-  if (rawData && typeof rawData === 'object') {
-    const obj = rawData as Record<string, unknown>;
-    for (const key of ['wines', 'items', 'results', 'products']) {
-      if (Array.isArray(obj[key])) return obj[key] as unknown[];
-    }
-    if (Array.isArray(obj.data)) return obj.data as unknown[];
-    if (obj.data && typeof obj.data === 'object') {
-      const dataObj = obj.data as Record<string, unknown>;
-      for (const key of ['items', 'wines', 'products', 'results']) {
-        if (Array.isArray(dataObj[key])) return dataObj[key] as unknown[];
-      }
-    }
-  }
-  return [];
-}
-
 let cachedApiToken: string | null = null;
 let tokenExpiresAt = 0;
 let inFlightTokenPromise: Promise<string | null> | null = null;
@@ -670,7 +652,7 @@ export function sanitizeProductsForAuth(products: Product[], isAuth: boolean): P
 
 export function mapWineItemToProduct(
   item: any,
-  isAuth: boolean = false,
+  _isAuth: boolean = false,
   apiBaseUrl: string = 'https://api.wayneven.uk'
 ): Product {
   const ensureString = (val: any): string => {

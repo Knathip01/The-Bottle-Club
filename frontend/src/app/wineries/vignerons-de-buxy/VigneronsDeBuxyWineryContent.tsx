@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const storyImages = [
   { src: 'https://images.vivino.com/misc/sponsorships/14076_VigneronsDeBuxy/14076_VigneronsDeBuxy_1.jpg', alt: 'The Vignerons de Buxy team during grape harvest' },

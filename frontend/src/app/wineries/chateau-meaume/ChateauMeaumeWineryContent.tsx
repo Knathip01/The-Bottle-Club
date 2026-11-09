@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const storyBase = 'https://images.vivino.com/misc/sponsorships/5086_chateaumeaume_2023/5086_chateaumeaume_2023_';
 const stories = [

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const cover = 'https://thumbs.vivino.com/wineries/sponsorship_cards/CNg1ORlKQoed6NqjPdwSFg_600x356.jpeg';
 

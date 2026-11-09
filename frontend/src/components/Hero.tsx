@@ -12,13 +12,8 @@ interface HeroProps {
 }
 
 export default function Hero({ heroPromo: initialHeroPromo }: HeroProps = {}) {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const [promo, setPromo] = useState<PromotionItem | null>(initialHeroPromo ?? null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (initialHeroPromo !== undefined) {

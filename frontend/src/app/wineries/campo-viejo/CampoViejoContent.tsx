@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, User } from 'lucide-react';
+import { ExternalLink, Globe, User } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/2730/logos/3M_aV6CvQ2-WXuTax6czXg_500x500.jpeg',

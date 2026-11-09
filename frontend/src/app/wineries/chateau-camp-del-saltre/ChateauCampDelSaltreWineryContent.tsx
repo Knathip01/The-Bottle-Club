@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Phone, Mail } from 'lucide-react';
+import { ExternalLink, Globe, Phone, Mail } from 'lucide-react';
 
 const storyBase = 'https://vivino.s3.amazonaws.com/misc/sponsorships/95487_ch%C3%A2teaucampdelsaltre/';
 const intro = 'At the edge of Prayssac in the Lot, close to the Dordogne border, Château Camp del Saltre is a centuries-old château with space to welcome up to 60 guests. The family has produced wine here for generations.';

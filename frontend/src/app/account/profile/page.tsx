@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import MainHeader from '@/components/MainHeader';
 import Footer from '@/components/Footer';
 import AccountSidebar from '@/components/account/AccountSidebar';
-import { getSession } from '@/lib/auth-utils';
 import ProfileContent from '@/components/account/ProfileContent';
 import { syncSession } from '@/app/actions/auth';
 

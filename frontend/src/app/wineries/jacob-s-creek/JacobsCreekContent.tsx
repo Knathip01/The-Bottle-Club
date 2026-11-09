@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Mail, Phone } from 'lucide-react';
+import { ExternalLink, Globe, Mail, Phone } from 'lucide-react';
 
 const images = [
   'https://images.vivino.com/misc/sponsorships/6806_jacobscreek/6806_jacobscreek_1_2560x1520.jpg',

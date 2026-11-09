@@ -3,7 +3,6 @@ import { getProducts } from '@/lib/products';
 import MainHeader from '@/components/MainHeader';
 import Footer from '@/components/Footer';
 import { getSession } from '@/lib/auth-utils';
-import { redirect } from 'next/navigation';
 
 interface SearchPageProps {
   searchParams: { q?: string };

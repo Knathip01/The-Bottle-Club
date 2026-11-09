@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const storyBase = 'https://images.vivino.com/misc/sponsorships/204658_millebuis/204658_millebuis_';
 const stories: Array<{ src: string; alt: string; text?: string; heading?: string; paragraphs?: string[] }> = [

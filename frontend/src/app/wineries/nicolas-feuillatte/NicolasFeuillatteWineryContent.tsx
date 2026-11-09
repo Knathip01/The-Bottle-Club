@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const storyImages = [
   { src: 'https://images.vivino.com/misc/sponsorships/7991_nicolasfeuillatte_2024/7991_nicolasfeuillatte_2024_1_2560x1520.jpg', alt: 'Champagne grapes in the vineyard' },

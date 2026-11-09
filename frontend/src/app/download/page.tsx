@@ -1,5 +1,4 @@
-import Link from 'next/link';
-import { Download, FileCode, Database, FileArchive, FileText, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Download, FileCode, Database, FileArchive, FileText, CheckCircle2 } from 'lucide-react';
 import MainHeader from '@/components/MainHeader';
 import Footer from '@/components/Footer';
 

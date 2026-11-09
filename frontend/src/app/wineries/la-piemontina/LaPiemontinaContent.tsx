@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Shield } from 'lucide-react';
+import { ExternalLink, Globe, Shield } from 'lucide-react';
 
 const heroImage = 'https://www.vivino.com/images/wineries/wineglasses.webp';
 

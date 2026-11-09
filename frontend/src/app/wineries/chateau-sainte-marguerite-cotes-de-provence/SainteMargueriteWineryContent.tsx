@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const storyBase = 'https://vivino.s3.amazonaws.com/misc/sponsorships/11523_ch%C3%A2teausaintemarguerite+/11523_cha%CC%82teausaintemarguerite_';
 const stories = [

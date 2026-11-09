@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const storyBase = 'https://vivino.s3.amazonaws.com/misc/sponsorships/42136_Ch%C3%A2teaudeMille/42136_Chateau+de+Mille_';
 const intro = 'In 2018, French-American couple Constance and Lawrence Slaughter took over Château de Mille, a historic estate ready for renewal. They have devoted their energy to restoring the château and revitalising its vineyards, with cover crops, biodiversity projects, new plantings and careful, natural winemaking.';

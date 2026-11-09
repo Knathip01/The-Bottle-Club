@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Landmark, Mountain } from 'lucide-react';
+import { Landmark } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/28564/logos/oooQGypySFG4TfEsLQf7HA_500x500.jpeg',

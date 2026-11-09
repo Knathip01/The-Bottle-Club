@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const storyImages = [
   { src: 'https://vivino.s3.amazonaws.com/misc/sponsorships/1337_krug/1337_krug_2b_2560x1520.jpg', alt: 'A hand selecting a grape in a Champagne vineyard' },

@@ -386,17 +386,7 @@ export default function VoiceAssistant() {
     ) {
       return { path: '/search', name: 'ค้นหาสินค้า' };
     }
-    // 12. Test / หน้าทดสอบ
-    else if (
-      query.includes('หน้าทดสอบ') ||
-      query.includes('ทดสอบ') ||
-      query.includes('test') ||
-      query.includes('ไปหน้าทดสอบ') ||
-      query.includes('ไปtest')
-    ) {
-      return { path: '/test', name: 'หน้าทดสอบ' };
-    }
-    // 13. Home / หน้าแรก
+    // 12. Home / หน้าแรก
     else if (
       query.includes('หน้าแรก') ||
       query.includes('หน้าหลัก') ||

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const aix = 'https://images.vivino.com/misc/sponsorships/25239_aix/';
 const saintAix = 'https://images.vivino.com/misc/sponsorships/25239_saintaix/';

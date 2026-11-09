@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Phone, Mail } from 'lucide-react';
+import { ExternalLink, Globe, Phone, Mail } from 'lucide-react';
 
 const storyBase = 'https://vivino.s3.amazonaws.com/misc/sponsorships/35643_domainesaintemarie/';
 const stories = [

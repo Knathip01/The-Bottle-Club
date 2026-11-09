@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Search, Sparkles, Moon, Sun, Globe, Radio, RefreshCw, Cpu } from 'lucide-react';
 import { DEMO_TRACKING_IDS } from '@/lib/tracking/shipments';
 

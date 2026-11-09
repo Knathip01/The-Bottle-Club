@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Mail } from 'lucide-react';
+import { ExternalLink, Globe, Mail } from 'lucide-react';
 
 const storyImages = [
   ['https://images.vivino.com/misc/sponsorships/321844_FlyingWhale/321844_FlyingWhale_1.jpg', 'Maba Ba standing among the vineyard rows'],

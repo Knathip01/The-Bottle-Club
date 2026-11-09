@@ -9,15 +9,11 @@ import {
   Mail,
   ArrowLeft,
   ExternalLink,
-  ShieldCheck,
   ShoppingBag,
-  Sparkles,
-  Share2,
 } from 'lucide-react';
 import MainHeader from '@/components/MainHeader';
 import Footer from '@/components/Footer';
-import { WINERIES_DATA, Winery } from '@/data/wineriesData';
-import { WineriesShieldIcon } from '@/components/wineries/WineriesShieldIcon';
+import { WINERIES_DATA } from '@/data/wineriesData';
 
 interface PageProps {
   params: Promise<{ slug: string }>;

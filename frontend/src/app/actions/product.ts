@@ -46,7 +46,7 @@ export async function uploadProductImage(productId: number, formData: FormData) 
 }
 
 // Delete product image
-export async function deleteProductImage(productId: number, imageId: number) {
+export async function deleteProductImage(productId: number, _imageId?: number) {
   const session = await getSession()
   const token = session?.user?.access_token
 
@@ -79,7 +79,7 @@ export async function deleteProductImage(productId: number, imageId: number) {
 }
 
 // Example: Server Action to add a product to cart
-export async function addToCart(productId: string, quantity: number) {
+export async function addToCart(productId: string, _quantity?: number) {
   const session = await getSession()
 
   if (!session || !session.user) {

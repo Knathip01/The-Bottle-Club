@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Mail } from 'lucide-react';
+import { ExternalLink, Globe, Mail } from 'lucide-react';
 
 const alentiImages = {
   hero: 'https://alenti.fr/cdn/shop/files/859A4428.jpg?v=1763027854&width=2400',

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const images = [
   { src: 'https://images.vivino.com/misc/sponsorships/11092_minuty/11092_minuty_1_2560x1520.jpg', alt: 'Garden and grounds at Château Minuty' },

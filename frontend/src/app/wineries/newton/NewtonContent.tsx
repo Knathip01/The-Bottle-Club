@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mail, Mountain, Phone, User } from 'lucide-react';
+import { ExternalLink, Globe, Mail, Phone, User } from 'lucide-react';
 
 const images = {
   logo: 'https://images.vivino.com/wineries/1445/logos/nnRmT8Q5SqCRDLhChprfBA.jpeg',
@@ -239,11 +239,11 @@ export default function NewtonContent() {
 
           <StoryImage
             src={images.story4}
-            alt="Three bottles of Newton Single Vineyard Cabernet Sauvignon: Spring Mountain, Yountville, and Mt. Veeder"
+            alt="Three bottles of Newton Single Vineyard Cabernet Sauvignon: Spring Yountville, and Mt. Veeder"
           />
 
           <Paragraph>
-            Pursuing even deeper terroir exploration, in 2016, Newton released three exceptional single-vineyard Cabernets from the Spring Mountain, Mt. Veeder and Yountville AVAs and two single-vineyard Chardonnays, revealing the character of each individual estate through the best blocks, each season.
+            Pursuing even deeper terroir exploration, in 2016, Newton released three exceptional single-vineyard Cabernets from the Spring Mt. Veeder and Yountville AVAs and two single-vineyard Chardonnays, revealing the character of each individual estate through the best blocks, each season.
           </Paragraph>
 
           <hr className="border-stone-100" />

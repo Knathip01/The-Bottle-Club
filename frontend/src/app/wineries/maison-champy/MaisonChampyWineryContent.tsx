@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const imageBase = 'https://vivino.s3.amazonaws.com/misc/sponsorships/2358_maisonchampy/';
 const storyImages = [

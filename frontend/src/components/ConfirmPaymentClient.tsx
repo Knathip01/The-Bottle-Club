@@ -26,7 +26,7 @@ interface ConfirmPaymentClientProps {
   existingSlip?: any;
 }
 
-export default function ConfirmPaymentClient({ accessToken, orderId, initialOrder, existingSlip }: ConfirmPaymentClientProps) {
+export default function ConfirmPaymentClient({ accessToken: _accessToken, orderId, initialOrder, existingSlip }: ConfirmPaymentClientProps) {
   const router = useRouter();
   const { t, language } = useLanguage();
   const order = initialOrder;

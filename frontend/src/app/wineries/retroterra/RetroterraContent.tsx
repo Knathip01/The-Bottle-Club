@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Mountain, User } from 'lucide-react';
+import { User } from 'lucide-react';
 
 const images = {
   logo: 'https://thumbs.vivino.com/wineries/319679/logos/Ih9X6gAiT2itRtFvLcJffg_500x500.jpeg',

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Mail } from 'lucide-react';
+import { ExternalLink, Globe, Mail } from 'lucide-react';
 
 const storyBase = 'https://vivino.s3.amazonaws.com/misc/sponsorships/274027_rumor/274027_rumor_';
 const intro = 'Every great love story can begin with a small detail that keeps returning. For Barry Bayat, it was a glass of rosé, present in life’s special moments: a Côte d’Azur sunset, dinner with friends or a night that seemed never to end. RUMOR was created to bottle that feeling, ready to be shared wherever a bottle is opened.';

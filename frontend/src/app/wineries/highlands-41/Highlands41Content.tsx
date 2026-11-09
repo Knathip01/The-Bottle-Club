@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Phone, User } from 'lucide-react';
+import { ExternalLink, Globe, Phone, User } from 'lucide-react';
 
 const images = {
   logo: 'https://images.vivino.com/wineries/259661/logos/1gl8Pg9CTx6akibskzyzMQ.png',

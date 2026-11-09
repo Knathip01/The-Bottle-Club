@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const storyImages = [
   { src: 'https://images.vivino.com/misc/sponsorships/17370_xaviervignon/17370_xaviervignon_1_2560x1520.jpg', alt: 'Vineyards and terroir of Xavier Vignon' },

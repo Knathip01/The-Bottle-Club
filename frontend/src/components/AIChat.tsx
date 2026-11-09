@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Send, User, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
-import { usePathname } from 'next/navigation';
 import type { Language } from '@/context/LanguageContext';
 import type { Product } from '@/lib/products';
 import {
@@ -78,8 +77,6 @@ interface Message {
 }
 
 export default function AIChat() {
-  const pathname = usePathname();
-
   const { language, t } = useLanguage();
   const locale = AI_PRICE_LOCALES[language] || 'en-US';
   const [isOpen, setIsOpen] = useState(false);

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
 
 const storyBase = 'https://images.vivino.com/misc/sponsorships/313036_lesglories/313036_Les+Glories_';
 const intro = 'Centuries ago, monks protected France’s treasured vineyards through war and unrest, helping preserve vines and advance winemaking. Les Glories celebrates that legacy with wines grounded in tradition, shaped by time and made to be shared across generations.';

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Mail } from 'lucide-react';
+import { ExternalLink, Globe, Mail } from 'lucide-react';
 
 const storyImages = [
   'https://api.u.wine/api/v1/image/shop_manager.shop_product_image/5597/image/470x705.png',

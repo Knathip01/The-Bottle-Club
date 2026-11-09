@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, Globe, Mountain, Mail } from 'lucide-react';
+import { ExternalLink, Globe, Mail } from 'lucide-react';
 
 const storyBase = 'https://images.vivino.com/misc/sponsorships/66011_ChateauMaineGazin/66011_ChateauMaineGazin_';
 const opening = [
