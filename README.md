@@ -1,161 +1,266 @@
-# 🍷 The Bottle Club — Project Documentation
+# 🍷 The Bottle Club — Project Documentation & Developer Guide
 
-โครงการร้านค้าออนไลน์สำหรับเครื่องดื่ม (Wine & Spirits) พัฒนาด้วย **Next.js 16** (Frontend) และ **Express.js** (Backend) โดยใช้ฐานข้อมูล **PostgreSQL** และเชื่อมต่อกับ External API แบบ Hybrid System
+เอกสารคู่มือโครงการ **The Bottle Club** แพลตฟอร์มร้านค้าออนไลน์สำหรับไวน์และเครื่องดื่มระดับพรีเมียม (Wine & Spirits E-Commerce) พัฒนาด้วยสถาปัตยกรรม **Next.js 16 (App Router + Turbopack)**, **React 19**, **Tailwind CSS v4** และเชื่อมต่อระบบหลังบ้านแบบ **Hybrid Architecture** ร่วมกับ **FastAPI Backend (Wayneven API)** และ **PostgreSQL / Supabase** พร้อมระบบ **Mock Product & Instant Login Fallback** เพื่อความต่อเนื่องในการพัฒนาและทดสอบ
 
 ---
 
-## 📐 Web Inspection (สถาปัตยกรรมเว็บ)
+## 📑 สารบัญ (Table of Contents)
+1. [ภาพรวมสถาปัตยกรรมระบบ (Architecture Overview)](#-ภาพรวมสถาปัตยกรรมระบบ-architecture-overview)
+2. [วิธีการทำงานของระบบ (System Workflows)](#-วิธีการทำงานของระบบ-system-workflows)
+3. [โครงสร้างโปรเจกต์ (Project Structure)](#-โครงสร้างโปรเจกต์-project-structure)
+4. [คู่มือการติดตั้งสำหรับ Developer (Local Setup Guide)](#-คู่มือการติดตั้งสำหรับ-developer-local-setup-guide)
+5. [การตั้งค่า Environment Variables](#-การตั้งค่า-environment-variables)
+6. [คู่มือการ Deploy ขึ้น Vercel (Vercel Deployment Guide)](#-คู่มือการ-deploy-ขึ้น-vercel-vercel-deployment-guide)
+7. [เส้นทางและโมดูลทั้งหมด (Pages & API Routes)](#-เส้นทางและโมดูลทั้งหมด-pages--api-routes)
+8. [แผนผังฐานข้อมูล (Database ER Diagram)](#-แผนผังฐานข้อมูล-database-er-diagram)
+9. [การทำงานร่วมกับระบบ POS หน้าร้าน](#-การทำงานร่วมกับระบบ-pos-หน้าร้าน)
 
-### Architecture Overview
+---
+
+## 📐 ภาพรวมสถาปัตยกรรมระบบ (Architecture Overview)
+
+ระบบออกแบบเป็น **Hybrid Decoupled Architecture** เพื่อความยืดหยุ่นสูงสุดในการทำงานร่วมกันระหว่าง Frontend E-Commerce, Backend API และระบบขายหน้าร้าน (POS)
+
+```mermaid
+flowchart TD
+    subgraph Client ["Client Devices"]
+        Browser["User Browser (Web / Mobile)"]
+    end
+
+    subgraph Vercel ["Vercel Edge Platform"]
+        NextApp["Next.js 16 App Router (Turbopack)"]
+        ServerActions["Server Actions & SSR"]
+        APIRoutes["Route Handlers (/api/*)"]
+        FallbackEngine["Mock Catalog & Auth Fallback"]
+    end
+
+    subgraph ExternalAPI ["Wayneven FastAPI Backend (api.wayneven.uk)"]
+        AuthMe["/api/v1/auth/ (OAuth2 / JWT)"]
+        WineCatalog["/api/v1/wine-products/"]
+        OrderAPI["/api/v1/orders/"]
+        CustomerAPI["/api/v1/customers/"]
+    end
+
+    subgraph DataLayer ["Data & Storage Layer"]
+        SupabaseDB["Supabase PostgreSQL (Settings & Sync)"]
+        DirectPG["PostgreSQL Database (Local/Render)"]
+        StripeGateway["Stripe Payments Gateway"]
+        GeminiAI["Google Gemini AI (Vision & Chat)"]
+    end
+
+    Browser -->|HTTPS / RSC| NextApp
+    NextApp --> ServerActions
+    NextApp --> APIRoutes
+    ServerActions -->|Fetch Data| ExternalAPI
+    ServerActions -->|If API down/empty| FallbackEngine
+    ServerActions -->|Shared Config| SupabaseDB
+    ServerActions -->|Orders & Reviews| DirectPG
+    APIRoutes -->|Payment Intents| StripeGateway
+    APIRoutes -->|Label OCR / Sommelier| GeminiAI
+```
+
+---
+
+## ⚙️ วิธีการทำงานของระบบ (System Workflows)
+
+### 1. ระบบดึงข้อมูลสินค้าแบบ Hybrid (Hybrid Product Catalog & Fallback)
+1. เมื่อผู้ใช้เข้าชมหน้าเว็บ (`/`, `/search`, `/product/[id]`) ระบบจะเรียกฟังก์ชัน `getWineProducts()` ใน [`products.ts`](frontend/src/lib/products.ts)
+2. มีการเรียกคำขอไปยัง Wayneven API (`https://api.wayneven.uk/api/v1/wine-products/`) ด้วย Timeout 8 วินาที
+3. **Fallback อัตโนมัติ:** หาก Backend API ตอบกลับ 0 รายการ (`items: []`), หรือเกิดข้อผิดพลาด/ช้า ระบบจะสลับมาดึงสินค้าจาก **`MOCK_PRODUCTS_POOL` (ไวน์ชั้นนำระดับโลกกว่า 130+ รายการ)** ทันที
+4. ทำให้ผู้ใช้, พนักงาน และทีมพัฒนาสามารถดูข้อมูล ราคา รูปภาพ กรองตามประเภท (Red, White, Rosé, Sparkling) และทดสอบสั่งซื้อได้ตลอดเวลาโดยไม่สะดุด
+
+### 2. ระบบยืนยันตัวตนและการเข้าสู่ระบบด่วน (Authentication & Instant Demo Login)
+- **Production Mode:** ส่งคำขอเข้าสู่ระบบไปยัง FastAPI `/api/v1/auth/login` เพื่อรับ Access Token และเข้ารหัสเก็บไว้ใน HttpOnly Cookie ผ่าน `jose (HS256)`
+- **Instant Demo Login:** หาก API ยังไม่พร้อมใช้งาน หรือกรอกรหัสทดสอบ ระบบมีปุ่ม **"⚡ เข้าสู่ระบบทันที (Instant Demo Login)"** ในหน้า [`/login`](frontend/src/app/login/page.tsx)
+- ระบบจะสร้าง Mock Session ระดับ **VIP Member** (มี 250 คะแนนสะสม และรหัสสมาชิก `•••• •••• •••• 9999`) ให้อัตโนมัติ ทำให้สามารถทดสอบฟังก์ชันในหน้าสมาชิก เช่น ดูคะแนนสะสม, ตรวจสอบที่อยู่ และจำลองสั่งซื้อได้ทันที
+
+### 3. ระบบสมาชิกและการซ่อนข้อมูลสำหรับ Guest (Members-Only Barrier)
+- ผู้ใช้ที่ยังไม่ได้เข้าสู่ระบบจะเห็นราคาและปุ่มเพิ่มลงตะกร้าพร้อมแท็กกระตุ้นให้สมัครสมาชิก
+- เมื่อเข้าสู่ระบบแล้ว ข้อมูลราคาเต็ม สิทธิประโยชน์แต้มสะสม และรีวิวจากลูกค้าจะแสดงผลแบบสมบูรณ์
+
+### 4. ระบบ AI Sommelier และ AI Wine Label Scanner (`/scan`)
+- เชื่อมต่อกับ **Google Gemini 2.5/Pro API**
+- ผู้ใช้สามารถเปิดกล้องหรืออัปโหลดรูปภาพฉลากไวน์ เพื่อให้อัลกอริทึมสกัดชื่อไวน์ ปีที่ผลิต พันธุ์องุ่น และแนะนำเมนูอาหารที่จับคู่ได้อย่างแม่นยำ
+
+---
+
+## 📁 โครงสร้างโปรเจกต์ (Project Structure)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CLIENT BROWSER                           │
-│   React 19 + Next.js 16 App Router + Tailwind CSS v4           │
-└──────────────────────┬──────────────────────────────────────────┘
-                       │  HTTP / HTTPS
-          ┌────────────▼────────────┐
-          │   NEXT.JS FRONTEND      │  :3000
-          │   (App Router / SSR)    │
-          │                         │
-          │  ┌───────────────────┐  │
-          │  │  Pages (Routes)   │  │
-          │  │  /               │  │
-          │  │  /product/[id]   │  │
-          │  │  /cart           │  │
-          │  │  /checkout       │  │
-          │  │  /auth/*         │  │
-          │  │  /account/*      │  │
-          │  │  /search         │  │
-          │  │  /tracking       │  │
-          │  └───────────────────┘  │
-          │                         │
-          │  ┌───────────────────┐  │
-          │  │  API Routes       │  │
-          │  │  /api/products    │  │
-          │  │  /api/reviews     │  │
-          │  │  /api/shipping    │  │
-          │  │  /api/proxy/*     │  │
-          │  │  /api/customers/* │  │
-          │  │  /api/create-order│  │
-          │  └───────────────────┘  │
-          └──────────┬──────────────┘
-                     │
-         ┌───────────┼───────────┐
-         │           │           │
-         ▼           ▼           ▼
-┌──────────────┐ ┌──────────┐ ┌──────────────────┐
-│  PostgreSQL  │ │ Express  │ │  Wayneven API    │
-│  Database    │ │ Backend  │ │  api.wayneven.uk │
-│              │ │  :3001   │ │                  │
-│  - users     │ │          │ │  - /api/v1/wine- │
-│  - orders    │ │  Stripe  │ │    products/     │
-│  - order_    │ │  Webhooks│ │  - /api/v1/auth/ │
-│    items     │ │  Shipping│ │  - /api/v1/orders│
-│  - products  │ │  API     │ │  - /api/v1/      │
-│  - product_  │ └──────────┘ │    payments/     │
-│    reviews   │              └──────────────────┘
-└──────────────┘
+ProjectbottleClub1/
+├── frontend/                  # Next.js 16 Web Application (Deploy บน Vercel)
+│   ├── src/
+│   │   ├── app/              # Next.js App Router (หน้าเว็บและ API Routes)
+│   │   │   ├── (auth)/       # /login, /register, /auth/success
+│   │   │   ├── account/      # /account (addresses, orders, points, profile, reviews)
+│   │   │   ├── actions/      # Server Actions (auth.ts, product.ts)
+│   │   │   ├── api/          # Route Handlers (create-order, upload-slip, wine-scan ฯลฯ)
+│   │   │   ├── cart/         # ตะกร้าสินค้า
+│   │   │   ├── checkout/     # เช็คเอาต์และชำระเงิน
+│   │   │   ├── download/     # ดาวน์โหลดสเปกและไฟล์แบ็กเอนด์
+│   │   │   ├── product/      # รายละเอียดสินค้า (/product/[id])
+│   │   │   ├── promotions/   # โปรโมชันประจำเดือน
+│   │   │   ├── scan/         # AI Wine Label Scanner
+│   │   │   ├── search/       # ค้นหาและกรองสินค้า
+│   │   │   ├── tracking/     # ติดตามสถานะพัสดุ
+│   │   │   └── wineries/     # แคตตาล็อกโรงไวน์ 150+ แห่งทั่วโลก
+│   │   ├── components/       # Reusable React Components
+│   │   ├── context/          # LanguageContext (รองรับ 25 ภาษา), CartContext
+│   │   ├── data/             # Mock Data Pools, Winery Master Data
+│   │   └── lib/              # Database, Utilities, Auth-utils, Products Library
+│   ├── public/               # รูปภาพ โลโก้ และ Static Assets
+│   ├── .env.example          # ตัวอย่าง Environment Variables
+│   ├── package.json          # Dependencies & Scripts
+│   └── tsconfig.json         # TypeScript Config
+├── backend/                   # Node.js/Express Backend เสริม (Microservices/Webhooks)
+├── shared/                    # ไฟล์ Schema และ JSON ข้อมูลรีวิวที่แชร์ร่วมกัน
+├── AGENTS.md                  # กฎและข้อกำหนดสำหรับ AI Coding Assistant
+├── BACKEND_CONTRACT.md        # ข้อตกลง API Contract ร่วมกับทีม FastAPI
+└── README.md                  # เอกสารคู่มือโครงการ (ไฟล์นี้)
 ```
 
-### 📄 Pages & Routes
+---
 
-| Route | ประเภท | คำอธิบาย |
+## 💻 คู่มือการติดตั้งสำหรับ Developer (Local Setup Guide)
+
+### ความต้องการของระบบ (Prerequisites)
+- **Node.js**: เวอร์ชัน `20.x` หรือ `22.x` ขึ้นไป (แนะนำ `22.12.0 LTS`)
+- **Package Manager**: `npm` เวอร์ชัน 10 ขึ้นไป
+- **Git**: สำหรับการจัดการเวอร์ชันโค้ด
+
+### ขั้นตอนการรันโปรเจกต์บนเครื่อง Local
+
+1. **Clone Repository:**
+   ```bash
+   git clone https://github.com/Knathip01/The-Bottle-Club.git
+   cd The-Bottle-Club
+   ```
+
+2. **เข้าไปที่โฟลเดอร์ `frontend`:**
+   ```bash
+   cd frontend
+   ```
+
+3. **ติดตั้ง Dependencies:**
+   ```bash
+   npm install
+   ```
+
+4. **สร้างไฟล์ Environment Variables:**
+   คัดลอกไฟล์ `.env.example` เป็น `.env.local`:
+   ```bash
+   cp .env.example .env.local
+   # บน Windows PowerShell:
+   Copy-Item .env.example .env.local
+   ```
+   *(แก้ไขค่าคีย์ต่างๆ ให้อิงตามข้อมูลจริง หรือใช้ค่าเริ่มต้นสำหรับพัฒนาต่อได้ทันที)*
+
+5. **รัน Development Server:**
+   ```bash
+   npm run dev
+   ```
+   เปิดเว็บเบราว์เซอร์แล้วเข้าสู่ [http://localhost:3000](http://localhost:3000)
+
+6. **คำสั่งตรวจสอบคุณภาพโค้ด:**
+   ```bash
+   # ตรวจสอบ Type Safety
+   npx tsc --noEmit
+
+   # ตรวจสอบ Linting
+   npm run lint
+
+   # ทดสอบคอมไพล์ Production Build
+   npm run build
+   ```
+
+---
+
+## 🔐 การตั้งค่า Environment Variables
+
+สร้างไฟล์ `.env.local` ในโฟลเดอร์ `frontend/` โดยใช้ตัวแปรดังตารางต่อไปนี้:
+
+| ตัวแปร (Variable Name) | จำเป็น | ค่าเริ่มต้น / ตัวอย่าง | คำอธิบาย |
+|-----------------------|:-----:|----------------------|----------|
+| `NEXT_PUBLIC_API_URL` | ✅ | `https://api.wayneven.uk` | URL ฐานสำหรับเรียก FastAPI Backend |
+| `API_URL` | ✅ | `https://api.wayneven.uk` | URL แบ็กเอนด์สำหรับ Server-side Fetch |
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | `https://yywymyxautnskmuvupwv.supabase.co` | URL ของ Supabase Project |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | `sb_publishable_...` | Public Anonymous Key ของ Supabase |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | `eyJhbGciOi...` | Service Role Key สำหรับจัดการ Settings ลับ |
+| `DATABASE_URL` | ⚠️ | `postgresql://user:pass@host:5432/db` | Connection String ฐานข้อมูล PostgreSQL |
+| `JWT_SECRET` | ✅ | `super-secret-key-min-32-characters` | คีย์เข้ารหัส Cookie Session ของผู้ใช้ |
+| `GEMINI_API_KEY` | ⚠️ | `AQ.Ab8RN6Jh...` | API Key สำหรับ AI Sommelier และ Wine OCR |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | ⚠️ | `pk_test_...` | Public Key สำหรับระบบจ่ายเงิน Stripe |
+| `STRIPE_SECRET_KEY` | ⚠️ | `sk_test_...` | Secret Key สำหรับ Stripe Webhook / Intents |
+| `BACKEND_ADMIN_USER` | ⚠️ | `admin` | Username แอดมินสำหรับดึง Service Token |
+| `API_ADMIN_PASSWORD` | ⚠️ | `admin123` | Password แอดมินสำหรับดึง Service Token |
+
+---
+
+## 🚀 คู่มือการ Deploy ขึ้น Vercel (Vercel Deployment Guide)
+
+เนื่องจากโปรเจกต์นี้มีโครงสร้างแบบ Monorepo ย่อย (โค้ดเว็บ Next.js อยู่ในไดเรกทอรี `frontend/`) **การตั้งค่า Root Directory ใน Vercel จึงเป็นขั้นตอนที่สำคัญที่สุด**
+
+### ขั้นตอนการ Deploy ผ่าน Vercel Dashboard
+
+1. **เข้าสู่ระบบ Vercel:** ไปที่ [vercel.com](https://vercel.com) และล็อกอินด้วยบัญชี GitHub ของคุณ
+2. **สร้างโปรเจกต์ใหม่ (Add New Project):**
+   - คลิกปุ่ม **"Add New..."** → เลือก **"Project"**
+   - ค้นหา Repository `The-Bottle-Club` แล้วคลิก **"Import"**
+3. **การตั้งค่าโปรเจกต์ (Project Configuration):**
+   - **Root Directory (สำคัญที่สุด):** คลิก **Edit** ข้าง Root Directory แล้วระบุเป็น:
+     ```text
+     frontend
+     ```
+   - **Framework Preset:** ตรวจสอบว่าระบบเลือกเป็น `Next.js` อัตโนมัติ
+   - **Build Command:** ปล่อยเป็นค่าเริ่มต้น (`next build` หรือ `npm run build`)
+   - **Output Directory:** ปล่อยเป็นค่าเริ่มต้น (`.next`)
+   - **Install Command:** ปล่อยเป็นค่าเริ่มต้น (`npm install`)
+4. **ตั้งค่า Environment Variables ใน Vercel:**
+   - ขยายแถบ **Environment Variables**
+   - คัดลอกค่าจากตาราง Environment Variables ด้านบนไปใส่ให้ครบถ้วน (โดยเฉพาะ `NEXT_PUBLIC_API_URL`, `JWT_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`)
+5. **กดปุ่ม Deploy:**
+   - คลิก **"Deploy"**
+   - Vercel จะทำการ Build และ Deploy หน้าเว็บทั้ง 295 หน้าภายในเวลาประมาณ 1-2 นาที
+   - เมื่อสำเร็จ จะได้รับโดเมน Production เช่น `https://pos-thebottleclub-web-eta.vercel.app`
+
+### การตั้งค่า Redeploy อัตโนมัติผ่าน Git
+- ทุกครั้งที่มีการ `git push origin main` Vercel จะทำการตรวจสอบและ Build เวอร์ชันใหม่อัตโนมัติ (Continuous Deployment)
+
+---
+
+## 📄 เส้นทางและโมดูลทั้งหมด (Pages & API Routes)
+
+### 1. หน้าเว็บหลัก (User Interface Routes)
+| Route | หน้าที่ | คำอธิบาย |
 |-------|--------|----------|
-| `/` | SSR | หน้าหลัก — Hero banner + ProductGrid พร้อม Members-Only Barrier |
-| `/product/[id]` | SSR + ISR | รายละเอียดสินค้า + Related Products Carousel + Reviews |
-| `/cart` | Client | ตะกร้าสินค้า — คำนวณ VAT 7% + Reward Points |
-| `/checkout` | Client | ชำระเงิน — Stripe, PromptPay, Cash ฯลฯ |
-| `/checkout/confirmation` | Client | หน้ายืนยันคำสั่งซื้อ |
-| `/confirm-payment` | Client | ยืนยันการชำระเงินผ่าน Stripe Webhook |
-| `/auth/login` | Client | เข้าสู่ระบบ |
-| `/auth/register` | Client | สมัครสมาชิก |
-| `/account` | SSR | โปรไฟล์ผู้ใช้ (Protected) |
-| `/account/profile` | Client | แก้ไขข้อมูลส่วนตัว |
-| `/account/orders` | Client | ประวัติคำสั่งซื้อ |
-| `/account/addresses` | Client | จัดการที่อยู่จัดส่ง |
-| `/account/points` | Client | คะแนนสะสม |
-| `/account/reviews` | Client | รีวิวสินค้าของฉัน |
-| `/account/privacy` | Client | นโยบายความเป็นส่วนตัว |
-| `/search` | Client | ค้นหาสินค้า |
-| `/tracking` | Client | ติดตามพัสดุ |
+| `/` | หน้าหลัก (Home) | Hero Banner, ตัวกรองหมวดหมู่, สินค้ายอดนิยม และโปรโมชัน |
+| `/product/[id]` | รายละเอียดสินค้า | ข้อมูลรสสัมผัส, แคว้น, ความเข้มข้นแอลกอฮอล์, คะแนนรีวิว และสินค้าแนะนำ |
+| `/search` | ค้นหาสินค้า | ค้นหาแบบ Real-time, กรองตามราคา ชนิดไวน์ (แดง/ขาว/โรเซ่/สปาร์กลิ้ง) |
+| `/cart` | ตะกร้าสินค้า | คำนวณยอดเงินรวม, ภาษีมูลค่าเพิ่ม (VAT 7%) และแต้มสะสม |
+| `/checkout` | ชำระเงิน | เลือกที่อยู่จัดส่ง, ช่องทางชำระเงิน (Stripe, PromptPay, บัตรเครดิต) |
+| `/account` | บัญชีของฉัน | แดชบอร์ดภาพรวมสมาชิก, ระดับ Member Tier (Classic, Silver, Gold, Platinum) |
+| `/account/orders` | รายการสั่งซื้อ | ประวัติการสั่งซื้อ และสถานะการชำระเงิน |
+| `/account/addresses` | จัดการที่อยู่ | เพิ่มและแก้ไขที่อยู่สำหรับจัดส่งพัสดุ |
+| `/account/points` | คะแนนสะสม | ตรวจสอบแต้มสะสมและสิทธิประโยชน์ |
+| `/account/confirm-payment` | แจ้งชำระเงิน | อัปโหลดสลิปโอนเงินสำหรับออเดอร์หน้าร้าน/โอนเงิน |
+| `/account/reviews` | รีวิวของฉัน | ประวัติการเขียนรีวิวและให้คะแนนสินค้า |
+| `/tracking` | ติดตามพัสดุ | ตรวจสอบสถานะการจัดส่งแบบ Real-time |
+| `/scan` | AI Wine Scanner | สแกนฉลากไวน์ผ่านกล้องเพื่อรับข้อมูลและคำแนะนำ |
+| `/wineries` | แคตตาล็อกโรงไวน์ | ทำเนียบผู้ผลิตไวน์และโรงไวน์ชื่อดังกว่า 150 แห่งทั่วโลก |
+| `/download` | ศูนย์ดาวน์โหลด | เอกสารสเปก API, Schema ฐานข้อมูล และสคริปต์หลังบ้าน |
 
-### 🔌 API Routes (Next.js Internal)
-
-| Method | Endpoint | คำอธิบาย |
-|--------|----------|----------|
-| GET | `/api/products` | Proxy ดึงรายการสินค้าจาก External API |
-| GET/POST | `/api/reviews` | CRUD รีวิวสินค้า → Local DB |
-| GET | `/api/shipping/track` | ติดตามพัสดุ (External + Built-in Fallback) |
-| POST | `/api/shipping/track` | ติดตามพัสดุผ่าน Body Params |
-| ANY | `/api/proxy/*` | Reverse Proxy ไปยัง External API |
-| GET/POST | `/api/customers/addresses` | จัดการที่อยู่ → External API |
-| POST | `/api/create-order` | สร้างคำสั่งซื้อ → Local DB + External |
-
-### 🧩 Component Tree
-
-```
-RootLayout
-├── LanguageProvider (Context — 25+ ภาษา)
-├── SessionSync (Client — Hydrate Auth State)
-├── Header
-│   ├── MainHeader (Logo + Search + Cart Icon)
-│   └── MobileNav (Hamburger Menu)
-├── [Page Content]
-│   ├── Hero (หน้าแรก)
-│   ├── ProductGrid → ProductCard
-│   ├── MembersOnlyBarrier (บล็อกราคา/รูปสำหรับ Guest)
-│   ├── ProductDetailClient → Review Section + Related Carousel
-│   ├── SearchProductList
-│   └── [Account Pages] → Profile / Orders / Address / Points / Reviews
-├── AIChat (Floating AI Assistant)
-├── VoiceAssistant (Floating Voice Assistant)
-└── Footer
-```
-
-### 🔐 Authentication Flow
-
-```
-User Login/Register
-       │
-       ▼
-External API (api.wayneven.uk)
-       │  JWT Token
-       ▼
-Next.js Server Action (login())
-       │  encrypt() with jose / HS256
-       ▼
-HttpOnly Cookie "session" (2h TTL)
-       │
-       ▼
-Middleware (updateSession) — Auto-refresh
-       │
-       ▼
-getSession() → Server Components / API Routes
-```
-
-### 🌐 Tech Stack
-
-| Layer | Technology | Version |
-|-------|-----------|---------|
-| Frontend Framework | Next.js | 16.2.4 |
-| UI Library | React | 19.2.4 |
-| Language | TypeScript | ^5 |
-| Styling | Tailwind CSS | ^4 |
-| Animation | Framer Motion | ^12 |
-| Icons | Lucide React | ^1.11 |
-| Auth | jose (JWT Sign/Verify) | ^6.2 |
-| Payments | Stripe | ^22.1 |
-| Database Client | pg (node-postgres) | ^8.20 |
-| State Management | Zustand | ^5 |
-| Maps | Leaflet + React-Leaflet | ^5 |
-| Backend | Express.js | — |
-| Database | PostgreSQL | — |
-| Fonts | Inter + Playfair Display | Google Fonts |
+### 2. API ภายใน (Next.js Internal Route Handlers)
+- `POST /api/create-order` : สร้างคำสั่งซื้อใหม่และบันทึกลงฐานข้อมูล
+- `POST /api/upload-slip` : อัปโหลดและตรวจสอบสลิปการโอนเงิน
+- `GET /api/products` : บริการดึงแคตตาล็อกสินค้าพร้อมระบบ Fallback
+- `GET /api/promotions` : ดึงข้อมูลโปรโมชันปัจจุบัน
+- `POST /api/wine-scan` : วิเคราะห์ฉลากไวน์ด้วย Gemini Vision AI
+- `GET /api/shipping/track` : ตรวจสอบสถานะเลขพัสดุ
+- `GET/POST /api/customers/addresses` : จัดการที่อยู่ลูกค้าผ่าน Supabase
 
 ---
 
-## 🗄️ ER Diagram (Entity Relationship Diagram)
+## 🗄️ แผนผังฐานข้อมูล (Database ER Diagram)
 
 ```mermaid
 erDiagram
@@ -165,9 +270,8 @@ erDiagram
         VARCHAR last_name
         VARCHAR email UK "NOT NULL"
         VARCHAR password_hash "NOT NULL"
-        TIMESTAMPTZ created_at
-        TIMESTAMPTZ updated_at
         INTEGER points "DEFAULT 0"
+        TIMESTAMPTZ created_at
     }
 
     products {
@@ -175,28 +279,19 @@ erDiagram
         VARCHAR name "NOT NULL"
         DECIMAL price "NOT NULL"
         INTEGER stock "DEFAULT 0"
+        VARCHAR color "red / white / rose / sparkling"
+        VARCHAR region
         TIMESTAMPTZ created_at
     }
 
     orders {
         SERIAL id PK
-        VARCHAR user_id FK "→ users.email or external ID"
-        DECIMAL subtotal_amount "NOT NULL DEFAULT 0"
-        DECIMAL shipping_fee "NOT NULL DEFAULT 0"
+        VARCHAR user_id FK "users.id or external email"
+        DECIMAL subtotal_amount "NOT NULL"
+        DECIMAL shipping_fee "DEFAULT 0"
         DECIMAL total_amount "NOT NULL"
-        VARCHAR status "pending/confirmed/shipped/delivered"
-        VARCHAR order_type "online / pos"
-        VARCHAR payment_method "cash/transfer/credit_card/promptpay/alipay/wechat_pay/line_pay/shopee_pay/true_wallet"
-        VARCHAR shipping_method "standard / express / pos"
-        INTEGER address_id
-        DECIMAL received_amount
-        DECIMAL change_amount
-        BOOLEAN is_full_tax_invoice "DEFAULT false"
-        VARCHAR tax_id
-        VARCHAR tax_business_name
-        BOOLEAN use_shipping_as_tax_address "DEFAULT true"
-        JSONB tax_address
-        VARCHAR stripe_payment_intent_id
+        VARCHAR status "pending / confirmed / shipped / delivered"
+        VARCHAR payment_method "promptpay / stripe / transfer / cash"
         TEXT payment_slip_url
         TIMESTAMPTZ created_at
     }
@@ -214,550 +309,31 @@ erDiagram
         INTEGER product_id "NOT NULL"
         VARCHAR user_id "NOT NULL"
         VARCHAR user_name
-        INTEGER rating "1-5 CHECK"
-        TEXT comment
-        TIMESTAMPTZ created_at
-    }
-
-    users ||--o{ orders : "places"
-    orders ||--|{ order_items : "contains"
-    products ||--o{ order_items : "included in"
-    products ||--o{ product_reviews : "has"
-    users ||--o{ product_reviews : "writes"
-```
-
-### 📊 ความสัมพันธ์ระหว่างตาราง
-
-| ความสัมพันธ์ | ประเภท | คำอธิบาย |
-|-------------|--------|----------|
-| `users` → `orders` | One-to-Many | ผู้ใช้หนึ่งคนมีได้หลายคำสั่งซื้อ |
-| `orders` → `order_items` | One-to-Many | คำสั่งซื้อหนึ่งมีหลายรายการสินค้า |
-| `products` → `order_items` | One-to-Many | สินค้าหนึ่งรายการมีได้ในหลายออเดอร์ |
-| `products` → `product_reviews` | One-to-Many | สินค้าหนึ่งชิ้นมีได้หลายรีวิว |
-| `users` → `product_reviews` | One-to-Many | ผู้ใช้หนึ่งคนเขียนรีวิวได้หลายชิ้น |
-
-> **หมายเหตุ**: `orders.user_id` เป็น `VARCHAR` เพื่อรองรับทั้ง Local DB user (integer as string) และ External API user ID (UUID/string) แบบ Hybrid System
-
----
-
-## 🌟 ฟีเจอร์ที่พัฒนาแล้ว (Implemented Features)
-
-### 🔐 ระบบสมาชิกและความปลอดภัย (Authentication & Security)
-- **ระบบ Login / Register**: เชื่อมต่อ External API พร้อมระบบตรวจสอบข้อผิดพลาดครบถ้วน รองรับทั้ง Username และ Email
-- **Advanced JWT Handling**: Extract & Normalize Token อัตโนมัติจาก API Payload หลายรูปแบบ, `setSessionFromToken`
-- **Secure Session Management**: Cookie-based Session ด้วย `jose` (Sign/Verify HS256) — HttpOnly, Secure, SameSite=Lax
-- **Middleware Protection**: Auto-refresh session + Route protection สำหรับหน้าที่ต้องระบุตัวตน
-- **Members-Only Barrier**: ซ่อนราคา/รูปสินค้าจริงสำหรับ Guest เพื่อกระตุ้นการสมัครสมาชิก
-
-### 👤 การจัดการบัญชี (Account Management)
-- **Unified Profile**: แสดงและแก้ไขข้อมูลส่วนตัวแบบรวมศูนย์
-- **Address Book**: CRUD ที่อยู่จัดส่งผ่าน API Proxy → External System
-- **Order History**: ดึงข้อมูลจาก External API พร้อม Fallback บันทึกลง Local DB
-- **Points & Rewards**: ระบบคะแนนสะสมสำหรับสมาชิก
-- **Review Management**: เขียน/ดูรีวิวสินค้าของตัวเอง
-
-### 🍷 ระบบแสดงและจัดการสินค้า (Product Catalog)
-- **Hybrid Data Fetching**: ดึงสินค้าจาก External API + Fallback Mock Data
-- **Smart Product Mapping**: แปลง Raw API data → Standard Schema พร้อม Auto-color Tagging (Red/White/Rose) และ Country Mapping (ISO Code)
-- **Dynamic Product Detail**: SSR + ISR รองรับ Next.js 15+ dynamic params
-- **Related Products Carousel**: แสดงสินค้าที่เกี่ยวข้องพร้อม Quick Buy
-- **Advanced Search**: ค้นหาตาม ชื่อ, ประเภท, สายพันธุ์, ภูมิภาค
-
-### 🛒 ตะกร้าและการชำระเงิน (Cart & Checkout)
-- **Cart State**: Zustand + localStorage persistence พร้อม Server-Client Sync
-- **VAT Calculation**: คำนวณ VAT 7% + แสดง Reward Points ที่จะได้รับ
-- **Multi-payment Methods**: Stripe, PromptPay, Transfer, Cash, AliPay, WeChat Pay, LINE Pay, ShopeePay, TrueMoney Wallet
-- **Tax Invoice**: รองรับการออกใบกำกับภาษีเต็มรูปแบบ (TAX ID + ที่อยู่)
-- **Stripe Integration**: Checkout Sessions + Payment Intents + Webhooks (backend)
-
-### 🚚 ระบบขนส่ง (Shipping & Tracking)
-- **Multi-modal Tracking**: รองรับทางอากาศ (AIR), ทางเรือ (SEA), ในประเทศ (DOM)
-- **Multi-destination**: ส่งออกไปได้หลายประเทศ (JP, GB, CN, RU, TH ฯลฯ)
-- **External API Integration**: เชื่อม Shipping API ภายนอกพร้อม Built-in Fallback
-- **Interactive Map**: แสดงเส้นทางการขนส่งด้วย Leaflet Map
-
-### 🤖 AI & Voice Assistant
-- **AIChat**: Floating AI Chatbot ช่วยแนะนำสินค้าและตอบคำถาม
-- **VoiceAssistant**: Floating Voice Assistant ควบคุมเว็บด้วยเสียง
-
-### 🌍 ระบบหลายภาษา (Localization)
-- รองรับ **25+ ภาษา**: TH, EN, FR, ZH, JA, ES, DE, KO, IT, RU, PT, VI, AR, HI, ID, TR, NL, PL, SV, DA, NO, FI, MS, HE, EL
-- **RTL Support**: ภาษาอาหรับ (AR) และ ฮีบรู (HE)
-- **Hydration-safe**: ใช้ `useSyncExternalStore` + Server-side `Accept-Language` detection
-- **Persistent**: บันทึกการเลือกภาษาลง `localStorage` อัตโนมัติ
-
----
-
-## ✅ อัปเดตล่าสุด (Latest Updates)
-
-### 📋 Session — 2026-06-04 (ล่าสุด)
-- **Web Inspection & ER Diagram**: เพิ่มเอกสาร Architecture, Route Map, Component Tree, และ ER Diagram ใน README
-
-### 📋 Session — 2026-05-23
-- **Hydration Fix**: แก้ Hydration Mismatch ใน `ProductGrid.tsx` ด้วย `useSyncExternalStore`
-- **Product Infrastructure**: อัปเดต `getProducts` รองรับ Bearer Token Authentication
-- **Dynamic Routing Fix**: แก้ Dynamic Params สำหรับ `/product/[id]` บน Next.js 15+
-
-### 📋 Session — 2026-05-18
-- **Localization Expansion**: เพิ่มคีย์แปลภาษาสำหรับ Cart + Checkout ครอบคลุม 10+ ภาษา
-- **Enhanced Cart UI**: Redesign ตะกร้าสินค้า + คำนวณ VAT 7% + Reward Points
-- **Product Visibility**: Conditional Rendering — สมาชิกเห็นรูปจริง / Guest เห็น Silhouette
-- **Stripe Update**: อัปเดต API Version เป็น `2023-10-16`
-
-### 📋 Session — 2026-05-17
-- **Related Products Carousel**: เพิ่ม Horizontal Carousel + Quick Buy ในหน้า Product Detail
-- **VAT Formula Fix**: เปลี่ยนตัวแปร `tax` → `vat`, สูตร `total = subtotal + vat`
-- **Account 404 Fix**: แก้ปัญหาหน้า `/account` แสดง 404 หลัง Dev Server Restart
-
----
-
-## 🛠️ เทคโนโลยีที่ใช้ (Tech Stack)
-
-| ส่วน | เทคโนโลยี |
-|------|-----------|
-| **Frontend** | Next.js 16.2.4 (App Router), React 19, TypeScript 5 |
-| **Styling** | Tailwind CSS v4, Framer Motion |
-| **Backend** | Node.js, Express.js (Stripe & Shipping) |
-| **Database** | PostgreSQL + pg pool |
-| **Auth** | JWT via `jose`, HttpOnly Cookies |
-| **Payments** | Stripe (Checkout, Webhooks) |
-| **Maps** | Leaflet + React-Leaflet |
-| **State** | Zustand + localStorage |
-| **Icons** | Lucide React |
-| **Fonts** | Inter + Playfair Display (Google Fonts) |
-
----
-
-## 🚀 วิธีการติดตั้ง (Installation)
-
-### 1. โคลนโปรเจกต์
-```bash
-git clone https://github.com/artisan-digital-asia/Project1-ThebottleClub.git
-cd Project1-ThebottleClub
-```
-
-### 2. ตั้งค่า Frontend
-```bash
-cd frontend
-npm install
-```
-สร้างไฟล์ `.env.local` ในโฟลเดอร์ `frontend`:
-```env
-DATABASE_URL=your_postgresql_connection_string
-JWT_SECRET=your_jwt_secret
-NEXT_PUBLIC_API_URL=https://api.wayneven.uk
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-STRIPE_SECRET_KEY=your_stripe_secret_key
-# Optional: external shipping carrier API (falls back to built-in routes)
-SHIPPING_API_URL=https://your-carrier-api.example.com
-SHIPPING_API_KEY=your_shipping_api_key
-```
-รัน Frontend:
-```bash
-npm run dev
-```
-
-### 3. ตั้งค่า Backend (สำหรับ Stripe Checkout/Webhooks)
-```bash
-cd ../backend
-npm install
-```
-สร้างไฟล์ `.env` ในโฟลเดอร์ `backend`:
-```env
-PORT=3001
-STRIPE_SECRET_KEY=your_stripe_secret_key
-SHIPPING_API_URL=https://your-carrier-api.example.com
-SHIPPING_API_KEY=your_shipping_api_key
-```
-รัน Backend:
-```bash
-npm run dev
-```
-
-### 4. Shipping Tracking API
-
-| Method | Endpoint | คำอธิบาย |
-|--------|----------|----------|
-| GET | `/api/shipping/track?tracking_number=TBC-EXP-AIR-JP-001` | Next.js Route (แนะนำ) |
-| POST | `/api/shipping/track` | Body: `{ tracking_number, transport_mode, destination_country, direction }` |
-| GET | `http://localhost:3001/api/shipping/track/:trackingNumber` | Express Backend |
-
-ตัวอย่าง Tracking Numbers:
-- **ส่งออก**: `TBC-EXP-SEA-CN-001`, `TBC-EXP-AIR-JP-001`, `TBC-EXP-AIR-GB-001`, `TBC-EXP-AIR-RU-001`
-- **ในประเทศ**: `TBC-DOM-LOCAL-TH-001`
-
-### 5. การเตรียมฐานข้อมูล
-```bash
-psql -U your_user -d your_database -f database_init.sql
-```
-
----
-
-## 📁 โครงสร้างโฟลเดอร์
-
-```
-Project1-ThebottleClub/
-├── frontend/                    # Next.js App
-│   └── src/
-│       ├── app/                 # App Router Pages & API Routes
-│       │   ├── page.tsx         # หน้าหลัก
-│       │   ├── product/[id]/    # รายละเอียดสินค้า
-│       │   ├── cart/            # ตะกร้าสินค้า
-│       │   ├── checkout/        # ชำระเงิน
-│       │   ├── auth/            # Login / Register
-│       │   ├── account/         # บัญชีผู้ใช้ (Protected)
-│       │   ├── search/          # ค้นหา
-│       │   ├── tracking/        # ติดตามพัสดุ
-│       │   └── api/             # Internal API Routes
-│       ├── components/          # React Components
-│       ├── context/             # React Contexts (Language, etc.)
-│       ├── lib/                 # Utilities (auth, cart, products, stripe)
-│       └── utils/               # Helper Functions
-├── backend/                     # Express.js Server
-│   └── src/
-│       ├── index.ts             # Main Server (Stripe + Shipping)
-│       ├── db.ts                # DB Connection
-│       └── shipping/            # Shipping Service
-├── database_init.sql            # PostgreSQL Schema
-└── README.md                    # This file
-```
-
----
-
-## 🔧 Admin Panel — Specification (Planned)
-
-ระบบหลังบ้านสำหรับผู้ดูแลร้าน The Bottle Club โดยออกแบบให้ต่อยอดจากโครงสร้างที่มีอยู่แล้ว
-
----
-
-### 🎯 เป้าหมาย
-
-| เป้าหมาย | รายละเอียด |
-|----------|-----------|
-| **จัดการออเดอร์** | อนุมัติสลิปโอนเงิน, เปลี่ยน status, พิมพ์ใบกำกับภาษี |
-| **จัดการสินค้า** | เพิ่ม/แก้ไข/ลบสินค้าใน Local DB, sync กับ External API |
-| **จัดการสมาชิก** | ดูข้อมูล user, ปรับคะแนน, ระงับบัญชี |
-| **จัดการรีวิว** | อนุมัติ/ลบรีวิวที่ไม่เหมาะสม |
-| **Dashboard** | ยอดขาย, สถิติ, รายงาน |
-| **POS** | หน้าขาย ณ จุดขาย (Point of Sale) |
-
----
-
-### 🗺️ Admin Routes (Planned)
-
-| Route | คำอธิบาย | Priority |
-|-------|----------|----------|
-| `/admin` | Admin Login (แยกจาก User Login) | 🔴 High |
-| `/admin/dashboard` | ภาพรวม — ยอดขายวันนี้, ออเดอร์ใหม่, สินค้าใกล้หมด | 🔴 High |
-| `/admin/orders` | รายการออเดอร์ทั้งหมด + กรอง status | 🔴 High |
-| `/admin/orders/[id]` | รายละเอียดออเดอร์ + อนุมัติสลิป + เปลี่ยน status | 🔴 High |
-| `/admin/products` | จัดการสินค้า (CRUD) | 🔴 High |
-| `/admin/products/new` | เพิ่มสินค้าใหม่ | 🟡 Medium |
-| `/admin/products/[id]/edit` | แก้ไขสินค้า | 🟡 Medium |
-| `/admin/members` | รายชื่อสมาชิกทั้งหมด | 🟡 Medium |
-| `/admin/members/[id]` | โปรไฟล์สมาชิก + ปรับคะแนน + ประวัติออเดอร์ | 🟡 Medium |
-| `/admin/reviews` | รีวิวสินค้าทั้งหมด + อนุมัติ/ลบ | 🟡 Medium |
-| `/admin/pos` | หน้าขาย ณ จุดขาย (POS) | 🟢 Low |
-| `/admin/reports` | รายงานยอดขาย, Export CSV/PDF | 🟢 Low |
-| `/admin/settings` | ตั้งค่าร้าน (ค่าส่ง, VAT, Points Rate) | 🟢 Low |
-
----
-
-### 🔌 Admin API Endpoints (Planned)
-
-ทั้งหมดต้องผ่าน **Admin JWT Middleware** ก่อนทุก request
-
-#### Orders
-| Method | Endpoint | คำอธิบาย |
-|--------|----------|----------|
-| GET | `/api/admin/orders` | ดึงออเดอร์ทั้งหมด (paginate + filter by status/date) |
-| GET | `/api/admin/orders/:id` | รายละเอียดออเดอร์ + items + slip URL |
-| PATCH | `/api/admin/orders/:id/status` | เปลี่ยน status (pending → confirmed → shipped → delivered) |
-| POST | `/api/admin/orders/:id/approve-payment` | อนุมัติสลิปโอนเงิน → set status `confirmed` |
-| POST | `/api/admin/orders/:id/reject-payment` | ปฏิเสธสลิป → set status `payment_rejected` |
-
-#### Products
-| Method | Endpoint | คำอธิบาย |
-|--------|----------|----------|
-| GET | `/api/admin/products` | ดึงสินค้า Local DB ทั้งหมด (รวม stock) |
-| POST | `/api/admin/products` | เพิ่มสินค้าใหม่ลง Local DB |
-| PATCH | `/api/admin/products/:id` | แก้ไขสินค้า (ชื่อ, ราคา, stock) |
-| DELETE | `/api/admin/products/:id` | ลบสินค้า (soft delete) |
-| PATCH | `/api/admin/products/:id/stock` | ปรับ stock โดยตรง |
-
-#### Members
-| Method | Endpoint | คำอธิบาย |
-|--------|----------|----------|
-| GET | `/api/admin/users` | รายชื่อสมาชิกทั้งหมด + order count + points |
-| GET | `/api/admin/users/:id` | โปรไฟล์ + ออเดอร์ของ user นี้ |
-| PATCH | `/api/admin/users/:id/points` | ปรับคะแนนสะสม (เพิ่ม/ลด) |
-| PATCH | `/api/admin/users/:id/status` | ระงับ/เปิดใช้บัญชี |
-
-#### Reviews
-| Method | Endpoint | คำอธิบาย |
-|--------|----------|----------|
-| GET | `/api/admin/reviews` | รีวิวทั้งหมด (filter by product/rating/status) |
-| PATCH | `/api/admin/reviews/:id/approve` | อนุมัติรีวิว |
-| DELETE | `/api/admin/reviews/:id` | ลบรีวิว |
-
-#### Dashboard & Reports
-| Method | Endpoint | คำอธิบาย |
-|--------|----------|----------|
-| GET | `/api/admin/dashboard` | ยอดขายวันนี้/เดือน, ออเดอร์ใหม่, สินค้าใกล้หมด |
-| GET | `/api/admin/reports/sales` | รายงานยอดขายรายวัน/เดือน (query: `?from=&to=`) |
-| GET | `/api/admin/reports/sales/export` | Export CSV |
-
----
-
-### 🗄️ Database Changes (Planned)
-
-ต้องเพิ่มตาราง/คอลัมน์ต่อไปนี้เข้า `database_init.sql`:
-
-```sql
--- Admin users table (แยกจาก users ปกติ)
-CREATE TABLE IF NOT EXISTS admin_users (
-    id        SERIAL PRIMARY KEY,
-    email     VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    name      VARCHAR(255),
-    role      VARCHAR(50) DEFAULT 'staff',  -- 'superadmin' | 'staff'
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- เพิ่มคอลัมน์ใน orders (สำหรับ Admin actions)
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS admin_note TEXT;
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS approved_by INTEGER REFERENCES admin_users(id);
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ;
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_number VARCHAR(100);
-
--- เพิ่มคอลัมน์ใน product_reviews (สำหรับ Moderation)
-ALTER TABLE product_reviews ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT true;
-ALTER TABLE product_reviews ADD COLUMN IF NOT EXISTS moderated_by INTEGER REFERENCES admin_users(id);
-
--- เพิ่ม is_active ใน users (สำหรับระงับบัญชี)
-ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
-```
-
----
-
-### 🗄️ ER Diagram (อัปเดต — รวม Admin)
-
-```mermaid
-erDiagram
-    admin_users {
-        SERIAL id PK
-        VARCHAR email UK
-        VARCHAR password_hash
-        VARCHAR name
-        VARCHAR role "superadmin / staff"
-        TIMESTAMPTZ created_at
-    }
-
-    users {
-        SERIAL id PK
-        VARCHAR first_name
-        VARCHAR last_name
-        VARCHAR email UK
-        VARCHAR password_hash
-        INTEGER points
-        BOOLEAN is_active "DEFAULT true"
-        TIMESTAMPTZ created_at
-        TIMESTAMPTZ updated_at
-    }
-
-    products {
-        SERIAL id PK
-        VARCHAR name
-        DECIMAL price
-        INTEGER stock
-        TIMESTAMPTZ created_at
-    }
-
-    orders {
-        SERIAL id PK
-        VARCHAR user_id FK
-        DECIMAL subtotal_amount
-        DECIMAL shipping_fee
-        DECIMAL total_amount
-        VARCHAR status "pending/confirmed/shipped/delivered/payment_rejected"
-        VARCHAR order_type "online / pos"
-        VARCHAR payment_method
-        VARCHAR shipping_method
-        INTEGER address_id
-        DECIMAL received_amount
-        DECIMAL change_amount
-        BOOLEAN is_full_tax_invoice
-        VARCHAR tax_id
-        VARCHAR tax_business_name
-        BOOLEAN use_shipping_as_tax_address
-        JSONB tax_address
-        VARCHAR stripe_payment_intent_id
-        TEXT payment_slip_url
-        TEXT admin_note
-        INTEGER approved_by FK
-        TIMESTAMPTZ approved_at
-        VARCHAR tracking_number
-        TIMESTAMPTZ created_at
-    }
-
-    order_items {
-        SERIAL id PK
-        INTEGER order_id FK
-        INTEGER product_id FK
-        INTEGER quantity
-        DECIMAL price
-    }
-
-    product_reviews {
-        SERIAL id PK
-        INTEGER product_id
-        VARCHAR user_id
-        VARCHAR user_name
         INTEGER rating "1-5"
         TEXT comment
-        BOOLEAN is_approved "DEFAULT true"
-        INTEGER moderated_by FK
         TIMESTAMPTZ created_at
     }
 
     users ||--o{ orders : "places"
     orders ||--|{ order_items : "contains"
     products ||--o{ order_items : "included in"
-    products ||--o{ product_reviews : "has"
+    products ||--o{ product_reviews : "receives"
     users ||--o{ product_reviews : "writes"
-    admin_users ||--o{ orders : "approves"
-    admin_users ||--o{ product_reviews : "moderates"
 ```
 
 ---
 
-### 🔐 Admin Authentication Flow (Planned)
+## 🍷 การทำงานร่วมกับระบบ POS หน้าร้าน
 
-```
-Admin Login (/admin)
-       │  email + password
-       ▼
-POST /api/admin/auth/login
-       │  bcrypt.compare()
-       ▼
-admin_users table
-       │  สร้าง Admin JWT (role: superadmin/staff)
-       ▼
-HttpOnly Cookie "admin_session" (8h TTL)
-       │
-       ▼
-Admin Middleware — ตรวจทุก /api/admin/* และ /admin/* route
-       │  verify role
-       ▼
-Access Granted (superadmin = full, staff = limited)
-```
+ระบบ E-Commerce นี้ออกแบบมาเพื่อทำงานสอดประสานกับระบบ **The Bottle Club POS (Point of Sale)**:
+- **POS URL:** [pos-thebottleclub-web-eta.vercel.app/pos](https://pos-thebottleclub-web-eta.vercel.app/pos)
+- **การแชร์ข้อมูล:** บัญชีสมาชิก, แต้มสะสม (Loyalty Points) และการตั้งค่าร้านค้าจะเชื่อมโยงกันผ่านตารางกลางบน Supabase
+- **ระบบสิทธิ์:** ออเดอร์และยอดขายทั้งจาก Online และ POS สามารถสรุปวิเคราะห์ร่วมกันในหน้า Manager Dashboard
 
 ---
 
-### 🎨 Admin UI Specification
-
-#### Dashboard หน้าแรก
-- **KPI Cards**: ยอดขายวันนี้ | ออเดอร์รอดำเนินการ | สมาชิกใหม่เดือนนี้ | สินค้าใกล้หมด (stock < 10)
-- **Sales Chart**: กราฟยอดขายรายวัน 30 วันย้อนหลัง
-- **Recent Orders Table**: 10 ออเดอร์ล่าสุดพร้อม status badge
-- **Low Stock Alert**: รายการสินค้าที่ stock < threshold
-
-#### Order Management
-- **Filter Bar**: status | payment method | order type | date range
-- **Status Workflow**:
-  ```
-  pending → [อนุมัติสลิป] → confirmed → [จัดส่ง + tracking no.] → shipped → delivered
-       └── [ปฏิเสธสลิป] → payment_rejected
-  ```
-- **Slip Viewer**: แสดงรูปสลิปโอนเงินพร้อมปุ่ม Approve/Reject
-- **Tax Invoice**: ปุ่ม Print/Export PDF สำหรับออเดอร์ที่ `is_full_tax_invoice = true`
-
-#### POS (Point of Sale)
-- Product search + barcode scan
-- ตะกร้าสินค้าแบบ real-time
-- รองรับ payment method: cash, transfer, promptpay
-- คำนวณเงินทอน (received_amount − total)
-- Print receipt
-
----
-
-### 📁 Planned File Structure (Admin)
-
-```
-frontend/src/
-├── app/
-│   └── admin/
-│       ├── layout.tsx           # Admin Layout (Sidebar + Topbar)
-│       ├── page.tsx             # Redirect → /admin/dashboard
-│       ├── login/page.tsx       # Admin Login
-│       ├── dashboard/page.tsx   # Dashboard + KPI
-│       ├── orders/
-│       │   ├── page.tsx         # Orders List
-│       │   └── [id]/page.tsx    # Order Detail + Approve Slip
-│       ├── products/
-│       │   ├── page.tsx         # Product List + Stock
-│       │   ├── new/page.tsx     # Add Product
-│       │   └── [id]/edit/page.tsx
-│       ├── members/
-│       │   ├── page.tsx         # Member List
-│       │   └── [id]/page.tsx    # Member Detail
-│       ├── reviews/page.tsx     # Review Moderation
-│       ├── pos/page.tsx         # Point of Sale
-│       └── reports/page.tsx     # Sales Reports
-├── components/admin/
-│   ├── AdminSidebar.tsx
-│   ├── AdminHeader.tsx
-│   ├── KPICard.tsx
-│   ├── SalesChart.tsx
-│   ├── OrderStatusBadge.tsx
-│   ├── SlipViewer.tsx
-│   └── POSTerminal.tsx
-└── lib/
-    └── admin-auth.ts            # Admin JWT, getAdminSession()
-
-backend/src/
-└── admin/
-    ├── auth.ts                  # Admin Login endpoint
-    ├── orders.ts                # Admin Order routes
-    ├── products.ts              # Admin Product routes
-    ├── users.ts                 # Admin User routes
-    ├── reviews.ts               # Admin Review routes
-    ├── dashboard.ts             # Dashboard stats
-    └── middleware.ts            # verifyAdminToken()
-```
-
----
-
-### 🚦 Implementation Roadmap
-
-| Phase | งาน | สถานะ |
-|-------|-----|-------|
-| **Phase 1** | Admin Auth (login, JWT, middleware, role) | ⬜ TODO |
-| **Phase 1** | Database migration (admin_users, alter orders/reviews/users) | ⬜ TODO |
-| **Phase 2** | Dashboard (KPI stats, recent orders) | ⬜ TODO |
-| **Phase 2** | Order Management (list, filter, approve slip, update status) | ⬜ TODO |
-| **Phase 3** | Product Management CRUD + Stock Adjustment | ⬜ TODO |
-| **Phase 3** | Member Management + Points Adjustment | ⬜ TODO |
-| **Phase 4** | Review Moderation | ⬜ TODO |
-| **Phase 4** | Tax Invoice PDF Export | ⬜ TODO |
-| **Phase 5** | POS Terminal | ⬜ TODO |
-| **Phase 5** | Sales Reports + CSV Export | ⬜ TODO |
-
-
----
-
-## 🍷 The Wine Cellar POS & Restaurant System (ระบบขายหน้าร้าน สาขา และบาร์)
-
-ระบบขายหน้าร้าน (POS) พัฒนาขึ้นเพื่อรองรับการขายหน้าร้าน, คิวแคชเชียร์, หน้าจอห้องครัว (KDS), บาร์เครื่องดื่ม, สโตร์สินค้า และการสั่งอาหารด้วย QR Code:
-- **Production URL**: [pos-thebottleclub-web-eta.vercel.app/pos](https://pos-thebottleclub-web-eta.vercel.app/pos)
-- **Repository โค้ด**: PosTHEBOTTLECLUB (C:\project pos)
-- **เทคโนโลยีหลัก**: Next.js 16 (App Router + Turbopack), React 19, Supabase (PostgreSQL 15+), PromptPay Dynamic QR, Tailwind CSS v4 (Cream & Cobalt Theme)
-- **โมดูลที่พัฒนาแล้ว**:
-  - /pos: จุดขายหน้าร้าน, สแกนบาร์โค้ด, ตะกร้าสินค้า, สมาชิก, พักบิล, ชำระเงินสด/PromptPay/บัตร
-  - /pos/history: ประวัติใบเสร็จ, พิมพ์ซ้ำ, คืนเงิน
-  - /cashier: จัดการคิวออเดอร์หน้าร้านและโต๊ะ
-  - /kitchen & /bar: Kitchen Display System (KDS) & Bar Display รับออเดอร์ Realtime
-  - /stockstaff: รับเข้าสินค้า (PO) และปรับปรุงสต็อก (แตกหัก/ชำรุด/นับจริง) พร้อมรูปถ่าย
-  - /manager: แดชบอร์ดสรุปยอดขายตามวันเดือนปี, วิเคราะห์ช่องทางชำระเงิน, รายงานสต็อก
-  - /menu: เมนูดิจิทัลสำหรับลูกค้าสแกน QR ประจำโต๊ะ
-- **คู่มือการติดตั้งฐานข้อมูล Supabase และการพัฒนาต่อฉบับสมบูรณ์**: ดูได้ที่ไฟล์ README.md ภายในโปรเจกต์ POS (C:\project pos\README.md)
+## 🤝 สำหรับ Developer ที่เข้ามาพัฒนาต่อ (Developer Checklist)
+1. **เมื่อเริ่มงาน:** รัน `npm install` ในโฟลเดอร์ `frontend` และตรวจสอบว่า `.env.local` มีคีย์ครบ
+2. **ก่อน Commit:** รัน `npx tsc --noEmit` เพื่อตรวจความถูกต้องของ Type และรัน `npm run build` เพื่อให้แน่ใจว่าการ Generate ทุกหน้าผ่าน 100%
+3. **การเพิ่มหน้าใหม่:** ใช้โครงสร้าง Next.js 16 App Router และระบุ `'use client'` เฉพาะคอมโพเนนต์ที่มีการใช้งาน State/Hooks เท่านั้น
+4. **ความช่วยเหลือ:** สอบถามทีมงานผ่านช่องทาง Issue หรือ Pull Request บน GitHub
